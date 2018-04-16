@@ -147,6 +147,12 @@ type datacenter struct {
 	MissHistogram                   map[string]uint64 `json:"miss_histogram"`
 	TLSv12                          uint64            `json:"tls_v12"`
 	ObjectSize1k                    uint64            `json:"object_size_1k"`
+	ObjectSize10k                   uint64            `json:"object_size_10k"`
+	ObjectSize100k                  uint64            `json:"object_size_100k"`
+	ObjectSize1m                    uint64            `json:"object_size_1m"`
+	ObjectSize10m                   uint64            `json:"object_size_10m"`
+	ObjectSize100m                  uint64            `json:"object_size_100m"`
+	ObjectSize1g                    uint64            `json:"object_size_1g"`
 	RecvSubTime                     uint64            `json:"recv_sub_time"`
 	RecvSubCount                    uint64            `json:"recv_sub_count"`
 	HashSubTime                     uint64            `json:"hash_sub_time"`

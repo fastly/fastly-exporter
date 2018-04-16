@@ -93,7 +93,11 @@ func process(src realtimeResponse, dst *prometheusMetrics) {
 			dst.passTimeTotal.WithLabelValues(datacenter).Add(float64(stats.PassTime))
 			processHistogram(stats.MissHistogram, dst.missDurationSeconds.WithLabelValues(datacenter))
 			dst.tlsv12Total.WithLabelValues(datacenter).Add(float64(stats.TLSv12))
-			dst.objectSize1kTotal.WithLabelValues(datacenter).Add(float64(stats.ObjectSize1k))
+			processObjectSizes(
+				stats.ObjectSize1k, stats.ObjectSize10k, stats.ObjectSize100k,
+				stats.ObjectSize1m, stats.ObjectSize10m, stats.ObjectSize100m,
+				stats.ObjectSize1g, dst.objectSizeBytes.WithLabelValues(datacenter),
+			)
 			dst.recvSubTimeTotal.WithLabelValues(datacenter).Add(float64(stats.RecvSubTime))
 			dst.recvSubCountTotal.WithLabelValues(datacenter).Add(float64(stats.RecvSubCount))
 			dst.hashSubTimeTotal.WithLabelValues(datacenter).Add(float64(stats.HashSubTime))
@@ -123,6 +127,22 @@ func processHistogram(src map[string]uint64, dst prometheus.Observer) {
 		s := float64(ms) / 1e3
 		for i := 0; i < int(count); i++ {
 			dst.Observe(s)
+		}
+	}
+}
+
+func processObjectSizes(n1k, n10k, n100k, n1m, n10m, n100m, n1g uint64, dst prometheus.Observer) {
+	for v, n := range map[uint64]uint64{
+		1 * 1024:           n1k,
+		10 * 1024:          n10k,
+		100 * 1024:         n100k,
+		1 * 1000 * 1024:    n1m,
+		10 * 1000 * 1024:   n10m,
+		100 * 1000 * 1024:  n100m,
+		1000 * 1000 * 1024: n1g,
+	} {
+		for i := uint64(0); i < n; i++ {
+			dst.Observe(float64(v))
 		}
 	}
 }
