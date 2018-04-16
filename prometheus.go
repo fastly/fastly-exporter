@@ -320,8 +320,8 @@ func (m *prometheusMetrics) register(namespace, subsystem string) {
 		Help: "Total count of passes.",
 	}, []string{"datacenter"})
 	m.synthsTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
-		Name: "Total count of synths.",
-		Help: "synth_total",
+		Name: "synth_total",
+		Help: "Total count of synths.",
 	}, []string{"datacenter"})
 	m.errorsTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "errors_total",
