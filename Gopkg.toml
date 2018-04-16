@@ -1,0 +1,16 @@
+
+[[constraint]]
+  name = "github.com/go-kit/kit"
+  version = "0.7.0"
+
+[[constraint]]
+  name = "github.com/oklog/run"
+  version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/prometheus/client_golang"
+
+[prune]
+  go-tests = true
+  unused-packages = true
