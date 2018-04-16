@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"text/tabwriter"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -17,16 +18,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+var version = "dev"
+
 func main() {
+	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token     = flag.String("token", "", "Fastly API token")
-		service   = flag.String("service", "", "Fastly service")
-		addr      = flag.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
-		namespace = flag.String("namespace", "", "Prometheus namespace")
-		subsystem = flag.String("subsystem", "", "Prometheus subsystem")
-		debug     = flag.Bool("debug", false, "log debug information")
+		token     = fs.String("token", "", "Fastly API token")
+		service   = fs.String("service", "", "Fastly service")
+		addr      = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		namespace = fs.String("namespace", "", "Prometheus namespace")
+		subsystem = fs.String("subsystem", "", "Prometheus subsystem")
+		debug     = fs.Bool("debug", false, "log debug information")
 	)
-	flag.Parse()
+	fs.Usage = usageFor(fs, "fastly-exporter [flags]")
+	fs.Parse(os.Args[1:])
 
 	var logger log.Logger
 	{
@@ -104,4 +109,26 @@ func main() {
 		})
 	}
 	level.Info(logger).Log("exit", g.Run())
+}
+
+func usageFor(fs *flag.FlagSet, short string) func() {
+	return func() {
+		fmt.Fprintf(os.Stderr, "USAGE\n")
+		fmt.Fprintf(os.Stderr, "  %s\n", short)
+		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprintf(os.Stderr, "FLAGS\n")
+		w := tabwriter.NewWriter(os.Stderr, 0, 2, 2, ' ', 0)
+		fs.VisitAll(func(f *flag.Flag) {
+			def := f.DefValue
+			if def == "" {
+				def = "..."
+			}
+			fmt.Fprintf(w, "\t-%s %s\t%s\n", f.Name, def, f.Usage)
+		})
+		w.Flush()
+		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprintf(os.Stderr, "VERSION\n")
+		fmt.Fprintf(os.Stderr, "  %s\n", version)
+		fmt.Fprintf(os.Stderr, "\n")
+	}
 }
