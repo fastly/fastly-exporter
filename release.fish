@@ -23,8 +23,8 @@ mkdir -p $DISTDIR
 for pair in linux/amd64 darwin/amd64
 	set GOOS   (echo $pair | cut -d'/' -f1)
 	set GOARCH (echo $pair | cut -d'/' -f2)
-	set BIN    $DISTDIR/prometheus-aggregator-$VERSION-$GOOS-$GOARCH
+	set BIN    $DISTDIR/fastly-exporter-$VERSION-$GOOS-$GOARCH
 	echo $BIN
-	env GOOS=$GOOS GOARCH=$GOARCH go build -o $BIN -ldflags="-X main.version=$VERSION" github.com/peterbourgon/prometheus-aggregator
+	env GOOS=$GOOS GOARCH=$GOARCH go build -o $BIN -ldflags="-X main.version=$VERSION" github.com/peterbourgon/fastly-exporter
 end
 
