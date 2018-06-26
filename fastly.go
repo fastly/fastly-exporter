@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -19,9 +20,8 @@ func queryLoop(ctx context.Context, token, service string, m *prometheusMetrics,
 			return ctx.Err()
 
 		default:
-			// rt.fastly.com blocks until it has data to return.
-			// It's safe to call in a (single-threaded!) hot loop.
-			u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", service, ts)
+			// Extract service name from Fastly's Configuration API
+			u := fmt.Sprintf("https://api.fastly.com/service/%s/details", service)
 			req, err := http.NewRequest("GET", u, nil)
 			if err != nil {
 				return err // fatal for sure
@@ -29,6 +29,34 @@ func queryLoop(ctx context.Context, token, service string, m *prometheusMetrics,
 			req.Header.Set("Fastly-Key", token)
 			req.Header.Set("Accept", "application/json")
 			resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+			if err != nil {
+				level.Error(logger).Log("err", err)
+				contextSleep(ctx, time.Second)
+				continue
+			}
+			data := make(map[string]interface{})
+			body, _ := ioutil.ReadAll(resp.Body)
+			err = json.Unmarshal(body, &data)
+			if err != nil {
+			    return err
+			}
+			name, ok := data["name"].(string);
+			if !ok {
+				level.Error(logger).Log("err", "Received non-string type for service name")
+				contextSleep(ctx, time.Second)
+				continue
+			}
+
+			// rt.fastly.com blocks until it has data to return.
+			// It's safe to call in a (single-threaded!) hot loop.
+			u = fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", service, ts)
+			req, err = http.NewRequest("GET", u, nil)
+			if err != nil {
+				return err // fatal for sure
+			}
+			req.Header.Set("Fastly-Key", token)
+			req.Header.Set("Accept", "application/json")
+			resp, err = http.DefaultClient.Do(req.WithContext(ctx))
 			if err != nil {
 				level.Error(logger).Log("err", err)
 				contextSleep(ctx, time.Second)
@@ -45,7 +73,7 @@ func queryLoop(ctx context.Context, token, service string, m *prometheusMetrics,
 				rterr = "<none>"
 			}
 			level.Debug(logger).Log("response_ts", rt.Timestamp, "error", rterr)
-			process(rt, m)
+			process(name, rt, m)
 			ts = rt.Timestamp
 		}
 	}
