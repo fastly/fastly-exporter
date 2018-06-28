@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"text/tabwriter"
 	"time"
@@ -24,7 +25,7 @@ func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
 		token     = fs.String("token", "", "Fastly API token")
-		service   = fs.String("service", "", "Fastly service")
+		services  = fs.String("services", "", "Comma separated string of Fastly services")
 		addr      = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
 		namespace = fs.String("namespace", "", "Prometheus namespace")
 		subsystem = fs.String("subsystem", "", "Prometheus subsystem")
@@ -47,11 +48,11 @@ func main() {
 		level.Error(logger).Log("err", "-token is required")
 		os.Exit(1)
 	}
-	if *service == "" {
-		level.Error(logger).Log("err", "-service is required")
+	if *services == "" {
+		level.Error(logger).Log("err", "-services is required")
 		os.Exit(1)
 	}
-	level.Info(logger).Log("fastly_service", *service)
+	level.Info(logger).Log("fastly_service", *services)
 
 	var promURL *url.URL
 	{
@@ -72,11 +73,14 @@ func main() {
 	var g run.Group
 	{
 		ctx, cancel := context.WithCancel(context.Background())
-		g.Add(func() error {
-			return queryLoop(ctx, *token, *service, &m, log.With(logger, "query", "rt.fastly.com"))
-		}, func(error) {
-			cancel()
-		})
+		for _, s := range strings.Split(*services, ",") {
+			scopy := s
+			g.Add(func() error {
+				return queryLoop(ctx, *token, scopy, &m, log.With(logger, "query", "rt.fastly.com"))
+			}, func(error) {
+				cancel()
+			})
+		}
 	}
 	{
 		mux := http.NewServeMux()
