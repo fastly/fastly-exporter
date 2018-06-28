@@ -25,7 +25,7 @@ FLAGS
   -debug false                             log debug information
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
   -namespace ...                           Prometheus namespace
-  -service ...                             Fastly service
+  -services ...                            Comma separated string of Fastly services
   -subsystem ...                           Prometheus subsystem
   -token ...                               Fastly API token
 
@@ -33,7 +33,7 @@ VERSION
   0.0.1
 ```
 
-The -service and -token flags are mandatory. Your service ID is available at the
+The -services and -token flags are mandatory. Your service ID(s) are available at the
 top of your [Fastly dashboard][db]. [See this link][token] for information on
 creating API tokens.
 
