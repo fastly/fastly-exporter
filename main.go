@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"text/tabwriter"
 	"time"
@@ -24,12 +25,13 @@ func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
 		token     = fs.String("token", "", "Fastly API token")
-		service   = fs.String("service", "", "Fastly service")
+		services  = stringslice{}
 		addr      = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
 		namespace = fs.String("namespace", "", "Prometheus namespace")
 		subsystem = fs.String("subsystem", "", "Prometheus subsystem")
 		debug     = fs.Bool("debug", false, "log debug information")
 	)
+	fs.Var(&services, "service", "Fastly service (repeatable)")
 	fs.Usage = usageFor(fs, "fastly-exporter [flags]")
 	fs.Parse(os.Args[1:])
 
@@ -47,11 +49,16 @@ func main() {
 		level.Error(logger).Log("err", "-token is required")
 		os.Exit(1)
 	}
-	if *service == "" {
-		level.Error(logger).Log("err", "-service is required")
+	if len(services) <= 0 {
+		level.Error(logger).Log("err", "at least one -service is required")
 		os.Exit(1)
 	}
-	level.Info(logger).Log("fastly_service", *service)
+
+	level.Debug(logger).Log("msg", "looking up service names")
+	serviceNames := getServiceNames(*token, services, log.With(logger, "query", "api.fastly.com"))
+	for service, name := range serviceNames {
+		level.Info(logger).Log("fastly_service", service, "name", name)
+	}
 
 	var promURL *url.URL
 	{
@@ -71,12 +78,18 @@ func main() {
 
 	var g run.Group
 	{
-		ctx, cancel := context.WithCancel(context.Background())
-		g.Add(func() error {
-			return queryLoop(ctx, *token, *service, &m, log.With(logger, "query", "rt.fastly.com"))
-		}, func(error) {
-			cancel()
-		})
+		for serviceID, serviceName := range serviceNames {
+			var (
+				ctx, cancel = context.WithCancel(context.Background())
+				serviceID   = serviceID   // shadow copy
+				serviceName = serviceName // shadow copy
+			)
+			g.Add(func() error {
+				return queryLoop(ctx, *token, serviceID, serviceName, &m, log.With(logger, "query", "rt.fastly.com", "service", serviceName))
+			}, func(error) {
+				cancel()
+			})
+		}
 	}
 	{
 		mux := http.NewServeMux()
@@ -131,4 +144,18 @@ func usageFor(fs *flag.FlagSet, short string) func() {
 		fmt.Fprintf(os.Stderr, "  %s\n", version)
 		fmt.Fprintf(os.Stderr, "\n")
 	}
+}
+
+type stringslice []string
+
+func (ss *stringslice) Set(s string) error {
+	(*ss) = append(*ss, s)
+	return nil
+}
+
+func (ss *stringslice) String() string {
+	if len(*ss) <= 0 {
+		return "..."
+	}
+	return strings.Join(*ss, ", ")
 }
