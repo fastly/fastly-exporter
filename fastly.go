@@ -5,13 +5,53 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 )
 
-func queryLoop(ctx context.Context, token, service string, m *prometheusMetrics, logger log.Logger) error {
+func getServiceNames(token string, services []string, logger log.Logger) map[string]string {
+	serviceNames := map[string]string{}
+	for _, service := range services {
+		serviceNames[service] = getServiceName(token, service, log.With(logger, "service", service))
+	}
+	return serviceNames
+}
+
+func getServiceName(token, service string, logger log.Logger) string {
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.fastly.com/service/%s/details", url.QueryEscape(service)), nil)
+	if err != nil {
+		level.Error(logger).Log("err", err)
+		return service
+	}
+
+	req.Header.Set("Fastly-Key", token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		level.Error(logger).Log("err", err)
+		return service
+	}
+	defer resp.Body.Close()
+
+	var response struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		level.Error(logger).Log("err", err)
+		return service
+	}
+	if response.Name == "" {
+		level.Error(logger).Log("err", "Fastly returned blank service name")
+		return service
+	}
+
+	return response.Name
+}
+
+func queryLoop(ctx context.Context, token, serviceID, serviceName string, m *prometheusMetrics, logger log.Logger) error {
 	var ts uint64
 	for {
 		select {
@@ -21,7 +61,7 @@ func queryLoop(ctx context.Context, token, service string, m *prometheusMetrics,
 		default:
 			// rt.fastly.com blocks until it has data to return.
 			// It's safe to call in a (single-threaded!) hot loop.
-			u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", service, ts)
+			u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", serviceID, ts)
 			req, err := http.NewRequest("GET", u, nil)
 			if err != nil {
 				return err // fatal for sure
@@ -44,8 +84,8 @@ func queryLoop(ctx context.Context, token, service string, m *prometheusMetrics,
 			if rterr == "" {
 				rterr = "<none>"
 			}
-			level.Debug(logger).Log("response_ts", rt.Timestamp, "error", rterr)
-			process(rt, m)
+			level.Debug(logger).Log("response_ts", rt.Timestamp, "err", rterr)
+			process(rt, serviceName, m)
 			ts = rt.Timestamp
 		}
 	}
