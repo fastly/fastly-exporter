@@ -85,7 +85,7 @@ func queryLoop(ctx context.Context, token, serviceID, serviceName string, m *pro
 				rterr = "<none>"
 			}
 			level.Debug(logger).Log("response_ts", rt.Timestamp, "err", rterr)
-			process(rt, serviceName, serviceID, m)
+			process(rt, serviceID, serviceName, m)
 			ts = rt.Timestamp
 		}
 	}
