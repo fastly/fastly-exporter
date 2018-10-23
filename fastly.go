@@ -12,19 +12,19 @@ import (
 	"github.com/go-kit/kit/log/level"
 )
 
-func getServiceNames(token string, services []string, logger log.Logger) map[string]string {
+func getServiceNames(token string, serviceIDs []string, logger log.Logger) map[string]string {
 	serviceNames := map[string]string{}
-	for _, service := range services {
-		serviceNames[service] = getServiceName(token, service, log.With(logger, "service", service))
+	for _, serviceID := range serviceIDs {
+		serviceNames[serviceID] = getServiceName(token, serviceID, log.With(logger, "service_id", serviceID))
 	}
 	return serviceNames
 }
 
-func getServiceName(token, service string, logger log.Logger) string {
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.fastly.com/service/%s/details", url.QueryEscape(service)), nil)
+func getServiceName(token, serviceID string, logger log.Logger) string {
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.fastly.com/service/%s/details", url.QueryEscape(serviceID)), nil)
 	if err != nil {
 		level.Error(logger).Log("err", err)
-		return service
+		return serviceID
 	}
 
 	req.Header.Set("Fastly-Key", token)
@@ -32,7 +32,7 @@ func getServiceName(token, service string, logger log.Logger) string {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		level.Error(logger).Log("err", err)
-		return service
+		return serviceID
 	}
 	defer resp.Body.Close()
 
@@ -41,11 +41,11 @@ func getServiceName(token, service string, logger log.Logger) string {
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		level.Error(logger).Log("err", err)
-		return service
+		return serviceID
 	}
 	if response.Name == "" {
 		level.Error(logger).Log("err", "Fastly returned blank service name")
-		return service
+		return serviceID
 	}
 
 	return response.Name
@@ -85,7 +85,7 @@ func queryLoop(ctx context.Context, token, serviceID, serviceName string, m *pro
 				rterr = "<none>"
 			}
 			level.Debug(logger).Log("response_ts", rt.Timestamp, "err", rterr)
-			process(rt, serviceName, m)
+			process(rt, serviceID, serviceName, m)
 			ts = rt.Timestamp
 		}
 	}

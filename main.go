@@ -24,14 +24,14 @@ var version = "dev"
 func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token     = fs.String("token", "", "Fastly API token")
-		services  = stringslice{}
-		addr      = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
-		namespace = fs.String("namespace", "", "Prometheus namespace")
-		subsystem = fs.String("subsystem", "", "Prometheus subsystem")
-		debug     = fs.Bool("debug", false, "log debug information")
+		token      = fs.String("token", "", "Fastly API token")
+		serviceIDs = stringslice{}
+		addr       = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		namespace  = fs.String("namespace", "", "Prometheus namespace")
+		subsystem  = fs.String("subsystem", "", "Prometheus subsystem")
+		debug      = fs.Bool("debug", false, "log debug information")
 	)
-	fs.Var(&services, "service", "Fastly service (repeatable)")
+	fs.Var(&serviceIDs, "service", "Fastly service ID (repeatable)")
 	fs.Usage = usageFor(fs, "fastly-exporter [flags]")
 	fs.Parse(os.Args[1:])
 
@@ -49,13 +49,13 @@ func main() {
 		level.Error(logger).Log("err", "-token is required")
 		os.Exit(1)
 	}
-	if len(services) <= 0 {
-		level.Error(logger).Log("err", "at least one -service is required")
+	if len(serviceIDs) <= 0 {
+		level.Error(logger).Log("err", "at least one -service ID is required")
 		os.Exit(1)
 	}
 
 	level.Debug(logger).Log("msg", "looking up service names")
-	serviceNames := getServiceNames(*token, services, log.With(logger, "query", "api.fastly.com"))
+	serviceNames := getServiceNames(*token, serviceIDs, log.With(logger, "query", "api.fastly.com"))
 	for service, name := range serviceNames {
 		level.Info(logger).Log("fastly_service", service, "name", name)
 	}
