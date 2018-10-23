@@ -25,12 +25,12 @@ FLAGS
   -debug false                             log debug information
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
   -namespace ...                           Prometheus namespace
-  -service ...                             Fastly service (repeatable)
+  -service ...                             Fastly service ID (repeatable)
   -subsystem ...                           Prometheus subsystem
   -token ...                               Fastly API token
 
 VERSION
-  0.0.3
+  1.0.0
 ```
 
 A valid API -token and at least one -service ID are mandatory. Your service ID
