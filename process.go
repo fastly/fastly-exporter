@@ -92,7 +92,10 @@ func process(src realtimeResponse, serviceID string, serviceName string, dst *pr
 			dst.missTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.MissTime))
 			dst.passTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PassTime))
 			processHistogram(stats.MissHistogram, dst.missDurationSeconds.WithLabelValues(serviceID, serviceName, datacenter))
+			dst.tlsv10Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLSv10))
+			dst.tlsv11Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLSv11))
 			dst.tlsv12Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLSv12))
+			dst.tlsv13Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLSv13))
 			processObjectSizes(
 				stats.ObjectSize1k, stats.ObjectSize10k, stats.ObjectSize100k,
 				stats.ObjectSize1m, stats.ObjectSize10m, stats.ObjectSize100m,

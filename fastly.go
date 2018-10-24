@@ -185,7 +185,10 @@ type datacenter struct {
 	MissTime                        float64           `json:"miss_time"`
 	PassTime                        float64           `json:"pass_time"`
 	MissHistogram                   map[string]uint64 `json:"miss_histogram"`
+	TLSv10                          uint64            `json:"tls_v10"`
+	TLSv11                          uint64            `json:"tls_v11"`
 	TLSv12                          uint64            `json:"tls_v12"`
+	TLSv13                          uint64            `json:"tls_v13"`
 	ObjectSize1k                    uint64            `json:"object_size_1k"`
 	ObjectSize10k                   uint64            `json:"object_size_10k"`
 	ObjectSize100k                  uint64            `json:"object_size_100k"`

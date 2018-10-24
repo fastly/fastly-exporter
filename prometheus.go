@@ -70,7 +70,10 @@ type prometheusMetrics struct {
 	missTimeTotal                        *prometheus.CounterVec
 	passTimeTotal                        *prometheus.CounterVec
 	missDurationSeconds                  *prometheus.HistogramVec
+	tlsv10Total                          *prometheus.CounterVec
+	tlsv11Total                          *prometheus.CounterVec
 	tlsv12Total                          *prometheus.CounterVec
+	tlsv13Total                          *prometheus.CounterVec
 	objectSizeBytes                      *prometheus.HistogramVec
 	recvSubTimeTotal                     *prometheus.CounterVec
 	recvSubCountTotal                    *prometheus.CounterVec
@@ -348,9 +351,21 @@ func (m *prometheusMetrics) register(namespace, subsystem string) {
 		Help:    "Total time spent serving misses.",
 		Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2, 4, 8, 16, 32, 60},
 	}, []string{"service_id", "service_name", "datacenter"})
+	m.tlsv10Total = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
+		Name: "tls_v10_total",
+		Help: "Total number of TLS v1.0 requests.",
+	}, []string{"service_id", "service_name", "datacenter"})
+	m.tlsv11Total = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
+		Name: "tls_v11_total",
+		Help: "Total number of TLS v1.1 requests.",
+	}, []string{"service_id", "service_name", "datacenter"})
 	m.tlsv12Total = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "tls_v12_total",
 		Help: "Total number of TLS v1.2 requests.",
+	}, []string{"service_id", "service_name", "datacenter"})
+	m.tlsv13Total = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
+		Name: "tls_v13_total",
+		Help: "Total number of TLS v1.3 requests.",
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.objectSizeBytes = promauto.NewHistogramVec(prometheus.HistogramOpts{Namespace: namespace, Subsystem: subsystem,
 		Name:    "object_size_bytes",
