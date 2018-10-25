@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -14,17 +13,11 @@ import (
 
 func getServiceNames(token string, serviceIDs []string, logger log.Logger) map[string]string {
 	serviceNames := map[string]string{}
-	for _, serviceID := range serviceIDs {
-		serviceNames[serviceID] = getServiceName(token, serviceID, log.With(logger, "service_id", serviceID))
-	}
-	return serviceNames
-}
 
-func getServiceName(token, serviceID string, logger log.Logger) string {
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.fastly.com/service/%s/details", url.QueryEscape(serviceID)), nil)
+	req, err := http.NewRequest("GET", "https://api.fastly.com/service", nil)
 	if err != nil {
 		level.Error(logger).Log("err", err)
-		return serviceID
+		return serviceNames
 	}
 
 	req.Header.Set("Fastly-Key", token)
@@ -32,23 +25,22 @@ func getServiceName(token, serviceID string, logger log.Logger) string {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		level.Error(logger).Log("err", err)
-		return serviceID
+		return serviceNames
 	}
 	defer resp.Body.Close()
 
-	var response struct {
-		Name string `json:"name"`
-	}
+	var response serviceResponse
+
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		level.Error(logger).Log("err", err)
-		return serviceID
-	}
-	if response.Name == "" {
-		level.Error(logger).Log("err", "Fastly returned blank service name")
-		return serviceID
+		return serviceNames
 	}
 
-	return response.Name
+	for _, entry := range response {
+		serviceNames[entry.ID] = entry.Name
+	}
+
+	return serviceNames
 }
 
 func queryLoop(ctx context.Context, token, serviceID, serviceName string, m *prometheusMetrics, logger log.Logger) error {
@@ -99,6 +91,11 @@ type realtimeResponse struct {
 		Recorded   uint64                `json:"recorded"`
 	} `json:"Data"`
 	Error string `json:"error"`
+}
+
+type serviceResponse []struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
 }
 
 type datacenter struct {
