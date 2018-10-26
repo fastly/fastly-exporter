@@ -53,12 +53,12 @@ func main() {
 	level.Debug(logger).Log("msg", "looking up service names")
 	serviceNames := getServiceNames(*token, serviceIDs, log.With(logger, "query", "api.fastly.com"))
 	if len(serviceNames) == 0 {
-		level.Error(logger).Log("err","service name lookup error, retrying") 
-		for i:= 1; len(serviceNames) == 0; i++ {
+		level.Error(logger).Log("err", "service name lookup error, retrying")
+		for i := 1; len(serviceNames) == 0; i++ {
 			time.Sleep(time.Second)
 			serviceNames = getServiceNames(*token, serviceIDs, log.With(logger, "query", "api.fastly.com"))
 			if i > 4 {
-				level.Error(logger).Log("err","service name lookup error, exiting") 
+				level.Error(logger).Log("err", "service name lookup error, exiting")
 				os.Exit(1)
 			}
 		}
