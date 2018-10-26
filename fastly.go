@@ -30,7 +30,6 @@ func getServiceNames(token string, serviceIDs []string, logger log.Logger) map[s
 	defer resp.Body.Close()
 
 	var response serviceResponse
-
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		level.Error(logger).Log("err", err)
 		return serviceNames
@@ -42,15 +41,12 @@ func getServiceNames(token string, serviceIDs []string, logger log.Logger) map[s
 
 	if len(serviceIDs) > 0 {
 		limitedServiceNames := map[string]string{}
-
 		for _, serviceID := range serviceIDs {
 			if val, ok := serviceNames[serviceID]; ok {
 				limitedServiceNames[serviceID] = val
 			}
 		}
-
 		return limitedServiceNames
-
 	}
 
 	return serviceNames
@@ -107,8 +103,8 @@ type realtimeResponse struct {
 }
 
 type serviceResponse []struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type datacenter struct {
