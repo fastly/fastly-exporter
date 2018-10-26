@@ -31,7 +31,7 @@ func main() {
 		subsystem  = fs.String("subsystem", "", "Prometheus subsystem")
 		debug      = fs.Bool("debug", false, "log debug information")
 	)
-	fs.Var(&serviceIDs, "service", "Fastly service ID (repeatable)")
+	fs.Var(&serviceIDs, "service", "Specific Fastly service ID only (optional, repeatable)")
 	fs.Usage = usageFor(fs, "fastly-exporter [flags]")
 	fs.Parse(os.Args[1:])
 
