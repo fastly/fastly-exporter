@@ -40,6 +40,19 @@ func getServiceNames(token string, serviceIDs []string, logger log.Logger) map[s
 		serviceNames[entry.ID] = entry.Name
 	}
 
+	if len(serviceIDs) > 0 {
+		limitedServiceNames := map[string]string{}
+
+		for _, serviceID := range serviceIDs {
+			if val, ok := serviceNames[serviceID]; ok {
+				limitedServiceNames[serviceID] = val
+			}
+		}
+
+		return limitedServiceNames
+
+	}
+
 	return serviceNames
 }
 

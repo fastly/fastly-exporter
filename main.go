@@ -49,10 +49,6 @@ func main() {
 		level.Error(logger).Log("err", "-token is required")
 		os.Exit(1)
 	}
-	if len(serviceIDs) <= 0 {
-		level.Error(logger).Log("err", "at least one -service ID is required")
-		os.Exit(1)
-	}
 
 	level.Debug(logger).Log("msg", "looking up service names")
 	serviceNames := getServiceNames(*token, serviceIDs, log.With(logger, "query", "api.fastly.com"))
