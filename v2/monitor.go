@@ -11,7 +11,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 )
 
-func monitor(ctx context.Context, token string, serviceID string, resolver nameResolver, metrics prometheusMetrics, logger log.Logger) error {
+func monitor(ctx context.Context, client httpClient, token string, serviceID string, resolver nameResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) error {
 	var ts uint64
 	for {
 		select {
@@ -28,7 +28,7 @@ func monitor(ctx context.Context, token string, serviceID string, resolver nameR
 			}
 			req.Header.Set("Fastly-Key", token)
 			req.Header.Set("Accept", "application/json")
-			resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+			resp, err := client.Do(req.WithContext(ctx))
 			if err != nil {
 				level.Error(logger).Log("err", err)
 				contextSleep(ctx, time.Second)
@@ -46,6 +46,7 @@ func monitor(ctx context.Context, token string, serviceID string, resolver nameR
 			}
 			level.Debug(logger).Log("response_ts", rt.Timestamp, "err", rterr)
 			process(rt, serviceID, resolver.resolve(serviceID), metrics)
+			postprocess()
 			ts = rt.Timestamp
 		}
 	}

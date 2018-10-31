@@ -72,13 +72,14 @@ func main() {
 
 	var manager *monitorManager
 	{
-		manager = newMonitorManager(*token, cache, metrics, log.With(logger, "component", "monitors"))
+		postprocess := func() {} // postprocess is only used for tests
+		manager = newMonitorManager(http.DefaultClient, *token, cache, metrics, postprocess, log.With(logger, "component", "monitors"))
 	}
 
 	var queryer *serviceQueryer
 	{
 		queryer = newServiceQueryer(*token, serviceIDs, cache, manager)
-		if err := queryer.refresh(); err != nil { // first refresh must succeed
+		if err := queryer.refresh(http.DefaultClient); err != nil { // first refresh must succeed
 			level.Error(logger).Log("during", "initial service refresh", "err", err)
 			os.Exit(1)
 		}
@@ -99,7 +100,7 @@ func main() {
 					return ctx.Err()
 
 				case <-ticker.C:
-					if err := queryer.refresh(); err != nil {
+					if err := queryer.refresh(http.DefaultClient); err != nil {
 						level.Warn(logger).Log("during", "service refresh", "err", err)
 					}
 				}
@@ -169,4 +170,8 @@ func (ss *stringslice) String() string {
 		return "..."
 	}
 	return strings.Join(*ss, ", ")
+}
+
+type httpClient interface {
+	Do(*http.Request) (*http.Response, error)
 }

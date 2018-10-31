@@ -9,12 +9,15 @@ import (
 )
 
 type monitorManager struct {
-	mtx      sync.Mutex
-	token    string
-	running  map[string]interrupt
-	resolver nameResolver
-	metrics  prometheusMetrics
-	logger   log.Logger
+	mtx     sync.Mutex
+	running map[string]interrupt
+
+	client      httpClient
+	token       string
+	resolver    nameResolver
+	metrics     prometheusMetrics
+	postprocess func()
+	logger      log.Logger
 }
 
 type interrupt struct {
@@ -26,13 +29,16 @@ type nameResolver interface {
 	resolve(id string) (name string)
 }
 
-func newMonitorManager(token string, resolver nameResolver, metrics prometheusMetrics, logger log.Logger) *monitorManager {
+func newMonitorManager(client httpClient, token string, resolver nameResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) *monitorManager {
 	return &monitorManager{
-		token:    token,
-		running:  map[string]interrupt{},
-		resolver: resolver,
-		metrics:  metrics,
-		logger:   logger,
+		running: map[string]interrupt{},
+
+		client:      client,
+		token:       token,
+		resolver:    resolver,
+		metrics:     metrics,
+		postprocess: postprocess,
+		logger:      logger,
 	}
 }
 
@@ -42,7 +48,7 @@ func (m *monitorManager) update(ids []string) {
 
 	nextgen := map[string]interrupt{}
 	for _, id := range ids {
-		if irq, found := m.running[id]; found {
+		if irq, ok := m.running[id]; ok {
 			delete(m.running, id)
 			nextgen[id] = irq
 		} else {
@@ -56,6 +62,8 @@ func (m *monitorManager) update(ids []string) {
 		irq.cancel()
 		<-irq.done
 	}
+
+	m.running = nextgen
 }
 
 func (m *monitorManager) spawn(id string) interrupt {
@@ -64,7 +72,7 @@ func (m *monitorManager) spawn(id string) interrupt {
 		done        = make(chan struct{})
 	)
 	go func() {
-		monitor(ctx, m.token, id, m.resolver, m.metrics, log.With(m.logger, "service_id", id))
+		monitor(ctx, m.client, m.token, id, m.resolver, m.metrics, m.postprocess, log.With(m.logger, "service_id", id))
 		close(done)
 	}()
 	return interrupt{cancel, done}
@@ -80,4 +88,14 @@ func (m *monitorManager) stopAll() {
 		<-irq.done
 		delete(m.running, id)
 	}
+}
+
+func (m *monitorManager) currentlyRunning() (ids []string) {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+
+	for id := range m.running {
+		ids = append(ids, id)
+	}
+	return ids
 }
