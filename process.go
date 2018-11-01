@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func process(src realtimeResponse, serviceID string, serviceName string, dst *prometheusMetrics) {
+func process(src realtimeResponse, serviceID string, serviceName string, dst prometheusMetrics) {
 	for _, d := range src.Data {
 		for datacenter, stats := range d.Datacenter {
 			dst.requestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Requests))
