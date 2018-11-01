@@ -19,6 +19,10 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 			return ctx.Err()
 
 		default:
+			var (
+				serviceName = resolver.resolve(serviceID)
+				logger      = log.With(logger, "service_name", serviceName)
+			)
 			// rt.fastly.com blocks until it has data to return.
 			// It's safe to call in a (single-threaded!) hot loop.
 			u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", serviceID, ts)
@@ -45,7 +49,7 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 				rterr = "<none>"
 			}
 			level.Debug(logger).Log("response_ts", rt.Timestamp, "err", rterr)
-			process(rt, serviceID, resolver.resolve(serviceID), metrics)
+			process(rt, serviceID, serviceName, metrics)
 			postprocess()
 			ts = rt.Timestamp
 		}

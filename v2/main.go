@@ -72,14 +72,24 @@ func main() {
 
 	var manager *monitorManager
 	{
-		postprocess := func() {} // postprocess is only used for tests
-		manager = newMonitorManager(http.DefaultClient, *token, cache, metrics, postprocess, log.With(logger, "component", "monitors"))
+		var (
+			postprocess = func() {}                          // only used for tests
+			rtClient    = &http.Client{Timeout: time.Minute} // rt.fastly.com blocks awhile by design
+		)
+		manager = newMonitorManager(rtClient, *token, cache, metrics, postprocess, log.With(logger, "component", "monitors"))
+	}
+
+	var apiClient *http.Client
+	{
+		apiClient = &http.Client{
+			Timeout: 10 * time.Second, // api.fastly.com should be fast
+		}
 	}
 
 	var queryer *serviceQueryer
 	{
 		queryer = newServiceQueryer(*token, serviceIDs, cache, manager)
-		if err := queryer.refresh(http.DefaultClient); err != nil { // first refresh must succeed
+		if err := queryer.refresh(apiClient); err != nil { // first refresh must succeed
 			level.Error(logger).Log("during", "initial service refresh", "err", err)
 			os.Exit(1)
 		}
@@ -100,7 +110,7 @@ func main() {
 					return ctx.Err()
 
 				case <-ticker.C:
-					if err := queryer.refresh(http.DefaultClient); err != nil {
+					if err := queryer.refresh(apiClient); err != nil {
 						level.Warn(logger).Log("during", "service refresh", "err", err)
 					}
 				}
