@@ -22,20 +22,20 @@ USAGE
   fastly-exporter [flags]
 
 FLAGS
-  -debug false                             log debug information
+  -debug false                             Log debug information
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
-  -namespace ...                           Prometheus namespace
-  -service ...                             Fastly service ID (repeatable)
-  -subsystem ...                           Prometheus subsystem
-  -token ...                               Fastly API token
+  -namespace ...                           Prometheus namespace (optional)
+  -service ...                             Specific Fastly service ID (optional, repeatable)
+  -subsystem ...                           Prometheus subsystem (optional)
+  -token ...                               Fastly API token (required)
 
 VERSION
-  1.0.0
+  2.0.0
 ```
 
-A valid API -token and at least one -service ID are mandatory. Your service ID
-is available at the top of your [Fastly dashboard][db]. [See this link][token]
-for information on creating API tokens.
+A valid Fastly API -token is mandatory. [See this link][token] for information
+on creating API tokens. Providing individual -service IDs is optional, and will
+Service IDs are available at the top of your [Fastly dashboard][db]. 
 
-[db]: https://manage.fastly.com/services/all
 [token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
+[db]: https://manage.fastly.com/services/all

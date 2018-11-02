@@ -9,12 +9,12 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
-	"github.com/peterbourgon/usage"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -31,7 +31,7 @@ func main() {
 		debug      = fs.Bool("debug", false, "Log debug information")
 	)
 	fs.Var(&serviceIDs, "service", "Specific Fastly service ID (optional, repeatable)")
-	fs.Usage = usage.For(fs, "fastly-exporter [flags]")
+	fs.Usage = usageFor(fs, "fastly-exporter [flags]")
 	fs.Parse(os.Args[1:])
 
 	var logger log.Logger
@@ -184,4 +184,26 @@ func (ss *stringslice) String() string {
 
 type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
+}
+
+func usageFor(fs *flag.FlagSet, short string) func() {
+	return func() {
+		fmt.Fprintf(os.Stderr, "USAGE\n")
+		fmt.Fprintf(os.Stderr, "  %s\n", short)
+		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprintf(os.Stderr, "FLAGS\n")
+		w := tabwriter.NewWriter(os.Stderr, 0, 2, 2, ' ', 0)
+		fs.VisitAll(func(f *flag.Flag) {
+			def := f.DefValue
+			if def == "" {
+				def = "..."
+			}
+			fmt.Fprintf(w, "\t-%s %s\t%s\n", f.Name, def, f.Usage)
+		})
+		w.Flush()
+		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprintf(os.Stderr, "VERSION\n")
+		fmt.Fprintf(os.Stderr, "  %s\n", version)
+		fmt.Fprintf(os.Stderr, "\n")
+	}
 }

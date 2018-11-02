@@ -82,14 +82,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:c1da01adbc884ac57f9170be3b2a115088a1ba3c349ce47cb51f44628594e020"
-  name = "github.com/peterbourgon/usage"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "1122582085eb0b349e47de48f0527476daba20a6"
-  version = "v1.0.0"
-
-[[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -151,7 +143,6 @@
     "github.com/go-kit/kit/log/level",
     "github.com/google/go-cmp/cmp",
     "github.com/oklog/run",
-    "github.com/peterbourgon/usage",
     "github.com/pkg/errors",
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promauto",
