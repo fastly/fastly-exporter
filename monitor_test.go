@@ -295,11 +295,11 @@ testspace_testsystem_status_group_total{datacenter="BWI",service_id="my-service-
 testspace_testsystem_status_group_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name",status_group="4xx"} 1
 testspace_testsystem_status_group_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name",status_group="5xx"} 0
 testspace_testsystem_synth_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
-testspace_testsystem_tls_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
-testspace_testsystem_tls_v10_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
-testspace_testsystem_tls_v11_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
-testspace_testsystem_tls_v12_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
-testspace_testsystem_tls_v13_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_tls_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name",tls_version="any"} 0
+testspace_testsystem_tls_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name",tls_version="v10"} 0
+testspace_testsystem_tls_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name",tls_version="v11"} 0
+testspace_testsystem_tls_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name",tls_version="v12"} 0
+testspace_testsystem_tls_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name",tls_version="v13"} 0
 testspace_testsystem_uncacheable_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_video_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_waf_blocked_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
