@@ -6,11 +6,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func process(src realtimeResponse, serviceID string, serviceName string, dst *prometheusMetrics) {
+func process(src realtimeResponse, serviceID string, serviceName string, dst prometheusMetrics) {
 	for _, d := range src.Data {
 		for datacenter, stats := range d.Datacenter {
 			dst.requestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Requests))
-			dst.tlsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLS))
+			dst.tlsTotal.WithLabelValues(serviceID, serviceName, datacenter, "any").Add(float64(stats.TLS))
+			dst.tlsTotal.WithLabelValues(serviceID, serviceName, datacenter, "v10").Add(float64(stats.TLSv10))
+			dst.tlsTotal.WithLabelValues(serviceID, serviceName, datacenter, "v11").Add(float64(stats.TLSv11))
+			dst.tlsTotal.WithLabelValues(serviceID, serviceName, datacenter, "v12").Add(float64(stats.TLSv12))
+			dst.tlsTotal.WithLabelValues(serviceID, serviceName, datacenter, "v13").Add(float64(stats.TLSv13))
 			dst.shieldTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Shield))
 			dst.iPv6Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.IPv6))
 			dst.imgOptoTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgOpto))
@@ -92,10 +96,6 @@ func process(src realtimeResponse, serviceID string, serviceName string, dst *pr
 			dst.missTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.MissTime))
 			dst.passTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PassTime))
 			processHistogram(stats.MissHistogram, dst.missDurationSeconds.WithLabelValues(serviceID, serviceName, datacenter))
-			dst.tlsv10Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLSv10))
-			dst.tlsv11Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLSv11))
-			dst.tlsv12Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLSv12))
-			dst.tlsv13Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.TLSv13))
 			processObjectSizes(
 				stats.ObjectSize1k, stats.ObjectSize10k, stats.ObjectSize100k,
 				stats.ObjectSize1m, stats.ObjectSize10m, stats.ObjectSize100m,

@@ -5,53 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 )
 
-func getServiceNames(token string, serviceIDs []string, logger log.Logger) map[string]string {
-	serviceNames := map[string]string{}
-	for _, serviceID := range serviceIDs {
-		serviceNames[serviceID] = getServiceName(token, serviceID, log.With(logger, "service_id", serviceID))
-	}
-	return serviceNames
-}
-
-func getServiceName(token, serviceID string, logger log.Logger) string {
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.fastly.com/service/%s/details", url.QueryEscape(serviceID)), nil)
-	if err != nil {
-		level.Error(logger).Log("err", err)
-		return serviceID
-	}
-
-	req.Header.Set("Fastly-Key", token)
-	req.Header.Set("Accept", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		level.Error(logger).Log("err", err)
-		return serviceID
-	}
-	defer resp.Body.Close()
-
-	var response struct {
-		Name string `json:"name"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		level.Error(logger).Log("err", err)
-		return serviceID
-	}
-	if response.Name == "" {
-		level.Error(logger).Log("err", "Fastly returned blank service name")
-		return serviceID
-	}
-
-	return response.Name
-}
-
-func queryLoop(ctx context.Context, token, serviceID, serviceName string, m *prometheusMetrics, logger log.Logger) error {
+func monitor(ctx context.Context, client httpClient, token string, serviceID string, resolver nameResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) error {
 	var ts uint64
 	for {
 		select {
@@ -59,6 +19,10 @@ func queryLoop(ctx context.Context, token, serviceID, serviceName string, m *pro
 			return ctx.Err()
 
 		default:
+			var (
+				serviceName = resolver.resolve(serviceID)
+				logger      = log.With(logger, "service_name", serviceName)
+			)
 			// rt.fastly.com blocks until it has data to return.
 			// It's safe to call in a (single-threaded!) hot loop.
 			u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", serviceID, ts)
@@ -68,7 +32,7 @@ func queryLoop(ctx context.Context, token, serviceID, serviceName string, m *pro
 			}
 			req.Header.Set("Fastly-Key", token)
 			req.Header.Set("Accept", "application/json")
-			resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+			resp, err := client.Do(req.WithContext(ctx))
 			if err != nil {
 				level.Error(logger).Log("err", err)
 				contextSleep(ctx, time.Second)
@@ -85,7 +49,8 @@ func queryLoop(ctx context.Context, token, serviceID, serviceName string, m *pro
 				rterr = "<none>"
 			}
 			level.Debug(logger).Log("response_ts", rt.Timestamp, "err", rterr)
-			process(rt, serviceID, serviceName, m)
+			process(rt, serviceID, serviceName, metrics)
+			postprocess()
 			ts = rt.Timestamp
 		}
 	}
