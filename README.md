@@ -21,7 +21,9 @@ docker pull mrnetops/fastly-exporter
 
 ### Binary
 
-Go to the [releases page](/releases)
+Go to the [releases page][releases]
+
+[releases]: https://github.com/peterbourgon/fastly-exporter/releases
 
 ### Source
 
