@@ -5,7 +5,7 @@ the data available to [Prometheus][prom].
 
 [rt]: https://docs.fastly.com/api/analytics
 [prom]: https://prometheus.io
-[dockerfile]: (repo/blob/master/Dockerfile)
+[dockerfile]: Dockerfile
 
 ## Getting
 
