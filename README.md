@@ -5,6 +5,7 @@ the data available to [Prometheus][prom].
 
 [rt]: https://docs.fastly.com/api/analytics
 [prom]: https://prometheus.io
+[dockerfile]: (repo/blob/master/Dockerfile)
 
 ## Getting
 
@@ -31,6 +32,16 @@ FLAGS
 
 VERSION
   2.0.0
+```
+
+## Docker implementation
+build image using [Dockerfile][dockerfile] with:
+```
+docker build -t fastly-exporter:latest .
+```
+and run the container with:
+```
+docker run -p <host port>:<container port>  -e FASTLY_API_TOKEN=<token> -e FASTLY_EXPORTER_PORT=<container port> -e FASTLY_EXPORTER_SERVICES=<comma seperated list of service ids> -e FASTLY_NAMESPACE=<namespace for fastly> fastly_exporter:latest
 ```
 
 A valid Fastly API -token is mandatory. [See this link][token] for information
