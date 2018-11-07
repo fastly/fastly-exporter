@@ -9,8 +9,7 @@ FROM golang:${GO_VERSION}-alpine AS builder
 # ca-certificates for calls to HTTPS endpoints.
 # git for fetching the dependencies.
 RUN apk add --no-cache \
-	ca-certificates \
-	git
+	ca-certificates
 
 # Create appuser
 RUN adduser -D -g '' appuser
@@ -19,8 +18,8 @@ RUN adduser -D -g '' appuser
 COPY . $GOPATH/src/github.com/peterbourgon/fastly-exporter/
 WORKDIR $GOPATH/src/github.com/peterbourgon/fastly-exporter/
 
-# Get dependancies
-RUN go get -d -v
+# Dependencies are maintained in the parent repository
+# RUN go get -d -v
 
 # Build the binary
 RUN CGO_ENABLED=0 go build -a -o /go/bin/fastly-exporter
@@ -37,5 +36,5 @@ COPY --from=builder /go/bin/fastly-exporter /go/bin/fastly-exporter
 
 USER appuser
 EXPOSE 8080
-ENTRYPOINT ["/go/bin/fastly-exporter", "-endpoint", "http://0.0.0.0:8080/metrics"]
+ENTRYPOINT ["/go/bin/fastly-exporter", "-endpoint", "http://0.0.0.0:8080/metrics", "-namespace", "fastly", "-subsystem", "rt"]
 
