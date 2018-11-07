@@ -1,4 +1,4 @@
-# fastly-exporter [![Latest Release](https://img.shields.io/github/release/peterbourgon/fastly-exporter.svg?style=flat-square)](https://github.com/peterbourgon/fastly-exporter/releases/latest) [![Travis CI](https://travis-ci.org/peterbourgon/fastly-exporter.svg?branch=master)](https://travis-ci.org/peterbourgon/fastly-exporter)
+# fastly-exporter [![Latest Release](https://img.shields.io/github/release/peterbourgon/fastly-exporter.svg?style=flat-square)](https://github.com/peterbourgon/fastly-exporter/releases/latest) [![Travis CI](https://travis-ci.org/peterbourgon/fastly-exporter.svg?branch=master)](https://travis-ci.org/peterbourgon/fastly-exporter) [![Docker Status](https://img.shields.io/docker/build/mrnetops/fastly-exporter.svg)](https://hub.docker.com/r/mrnetops/fastly-exporter)
 
 This program consumes from the [Fastly Real-time Analytics API][rt] and makes
 the data available to [Prometheus][prom].
@@ -8,8 +8,26 @@ the data available to [Prometheus][prom].
 
 ## Getting
 
-Go to the [releases page](/releases), or, if you have a working Go installation,
-you can install the latest revision from HEAD.
+### Docker
+
+Avaliable as [mrnetops/fastly-exporter][container] from [Docker Hub][hub].
+
+[container]: https://hub.docker.com/r/mrnetops/fastly-exporter
+[hub]: https://hub.docker.com
+
+```
+docker pull mrnetops/fastly-exporter
+```
+
+### Binary
+
+Go to the [releases page][releases].
+
+[releases]: https://github.com/peterbourgon/fastly-exporter/releases
+
+### Source
+
+if you have a working Go installation, you can install the latest revision from HEAD.
 
 ```
 go get github.com/peterbourgon/fastly-exporter
