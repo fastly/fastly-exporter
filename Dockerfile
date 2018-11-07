@@ -16,8 +16,8 @@ RUN apk add --no-cache \
 RUN adduser -D -g '' appuser
 
 # Get code
-COPY . $GOPATH/src/mypackage/myapp/
-WORKDIR $GOPATH/src/mypackage/myapp/
+COPY . $GOPATH/src/github.com/peterbourgon/fastly-exporter/
+WORKDIR $GOPATH/src/github.com/peterbourgon/fastly-exporter/
 
 # Get dependancies
 RUN go get -d -v
