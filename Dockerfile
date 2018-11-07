@@ -1,13 +1,13 @@
 # Based off https://medium.com/@chemidy/create-the-smallest-and-secured-golang-docker-image-based-on-scratch-4752223b7324
 
-# Accept the Go version for the image to be set as a build argument.
+# Accept the Go version for the image to be set as a build argument
 ARG GO_VERSION=1.11.2
 
-# First stage: build the executable.
+# First stage: build the executable
 FROM golang:${GO_VERSION}-alpine AS builder
 
-# ca-certificates for calls to HTTPS endpoints.
-# git for fetching the dependencies.
+# ca-certificates for calls to HTTPS endpoints
+# git for fetching the dependencies
 RUN apk add --no-cache \
 	ca-certificates
 
@@ -24,7 +24,7 @@ WORKDIR $GOPATH/src/github.com/peterbourgon/fastly-exporter/
 # Build the binary
 RUN CGO_ENABLED=0 go build -a -o /go/bin/fastly-exporter
 
-# Second stage: build the container.
+# Second stage: build the container
 FROM scratch
 
 # Copy dependencies
