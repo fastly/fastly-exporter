@@ -11,7 +11,7 @@ WORKDIR $GOPATH/src/mypackage/myapp/
 #get dependancies
 RUN go get -d -v
 #build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/fastly-exporter
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o /go/bin/fastly-exporter
 # STEP 2 build a small image
 # start from scratch
 FROM scratch
