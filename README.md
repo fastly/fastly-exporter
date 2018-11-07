@@ -10,7 +10,7 @@ the data available to [Prometheus][prom].
 
 ### Docker
 
-Avaliable as [mrnetops/fastly-exporter][container] from [Docker Hub][hub]
+Avaliable as [mrnetops/fastly-exporter][container] from [Docker Hub][hub].
 
 [container]: https://hub.docker.com/r/mrnetops/fastly-exporter
 [hub]: https://hub.docker.com
