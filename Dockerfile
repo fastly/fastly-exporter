@@ -1,24 +1,40 @@
 # Based off https://medium.com/@chemidy/create-the-smallest-and-secured-golang-docker-image-based-on-scratch-4752223b7324
 
-# STEP 1 build executable binary
-FROM golang:alpine as builder
-# Install git + SSL ca certificates
-RUN apk update && apk add git && apk add ca-certificates
+# Accept the Go version for the image to be set as a build argument.
+ARG GO_VERSION=1.11.2
+
+# First stage: build the executable.
+FROM golang:${GO_VERSION}-alpine AS builder
+
+# ca-certificates for calls to HTTPS endpoints.
+# git for fetching the dependencies.
+RUN apk add --no-cache \
+	ca-certificates \
+	git
+
 # Create appuser
 RUN adduser -D -g '' appuser
+
+# Get code
 COPY . $GOPATH/src/mypackage/myapp/
 WORKDIR $GOPATH/src/mypackage/myapp/
-#get dependancies
+
+# Get dependancies
 RUN go get -d -v
-#build the binary
+
+# Build the binary
 RUN CGO_ENABLED=0 go build -a -o /go/bin/fastly-exporter
-# STEP 2 build a small image
-# start from scratch
+
+# Second stage: build the container.
 FROM scratch
+
+# Copy dependencies
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
-# Copy our static executable
+
+# Copy the binary
 COPY --from=builder /go/bin/fastly-exporter /go/bin/fastly-exporter
+
 USER appuser
 EXPOSE 8080
 ENTRYPOINT ["/go/bin/fastly-exporter", "-endpoint", "http://0.0.0.0:8080/metrics"]
