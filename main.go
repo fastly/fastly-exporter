@@ -26,8 +26,8 @@ func main() {
 		token      = fs.String("token", "", "Fastly API token (required)")
 		serviceIDs = stringslice{}
 		addr       = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
-		namespace  = fs.String("namespace", "fastly", "Prometheus namespace (optional)")
-		subsystem  = fs.String("subsystem", "rt", "Prometheus subsystem (optional)")
+		namespace  = fs.String("namespace", "fastly", "Prometheus namespace")
+		subsystem  = fs.String("subsystem", "rt", "Prometheus subsystem")
 		debug      = fs.Bool("debug", false, "Log debug information")
 	)
 	fs.Var(&serviceIDs, "service", "Specific Fastly service ID (optional, repeatable)")

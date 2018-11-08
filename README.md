@@ -46,9 +46,9 @@ USAGE
 FLAGS
   -debug false                             Log debug information
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
-  -namespace ...                           Prometheus namespace (optional)
+  -namespace fastly                        Prometheus namespace
   -service ...                             Specific Fastly service ID (optional, repeatable)
-  -subsystem ...                           Prometheus subsystem (optional)
+  -subsystem rt                            Prometheus subsystem
   -token ...                               Fastly API token (required)
 
 VERSION
