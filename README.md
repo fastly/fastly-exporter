@@ -3,6 +3,10 @@
 This program consumes from the [Fastly Real-time Analytics API][rt] and makes
 the data available to [Prometheus][prom].
 
+* Provides metrics for every service accessible to your API Key (`-token`).
+* Adapts to Fastly service creation and deletion.
+* Maintains labels dynamically (service_name).
+
 [rt]: https://docs.fastly.com/api/analytics
 [prom]: https://prometheus.io
 
@@ -42,18 +46,20 @@ USAGE
 FLAGS
   -debug false                             Log debug information
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
-  -namespace ...                           Prometheus namespace (optional)
+  -namespace fastly                        Prometheus namespace
   -service ...                             Specific Fastly service ID (optional, repeatable)
-  -subsystem ...                           Prometheus subsystem (optional)
+  -subsystem rt                            Prometheus subsystem
   -token ...                               Fastly API token (required)
 
 VERSION
   2.0.0
 ```
 
-A valid Fastly API -token is mandatory. [See this link][token] for information
-on creating API tokens. Providing individual -service IDs is optional. Service
-IDs are available at the top of your [Fastly dashboard][db]. 
+A valid Fastly API `-token` is mandatory. [See this link][token] for information
+on creating API tokens. 
+
+Optional `-service` IDs can be specified to limit monitoring to specific
+services. Service IDs are available at the top of your [Fastly dashboard][db]. 
 
 [token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
 [db]: https://manage.fastly.com/services/all
