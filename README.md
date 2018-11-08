@@ -5,7 +5,7 @@ the data available to [Prometheus][prom].
 
 * Provides metrics for every service accessible to your API Key (`-token`).
 * Adapts to Fastly service creation and deletion.
-* Maintains labels including service_name dynamically.
+* Maintains labels dynamically (service_name).
 
 [rt]: https://docs.fastly.com/api/analytics
 [prom]: https://prometheus.io
