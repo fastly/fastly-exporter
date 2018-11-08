@@ -36,5 +36,5 @@ COPY --from=builder /go/bin/fastly-exporter /go/bin/fastly-exporter
 
 USER appuser
 EXPOSE 8080
-ENTRYPOINT ["/go/bin/fastly-exporter", "-endpoint", "http://0.0.0.0:8080/metrics", "-namespace", "fastly", "-subsystem", "rt"]
+ENTRYPOINT ["/go/bin/fastly-exporter", "-endpoint", "http://0.0.0.0:8080/metrics"]
 

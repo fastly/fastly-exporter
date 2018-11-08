@@ -51,9 +51,10 @@ VERSION
   2.0.0
 ```
 
-A valid Fastly API -token is mandatory. [See this link][token] for information
-on creating API tokens. Providing individual -service IDs is optional. Service
-IDs are available at the top of your [Fastly dashboard][db]. 
+A valid Fastly API -token is mandatory. [See this link][token] for information on creating API tokens. 
+
+All service IDs are queried by default, but -service can be specified to limit monitoring to specific
+service IDs.  Service IDs are available at the top of your [Fastly dashboard][db]. 
 
 [token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
 [db]: https://manage.fastly.com/services/all
