@@ -3,7 +3,9 @@
 This program consumes from the [Fastly Real-time Analytics API][rt] and makes
 the data available to [Prometheus][prom].
 
-By default, the fastly-exporter will poll the Fastly API for every service accessible to your API Key (`-token`) and provide metrics for all of them.
+* Provides metrics for every service accessible to your API Key (`-token`).
+* Adapts to Fastly service creation and deletion.
+* Maintains labels including service_name dynamically.
 
 [rt]: https://docs.fastly.com/api/analytics
 [prom]: https://prometheus.io
