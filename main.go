@@ -45,8 +45,10 @@ func main() {
 	}
 
 	if *token == "" {
-		level.Error(logger).Log("err", "-token is required")
-		os.Exit(1)
+		if *token = os.Getenv("FASTLY_API_TOKEN"); *token == "" {
+			level.Error(logger).Log("err", "-token or FASTLY_API_TOKEN is required")
+			os.Exit(1)
+		}
 	}
 
 	var metrics prometheusMetrics
