@@ -71,7 +71,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "Number of user requests delivered from cache.",
       "format": "locale",
       "gauge": {
@@ -155,7 +155,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "Average millisecond interval from a cache receiving a HTTP request to it sending a cached response's first byte. Also know as Time-To-First-Byte (TTFB).",
       "format": "none",
       "gauge": {
@@ -239,7 +239,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "decimals": null,
       "description": "Number of user requests for objects not in cache (i.e. cache miss).",
       "format": "none",
@@ -323,7 +323,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "Requests delivered from cache divided by the number of cacheable requests (hits + misses).",
       "format": "percentunit",
       "gauge": {
@@ -406,7 +406,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "Average ms interval from when a cache issues a HTTP request to the origin to when the response is received.",
       "format": "none",
       "gauge": {
@@ -490,7 +490,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "Total number of requests received in a second.",
       "format": "none",
       "gauge": {
@@ -573,7 +573,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "Number of user requests producing an error.",
       "format": "none",
       "gauge": {
@@ -671,7 +671,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "The total number of requests that were received for your site by Fastly.",
       "fill": 1,
       "gridPos": {
@@ -792,7 +792,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "This number reflects a variety of errors, which can include calls on vcl_error.",
       "fill": 1,
       "gridPos": {
@@ -881,7 +881,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "Hit ratio is defined as the proportion if cache hits to all cacheable content (hits + misses). Increasing your hit ratio improves the overall performance benefit of using Fastly.",
       "fill": 1,
       "gridPos": {
@@ -967,7 +967,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS}",
+      "datasource": "Prometheus",
       "description": "The amount of bandwidth served for you site by Fastly.",
       "fill": 1,
       "gridPos": {
@@ -1081,7 +1081,7 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "${DS_PROMETHEUS}",
+        "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
         "label": null,
@@ -1102,7 +1102,7 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "${DS_PROMETHEUS}",
+        "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
         "label": null,
@@ -1123,7 +1123,7 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "${DS_PROMETHEUS}",
+        "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
         "label": null,
