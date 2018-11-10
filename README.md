@@ -81,6 +81,7 @@ docker run -p 8080:8080 mrnetops/fastly-exporter -token $FASTLY_API_TOKEN
 ```
 FASTLY_API_TOKEN=${FASTLY_API_TOKEN} docker-compose up
 ```
-Access the [Grafana][grafana] dashboard via http://localhost:3000
+
+Access the [Grafana][grafana] dashboard via http://localhost:3000.
 
 ![Fastly Dashboard in Grafana](https://github.com/peterbourgon/fastly-exporter/compose/Fastly-Dashboard.png)
