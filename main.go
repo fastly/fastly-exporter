@@ -23,7 +23,7 @@ var version = "dev"
 func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token      = fs.String("token", "", "Fastly API token (required)")
+		token      = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
 		serviceIDs = stringslice{}
 		addr       = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
 		namespace  = fs.String("namespace", "fastly", "Prometheus namespace")
