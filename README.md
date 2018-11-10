@@ -80,4 +80,5 @@ Docker Compose for a full fastly-exporter + [Prometheus][prom] +
 ```
 FASTLY_API_TOKEN=${FASTLY_API_TOKEN} docker-compose up
 ```
+http://localhost:3000
 ![Fastly Dashboard in Grafana](compose/Fastly-Dashboard.png)
