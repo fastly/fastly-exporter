@@ -63,3 +63,21 @@ services. Service IDs are available at the top of your [Fastly dashboard][db].
 
 [token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
 [db]: https://manage.fastly.com/services/all
+
+### Docker
+
+```
+docker run -p 8080:8080 mrnetops/fastly-exporter -token $FASTLY_API_TOKEN
+```
+
+### Docker Compose
+
+Docker Compose for a full fastly-exporter + [Prometheus][prom] + 
+[Grafana][grafana] + Fastly dashboard stack
+
+[grafana]: https://grafana.com
+
+```
+FASTLY_API_TOKEN=${FASTLY_API_TOKEN} docker-compose up
+```
+![Fastly Dashboard in Grafana](compose/Fastly-Dashboard.png)
