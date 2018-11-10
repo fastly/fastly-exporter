@@ -56,7 +56,7 @@ VERSION
 ```
 
 A valid Fastly API `-token` is mandatory. [See this link][token] for information
-on creating API tokens. Token can be provided via environment variable
+on creating API tokens. The token can also be provided via the environment variable
 `FASTLY_API_TOKEN`.
 
 Optional `-service` IDs can be specified to limit monitoring to specific
