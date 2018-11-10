@@ -1,46 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "5.3.2"
-    },
-    {
-      "type": "panel",
-      "id": "graph",
-      "name": "Graph",
-      "version": "5.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "5.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "singlestat",
-      "name": "Singlestat",
-      "version": "5.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "text",
-      "name": "Text",
-      "version": "5.0.0"
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -57,8 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
-  "iteration": 1541807871252,
+  "iteration": 1541842502998,
   "links": [],
   "panels": [
     {
@@ -319,9 +276,9 @@
       "colorBackground": false,
       "colorValue": false,
       "colors": [
-        "#299c46",
+        "#d44a3a",
         "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
+        "#299c46"
       ],
       "datasource": "Prometheus",
       "description": "Requests delivered from cache divided by the number of cacheable requests (hits + misses).",
@@ -331,7 +288,7 @@
         "minValue": 0,
         "show": true,
         "thresholdLabels": false,
-        "thresholdMarkers": true
+        "thresholdMarkers": false
       },
       "gridPos": {
         "h": 3,
@@ -382,7 +339,7 @@
           "refId": "A"
         }
       ],
-      "thresholds": "",
+      "thresholds": "0.6, 0.8",
       "title": "HIT RATIO",
       "transparent": true,
       "type": "singlestat",
@@ -407,6 +364,7 @@
         "#d44a3a"
       ],
       "datasource": "Prometheus",
+      "decimals": null,
       "description": "Average ms interval from when a cache issues a HTTP request to the origin to when the response is received.",
       "format": "none",
       "gauge": {
@@ -650,7 +608,7 @@
     {
       "content": "I think I can get this, but it's going to require a feature addition to fastly-exporter",
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 0,
         "y": 3
@@ -675,7 +633,7 @@
       "description": "The total number of requests that were received for your site by Fastly.",
       "fill": 1,
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 12,
         "y": 3
@@ -796,10 +754,10 @@
       "description": "This number reflects a variety of errors, which can include calls on vcl_error.",
       "fill": 1,
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 11
       },
       "id": 4,
       "legend": {
@@ -885,10 +843,10 @@
       "description": "Hit ratio is defined as the proportion if cache hits to all cacheable content (hits + misses). Increasing your hit ratio improves the overall performance benefit of using Fastly.",
       "fill": 1,
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 11
       },
       "id": 6,
       "legend": {
@@ -971,10 +929,10 @@
       "description": "The amount of bandwidth served for you site by Fastly.",
       "fill": 1,
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 0,
-        "y": 21
+        "y": 19
       },
       "id": 8,
       "legend": {
@@ -1056,18 +1014,66 @@
       }
     },
     {
-      "content": "I cant't seem to find anything exposed by rt.faslty.com that would appear have these numbers.  \n\nLet me know if I missed anything or if you have any suggestions!",
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#e24d42",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolateRdYlGn",
+        "exponent": 0.6,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": null,
+      "description": "Displays a histogram showing the distribution of origin latency times.  This tells you how quickly your origin is responding to Fastly.",
       "gridPos": {
-        "h": 9,
+        "h": 8,
         "w": 12,
         "x": 12,
-        "y": 21
+        "y": 19
       },
-      "id": 10,
+      "heatmap": {},
+      "highlightCards": true,
+      "id": 28,
+      "legend": {
+        "show": true
+      },
       "links": [],
-      "mode": "markdown",
+      "targets": [
+        {
+          "expr": "sum(increase(fastly_rt_miss_duration_seconds_bucket{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s])) by (le)",
+          "format": "heatmap",
+          "intervalFactor": 1,
+          "legendFormat": "{{le}}",
+          "refId": "A"
+        }
+      ],
       "title": "ORIGIN LATENCY",
-      "type": "text"
+      "tooltip": {
+        "show": true,
+        "showHistogram": true
+      },
+      "transparent": true,
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": null,
+        "format": "short",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
     }
   ],
   "refresh": false,
@@ -1080,7 +1086,10 @@
     "list": [
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
@@ -1101,7 +1110,10 @@
       },
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
@@ -1122,7 +1134,12 @@
       },
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
@@ -1175,5 +1192,5 @@
   "timezone": "",
   "title": "Fastly Dashboard",
   "uid": "SHjM6e-ik",
-  "version": 20
+  "version": 8
 }
