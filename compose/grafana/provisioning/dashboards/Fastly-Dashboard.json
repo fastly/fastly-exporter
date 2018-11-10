@@ -242,7 +242,7 @@
       "datasource": "Prometheus",
       "decimals": null,
       "description": "Number of user requests for objects not in cache (i.e. cache miss).",
-      "format": "none",
+      "format": "locale",
       "gauge": {
         "maxValue": 100,
         "minValue": 0,
@@ -327,7 +327,7 @@
       "description": "Requests delivered from cache divided by the number of cacheable requests (hits + misses).",
       "format": "percentunit",
       "gauge": {
-        "maxValue": 100,
+        "maxValue": 1,
         "minValue": 0,
         "show": true,
         "thresholdLabels": false,
@@ -492,7 +492,7 @@
       ],
       "datasource": "Prometheus",
       "description": "Total number of requests received in a second.",
-      "format": "none",
+      "format": "locale",
       "gauge": {
         "maxValue": 100,
         "minValue": 0,
@@ -575,7 +575,7 @@
       ],
       "datasource": "Prometheus",
       "description": "Number of user requests producing an error.",
-      "format": "none",
+      "format": "locale",
       "gauge": {
         "maxValue": 100,
         "minValue": 0,
