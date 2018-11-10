@@ -1,4 +1,4 @@
-version: '3'
+version: '2'
 volumes:
     prometheus_data: {}
     grafana_data: {}
@@ -8,8 +8,8 @@ services:
     image: prom/prometheus
     container_name: prometheus
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./prometheus_data:/prometheus
+      - ./compose/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./compose/prometheus/prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -27,7 +27,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./grafana_data:/var/lib/grafana
+      - ./compose/grafana/grafana_data:/var/lib/grafana
       - ./compose/grafana/provisioning/:/etc/grafana/provisioning/
 
   fastly-exporter:
