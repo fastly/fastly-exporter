@@ -439,7 +439,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "postfix": "milliseconds (avg)",
+      "postfix": " milliseconds (avg)",
       "postfixFontSize": "30%",
       "prefix": "",
       "prefixFontSize": "50%",
