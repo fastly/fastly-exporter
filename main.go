@@ -23,7 +23,7 @@ var version = "dev"
 func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token      = fs.String("token", "", "Fastly API token (required)")
+		token      = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
 		serviceIDs = stringslice{}
 		addr       = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
 		namespace  = fs.String("namespace", "fastly", "Prometheus namespace")
@@ -45,8 +45,10 @@ func main() {
 	}
 
 	if *token == "" {
-		level.Error(logger).Log("err", "-token is required")
-		os.Exit(1)
+		if *token = os.Getenv("FASTLY_API_TOKEN"); *token == "" {
+			level.Error(logger).Log("err", "-token or FASTLY_API_TOKEN is required")
+			os.Exit(1)
+		}
 	}
 
 	var metrics prometheusMetrics
