@@ -3,7 +3,7 @@
 This program consumes from the [Fastly Real-time Analytics API][rt] and makes
 the data available to [Prometheus][prom].
 
-* Provides metrics for every service accessible to your API Key (`-token`).
+* Provides metrics for every service accessible to your API token.
 * Adapts to Fastly service creation and deletion.
 * Maintains labels dynamically (service_name).
 
@@ -55,9 +55,9 @@ VERSION
   2.0.0
 ```
 
-A valid Fastly API `-token` is mandatory. [See this link][token] for information
-on creating API tokens. The token can also be provided via the environment variable
-`FASTLY_API_TOKEN`.
+A valid Fastly API token is mandatory. [See this link][token] for information
+on creating API tokens. The token can also be provided via the `-token` flag
+or the FASTLY_API_TOKEN environment variable.
 
 Optional `-service` IDs can be specified to limit monitoring to specific
 services. Service IDs are available at the top of your [Fastly dashboard][db].

@@ -32,7 +32,8 @@ services:
 
   fastly-exporter:
     image: mrnetops/fastly-exporter
-    command: -token ${FASTLY_API_TOKEN}
+    environment:
+      - FASTLY_API_TOKEN=${FASTLY_API_TOKEN}
     expose:
       - 8080
     ports:
