@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1541904856123,
+  "iteration": 1542059904618,
   "links": [],
   "panels": [
     {
@@ -1087,7 +1087,7 @@
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Service Name",
         "multi": true,
         "name": "service_name",
         "options": [],
@@ -1111,7 +1111,7 @@
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Service ID",
         "multi": true,
         "name": "service_id",
         "options": [],
@@ -1137,7 +1137,7 @@
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Datacenter",
         "multi": true,
         "name": "datacenter",
         "options": [],
@@ -1151,6 +1151,29 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "text": "30s",
+          "value": "30s"
+        },
+        "hide": 0,
+        "label": "Rate",
+        "name": "rate",
+        "options": [
+          {
+            "selected": true,
+            "text": "30s",
+            "value": "30s"
+          }
+        ],
+        "query": "30s",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "type": "interval"
       }
     ]
   },
@@ -1186,5 +1209,5 @@
   "timezone": "",
   "title": "Fastly Dashboard",
   "uid": "SHjM6e-ik",
-  "version": 5
+  "version": 1
 }
