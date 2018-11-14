@@ -90,6 +90,7 @@ Access the [Grafana][grafana] dashboard via http://localhost:3000.
 ## Credits and contributions
 
 ### Maintainers
-@peterbourgon @mrnetops
+[peterbourgon](https://github.com/peterbourgon) [mrnetops](https://github.com/mrnetops)
 ### Contributors
-@titosand @davidbirdsong @ljagiello
+[titosand](https://github.com/titosand) [davidbirdsong](https://github.com/davidbirdsong) 
+[ljagiello](https://github.com/ljagiello)
