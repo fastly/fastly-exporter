@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1542059904618,
+  "iteration": 1542223541937,
   "links": [],
   "panels": [
     {
@@ -1069,6 +1069,7 @@
       "yBucketSize": null
     }
   ],
+  "refresh": "30s",
   "schemaVersion": 16,
   "style": "dark",
   "tags": [
