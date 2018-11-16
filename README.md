@@ -52,7 +52,7 @@ FLAGS
   -token ...                               Fastly API token (required)
 
 VERSION
-  2.0.0
+  2.1.0
 ```
 
 A valid Fastly API token is mandatory. [See this link][token] for information
