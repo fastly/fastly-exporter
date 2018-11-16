@@ -366,7 +366,7 @@ func (m *prometheusMetrics) register(namespace, subsystem string) {
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.hashSubCountTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "hash_sub_count_total",
-		Help: "Tothash al sub count.",
+		Help: "Total hash sub count.",
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.missSubTimeTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "miss_sub_time_total",
@@ -374,7 +374,7 @@ func (m *prometheusMetrics) register(namespace, subsystem string) {
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.missSubCountTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "miss_sub_count_total",
-		Help: "Totmiss al sub count.",
+		Help: "Total miss sub count.",
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.fetchSubTimeTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "fetch_sub_time_total",
@@ -382,7 +382,7 @@ func (m *prometheusMetrics) register(namespace, subsystem string) {
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.fetchSubCountTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "fetch_sub_count_total",
-		Help: "Totafetch l sub count.",
+		Help: "Total fetch sub count.",
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.deliverSubTimeTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "deliver_sub_time_total",
@@ -398,7 +398,7 @@ func (m *prometheusMetrics) register(namespace, subsystem string) {
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.hitSubCountTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "hit_sub_count_total",
-		Help: "Tohit tal sub count.",
+		Help: "Total hit sub count.",
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.prehashSubTimeTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "prehash_sub_time_total",
