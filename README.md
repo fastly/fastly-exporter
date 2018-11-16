@@ -86,11 +86,3 @@ FASTLY_API_TOKEN=${FASTLY_API_TOKEN} docker-compose up
 Access the [Grafana][grafana] dashboard via http://localhost:3000.
 
 ![Fastly Dashboard in Grafana](https://raw.githubusercontent.com/peterbourgon/fastly-exporter/master/compose/Fastly-Dashboard.png)
-
-## Credits and contributions
-
-### Maintainers
-[peterbourgon](https://github.com/peterbourgon) [mrnetops](https://github.com/mrnetops)
-### Contributors
-[titosand](https://github.com/titosand) [davidbirdsong](https://github.com/davidbirdsong) 
-[ljagiello](https://github.com/ljagiello)
