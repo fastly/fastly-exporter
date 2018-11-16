@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1541904856123,
+  "iteration": 1542223541937,
   "links": [],
   "panels": [
     {
@@ -81,7 +81,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))\n",
+          "expr": "sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -165,7 +165,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(rate(fastly_rt_hits_time_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))",
+          "expr": "avg(rate(fastly_rt_hits_time_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -250,7 +250,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(rate(fastly_rt_miss_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))\n",
+          "expr": "sum(rate(fastly_rt_miss_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -333,7 +333,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s])) / (sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))\n+ sum(rate(fastly_rt_miss_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s])))\n",
+          "expr": "sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate])) / (sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))\n+ sum(rate(fastly_rt_miss_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate])))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -417,7 +417,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(rate(fastly_rt_miss_time_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))\n",
+          "expr": "avg(rate(fastly_rt_miss_time_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -501,7 +501,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(rate(fastly_rt_requests_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))\n",
+          "expr": "sum(rate(fastly_rt_requests_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -584,7 +584,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(rate(fastly_rt_errors_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))\n",
+          "expr": "sum(rate(fastly_rt_errors_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -664,7 +664,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(fastly_rt_errors_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))",
+          "expr": "sum(rate(fastly_rt_errors_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -674,28 +674,28 @@
           "refId": "A"
         },
         {
-          "expr": "sum(rate(fastly_rt_miss_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))",
+          "expr": "sum(rate(fastly_rt_miss_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "MISSES",
           "refId": "B"
         },
         {
-          "expr": "sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))",
+          "expr": "sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "HITS",
           "refId": "C"
         },
         {
-          "expr": "sum(rate(fastly_rt_synth_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))",
+          "expr": "sum(rate(fastly_rt_synth_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "SYNTHETIC",
           "refId": "D"
         },
         {
-          "expr": "sum(rate(fastly_rt_pass_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))",
+          "expr": "sum(rate(fastly_rt_pass_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "PASSES",
@@ -783,7 +783,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(fastly_rt_errors_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))",
+          "expr": "sum(rate(fastly_rt_errors_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -872,7 +872,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s])) / (sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))\n+ sum(rate(fastly_rt_miss_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s])))\n",
+          "expr": "sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate])) / (sum(rate(fastly_rt_hits_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))\n+ sum(rate(fastly_rt_miss_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate])))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "HIT RATIO",
@@ -958,7 +958,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "8 * sum(rate(fastly_rt_body_size_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s]))\n",
+          "expr": "8 * sum(rate(fastly_rt_body_size_total{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate]))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "BANDWIDTH",
@@ -1036,7 +1036,7 @@
       "links": [],
       "targets": [
         {
-          "expr": "sum(increase(fastly_rt_miss_duration_seconds_bucket{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[30s])) by (le)",
+          "expr": "sum(increase(fastly_rt_miss_duration_seconds_bucket{service_name=~\"$service_name\", service_id=~\"$service_id\", datacenter=~\"$datacenter\"}[$rate])) by (le)",
           "format": "heatmap",
           "intervalFactor": 1,
           "legendFormat": "{{le}}",
@@ -1069,6 +1069,7 @@
       "yBucketSize": null
     }
   ],
+  "refresh": "30s",
   "schemaVersion": 16,
   "style": "dark",
   "tags": [
@@ -1087,7 +1088,7 @@
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Service Name",
         "multi": true,
         "name": "service_name",
         "options": [],
@@ -1111,7 +1112,7 @@
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Service ID",
         "multi": true,
         "name": "service_id",
         "options": [],
@@ -1137,7 +1138,7 @@
         "datasource": "Prometheus",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Datacenter",
         "multi": true,
         "name": "datacenter",
         "options": [],
@@ -1151,6 +1152,29 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "text": "30s",
+          "value": "30s"
+        },
+        "hide": 0,
+        "label": "Rate",
+        "name": "rate",
+        "options": [
+          {
+            "selected": true,
+            "text": "30s",
+            "value": "30s"
+          }
+        ],
+        "query": "30s",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "type": "interval"
       }
     ]
   },
@@ -1186,5 +1210,5 @@
   "timezone": "",
   "title": "Fastly Dashboard",
   "uid": "SHjM6e-ik",
-  "version": 5
+  "version": 1
 }
