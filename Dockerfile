@@ -25,7 +25,7 @@ WORKDIR $GOPATH/src/github.com/peterbourgon/fastly-exporter/
 # Build the binary
 RUN CGO_ENABLED=0 go build \
 	-a \
-	-ldflags="-X main.version=$(git describe --abbrev=0 | sed -e 's/^v//')" \
+	-ldflags="-X main.version=$(git describe | sed -e 's/^v//')" \
 	-o /go/bin/fastly-exporter
 
 # Second stage: build the container
