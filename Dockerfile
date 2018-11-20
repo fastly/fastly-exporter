@@ -9,7 +9,8 @@ FROM golang:${GO_VERSION}-alpine AS builder
 # ca-certificates for calls to HTTPS endpoints
 # git for fetching the dependencies
 RUN apk add --no-cache \
-	ca-certificates
+	ca-certificates \
+	git
 
 # Create appuser
 RUN adduser -D -g '' appuser
@@ -22,7 +23,10 @@ WORKDIR $GOPATH/src/github.com/peterbourgon/fastly-exporter/
 # RUN go get -d -v
 
 # Build the binary
-RUN CGO_ENABLED=0 go build -a -o /go/bin/fastly-exporter
+RUN CGO_ENABLED=0 go build \
+	-a \
+	-ldflags="-X main.version=$(git describe | sed -e 's/^v//')" \
+	-o /go/bin/fastly-exporter
 
 # Second stage: build the container
 FROM scratch
