@@ -17,12 +17,14 @@ func (m *mockManager) update(ids []string) {
 }
 
 type fixedResponseClient struct {
+	code     int
 	response string
 }
 
 func (c fixedResponseClient) Do(req *http.Request) (*http.Response, error) {
 	rec := httptest.NewRecorder()
 	http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(c.code)
 		fmt.Fprint(w, c.response)
 	}).ServeHTTP(rec, req)
 	return rec.Result(), nil
@@ -36,7 +38,7 @@ type mockRealtimeClient struct {
 func (c *mockRealtimeClient) Do(req *http.Request) (*http.Response, error) {
 	// First request immediately returns real data.
 	if atomic.AddUint64(&(c.served), 1) == 1 {
-		return fixedResponseClient{c.response}.Do(req)
+		return fixedResponseClient{200, c.response}.Do(req)
 	}
 
 	// Subsequent requests block a bit and then return empty JSON.
@@ -44,6 +46,17 @@ func (c *mockRealtimeClient) Do(req *http.Request) (*http.Response, error) {
 	case <-req.Context().Done():
 		return nil, req.Context().Err()
 	case <-time.After(time.Second):
-		return fixedResponseClient{"{}"}.Do(req)
+		return fixedResponseClient{200, "{}"}.Do(req)
 	}
+}
+
+type countingRealtimeClient struct {
+	code     int
+	response string
+	served   uint64
+}
+
+func (c *countingRealtimeClient) Do(req *http.Request) (*http.Response, error) {
+	atomic.AddUint64(&(c.served), 1)
+	return fixedResponseClient{c.code, c.response}.Do(req)
 }

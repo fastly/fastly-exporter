@@ -12,7 +12,7 @@ func TestServiceQueryerFixture(t *testing.T) {
 		cache   = newNameCache()
 		manager = &mockManager{}
 		queryer = newServiceQueryer(token, ids, cache, manager)
-		client  = fixedResponseClient{serviceResponseFixture}
+		client  = fixedResponseClient{200, serviceResponseFixture}
 	)
 
 	if err := queryer.refresh(client); err != nil {

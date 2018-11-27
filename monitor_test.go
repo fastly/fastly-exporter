@@ -87,6 +87,38 @@ func TestMonitorFixture(t *testing.T) {
 	}
 }
 
+func TestMonitorBadToken(t *testing.T) {
+	// This test should ensure we don't spam rt.fastly.com in a hot loop
+	// when we provide a bad token and the API returns 403 Forbidden.
+
+	var (
+		ctx, cancel = context.WithCancel(context.Background())
+		done        = make(chan struct{})
+		client      = &countingRealtimeClient{403, `{"Error": "unauthorized"}`, 0}
+		token       = "presumably-bad-token"
+		serviceID   = "some-service-id"
+		cache       = newNameCache()
+		metrics     = prometheusMetrics{}
+		postprocess = func() {}
+		logger      = log.NewNopLogger()
+	)
+
+	go func() {
+		monitor(ctx, client, token, serviceID, cache, metrics, postprocess, logger)
+		close(done)
+	}()
+
+	defer func() {
+		cancel()
+		<-done
+	}()
+
+	time.Sleep(time.Second)
+	if want, have := uint64(1), atomic.LoadUint64(&(client.served)); want != have {
+		t.Fatalf("request count: want %d, have %d", want, have)
+	}
+}
+
 const rtResponseFixture = `{
 	"Data": [
 		{
