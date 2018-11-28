@@ -11,7 +11,7 @@ import (
 
 func TestMonitorManager(t *testing.T) {
 	var (
-		client      = fixedResponseClient{"{}"}
+		client      = fixedResponseClient{200, "{}"}
 		token       = "irrelevant-token"
 		cache       = newNameCache()
 		metrics     = prometheusMetrics{}

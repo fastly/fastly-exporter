@@ -30,6 +30,7 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 			if err != nil {
 				return err // fatal for sure
 			}
+			req.Header.Set("User-Agent", "Fastly-Exporter ("+version+")")
 			req.Header.Set("Fastly-Key", token)
 			req.Header.Set("Accept", "application/json")
 			resp, err := client.Do(req.WithContext(ctx))
@@ -40,17 +41,28 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 			}
 			var rt realtimeResponse
 			if err := json.NewDecoder(resp.Body).Decode(&rt); err != nil {
+				resp.Body.Close()
 				level.Error(logger).Log("err", err)
 				contextSleep(ctx, time.Second)
 				continue
 			}
+			resp.Body.Close()
 			rterr := rt.Error
 			if rterr == "" {
 				rterr = "<none>"
 			}
-			level.Debug(logger).Log("response_ts", rt.Timestamp, "err", rterr)
-			process(rt, serviceID, serviceName, metrics)
-			postprocess()
+			switch resp.StatusCode {
+			case http.StatusOK:
+				level.Debug(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
+				process(rt, serviceID, serviceName, metrics)
+				postprocess()
+			case http.StatusUnauthorized, http.StatusForbidden:
+				level.Error(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr, "msg", "-token is likely invalid")
+				contextSleep(ctx, 15*time.Second)
+			default:
+				level.Error(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
+				contextSleep(ctx, 5*time.Second)
+			}
 			ts = rt.Timestamp
 		}
 	}
