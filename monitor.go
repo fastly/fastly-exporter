@@ -57,7 +57,7 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 				process(rt, serviceID, serviceName, metrics)
 				postprocess()
 			case http.StatusUnauthorized, http.StatusForbidden:
-				level.Error(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr, "msg", "-token is likely invalid")
+				level.Error(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr, "msg", "token may be invalid")
 				contextSleep(ctx, 15*time.Second)
 			default:
 				level.Error(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
