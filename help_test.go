@@ -60,3 +60,22 @@ func (c *countingRealtimeClient) Do(req *http.Request) (*http.Response, error) {
 	atomic.AddUint64(&(c.served), 1)
 	return fixedResponseClient{c.code, c.response}.Do(req)
 }
+
+type userAgentCapturingClient struct {
+	userAgent atomic.Value
+}
+
+func (c *userAgentCapturingClient) Do(req *http.Request) (*http.Response, error) {
+	c.userAgent.Store(req.Header.Get("User-Agent"))
+	return fixedResponseClient{200, "{}"}.Do(req)
+}
+
+func within(d time.Duration, f func() bool) bool {
+	deadline := time.Now().Add(d)
+	for time.Now().Before(deadline) {
+		if f() { // 🔥
+			return true
+		}
+	}
+	return false
+}

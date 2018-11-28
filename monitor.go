@@ -30,6 +30,7 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 			if err != nil {
 				return err // fatal for sure
 			}
+			req.Header.Set("User-Agent", "Fastly-Exporter ("+version+")")
 			req.Header.Set("Fastly-Key", token)
 			req.Header.Set("Accept", "application/json")
 			resp, err := client.Do(req.WithContext(ctx))

@@ -119,6 +119,41 @@ func TestMonitorBadToken(t *testing.T) {
 	}
 }
 
+func TestUserAgent(t *testing.T) {
+	var (
+		ctx, cancel = context.WithCancel(context.Background())
+		done        = make(chan struct{})
+		client      = &userAgentCapturingClient{}
+		token       = "presumably-bad-token"
+		serviceID   = "some-service-id"
+		cache       = newNameCache()
+		metrics     = prometheusMetrics{}
+		postprocess = func() {}
+		logger      = log.NewNopLogger()
+	)
+
+	go func() {
+		monitor(ctx, client, token, serviceID, cache, metrics, postprocess, logger)
+		close(done)
+	}()
+
+	defer func() {
+		cancel()
+		<-done
+	}()
+
+	var (
+		want = "Fastly-Exporter (" + version + ")"
+		have string
+	)
+	if !within(time.Second, func() bool {
+		have, _ = client.userAgent.Load().(string)
+		return want == have
+	}) {
+		t.Fatalf("User-Agent: want %q, have %q", want, have)
+	}
+}
+
 const rtResponseFixture = `{
 	"Data": [
 		{
