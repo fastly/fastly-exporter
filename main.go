@@ -28,6 +28,7 @@ func main() {
 		addr       = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
 		namespace  = fs.String("namespace", "fastly", "Prometheus namespace")
 		subsystem  = fs.String("subsystem", "rt", "Prometheus subsystem")
+		pollfreq   = fs.Duration("pollfreq", time.Minute, "How often to poll Fasty API")
 		debug      = fs.Bool("debug", false, "Log debug information")
 	)
 	fs.Var(&serviceIDs, "service", "Specific Fastly service ID (optional, repeatable)")
@@ -99,11 +100,11 @@ func main() {
 
 	var g run.Group
 	{
-		// Every minute, query Fastly for new services and their names.
+		// Query Fastly for new services and their names.
 		// Update our name cache and managed monitors accordingly.
 		var (
 			ctx, cancel = context.WithCancel(context.Background())
-			ticker      = time.NewTicker(time.Minute)
+			ticker      = time.NewTicker(*pollfreq)
 		)
 		g.Add(func() error {
 			for {
