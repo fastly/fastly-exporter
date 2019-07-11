@@ -5,6 +5,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+// prometheusMetrics are the concrete Prometheus metrics that get updated with
+// data retrieved from the Fastly real-time stats API. The same set of metrics
+// are updated for all service IDs, only the labels change.
 type prometheusMetrics struct {
 	requestsTotal                        *prometheus.CounterVec
 	tlsTotal                             *prometheus.CounterVec

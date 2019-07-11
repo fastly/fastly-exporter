@@ -11,6 +11,10 @@ import (
 	"github.com/go-kit/kit/log/level"
 )
 
+// monitor polls the Fastly real-time stats API for the provided service ID on a
+// regular cadence. All received metrics are processed and given to the
+// Prometheus metrics struct. The service name label is regularly updated via
+// the name resolver. The function exits when the context is canceled.
 func monitor(ctx context.Context, client httpClient, token string, serviceID string, resolver nameResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) error {
 	var ts uint64
 	for {
@@ -23,6 +27,7 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 				serviceName = resolver.resolve(serviceID)
 				logger      = log.With(logger, "service_name", serviceName)
 			)
+
 			// rt.fastly.com blocks until it has data to return.
 			// It's safe to call in a (single-threaded!) hot loop.
 			u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", serviceID, ts)
@@ -30,39 +35,46 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 			if err != nil {
 				return err // fatal for sure
 			}
+
 			req.Header.Set("User-Agent", "Fastly-Exporter ("+version+")")
 			req.Header.Set("Fastly-Key", token)
 			req.Header.Set("Accept", "application/json")
 			resp, err := client.Do(req.WithContext(ctx))
 			if err != nil {
-				level.Error(logger).Log("err", err)
+				level.Error(logger).Log("during", "execute request", "err", err)
 				contextSleep(ctx, time.Second)
 				continue
 			}
+
 			var rt realtimeResponse
 			if err := json.NewDecoder(resp.Body).Decode(&rt); err != nil {
 				resp.Body.Close()
-				level.Error(logger).Log("err", err)
+				level.Error(logger).Log("during", "decode response", "err", err)
 				contextSleep(ctx, time.Second)
 				continue
 			}
 			resp.Body.Close()
+
 			rterr := rt.Error
 			if rterr == "" {
 				rterr = "<none>"
 			}
+
 			switch resp.StatusCode {
 			case http.StatusOK:
 				level.Debug(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
 				process(rt, serviceID, serviceName, metrics)
 				postprocess()
+
 			case http.StatusUnauthorized, http.StatusForbidden:
 				level.Error(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr, "msg", "token may be invalid")
 				contextSleep(ctx, 15*time.Second)
+
 			default:
 				level.Error(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
 				contextSleep(ctx, 5*time.Second)
 			}
+
 			ts = rt.Timestamp
 		}
 	}

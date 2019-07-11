@@ -8,6 +8,11 @@ import (
 	"github.com/go-kit/kit/log/level"
 )
 
+// monitorManager maintains the goroutines running the monitor function for each
+// service ID. It's possible that a service ID is added or removed during
+// runtime; for example, if we're configured to monitor all service IDs
+// accessible to a token, and the admin for that account adds or removes a
+// service. In that case, the monitor manager updates the monitors accordingly.
 type monitorManager struct {
 	mtx     sync.Mutex
 	running map[string]interrupt
@@ -29,6 +34,7 @@ type nameResolver interface {
 	resolve(id string) (name string)
 }
 
+// newMonitorManager returns an empty, usable monitor manager.
 func newMonitorManager(client httpClient, token string, resolver nameResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) *monitorManager {
 	return &monitorManager{
 		running: map[string]interrupt{},
@@ -42,6 +48,10 @@ func newMonitorManager(client httpClient, token string, resolver nameResolver, m
 	}
 }
 
+// update the set of service IDs that the monitor manager should be managing.
+// New service IDs spawn new monitors; existing service IDs leave their monitors
+// unchanged; service IDs that were in the manager but aren't in the incoming
+// set of IDs have their monitors canceled and reaped.
 func (m *monitorManager) update(ids []string) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
@@ -66,6 +76,8 @@ func (m *monitorManager) update(ids []string) {
 	m.running = nextgen
 }
 
+// spawn a new monitor watching the provided service ID. Return an interrupt,
+// which allows the monitor to be canceled and reaped.
 func (m *monitorManager) spawn(id string) interrupt {
 	var (
 		ctx, cancel = context.WithCancel(context.Background())
@@ -78,6 +90,8 @@ func (m *monitorManager) spawn(id string) interrupt {
 	return interrupt{cancel, done}
 }
 
+// stopAll cancels and reaps all running monitors in sequence.
+// When it returns, the monitor manager is empty.
 func (m *monitorManager) stopAll() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
@@ -90,6 +104,7 @@ func (m *monitorManager) stopAll() {
 	}
 }
 
+// currentRunning returns all service IDs that are currently being monitored.
 func (m *monitorManager) currentlyRunning() (ids []string) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()

@@ -7,30 +7,51 @@ import (
 	"github.com/pkg/errors"
 )
 
+// serviceQueryer asks the Fastly API to resolve a set of service IDs to their
+// names. This is necessary because names can be changed dynamically, and the
+// fastly-exporter should reflect the most recent name.
 type serviceQueryer struct {
-	token    string
-	ids      []string // optional
-	resolver nameUpdater
-	manager  idUpdater
+	token     string
+	whitelist map[string]bool // service IDs to use (optional; if not specified, allow all)
+	resolver  nameUpdater
+	manager   idUpdater
 }
 
+// nameUpdater is a consumer contract for the write side of the name cache.
+// Whenever the service queryer gets a new mapping of service IDs to names,
+// it will call this method to save that latest mapping.
 type nameUpdater interface {
 	update(names map[string]string)
 }
 
+// idUpdater is a consumer contract for the write side of the monitor manager.
+// Whenever the service queryer gets a new set of service IDs that should be
+// monitored, it will call this method to save those latest IDs.
+//
+// Note that while this method is called regardless, it only has a meaningful
+// effect when the fastly-exporter and service queryer are configured without
+// any explicit service IDs, and thus should monitor *all* service IDs available
+// to a Fastly token.
 type idUpdater interface {
 	update(ids []string)
 }
 
 func newServiceQueryer(token string, ids []string, resolver nameUpdater, manager idUpdater) *serviceQueryer {
+	whitelist := map[string]bool{}
+	for _, id := range ids {
+		whitelist[id] = true
+	}
+
 	return &serviceQueryer{
-		token:    token,
-		ids:      ids,
-		resolver: resolver,
-		manager:  manager,
+		token:     token,
+		whitelist: whitelist,
+		resolver:  resolver,
+		manager:   manager,
 	}
 }
 
+// refresh the service ID to name mapping, updating the name updater (the name
+// cache) and the ID updater (the monitor manager).
 func (q *serviceQueryer) refresh(client httpClient) error {
 	req, err := http.NewRequest("GET", "https://api.fastly.com/service", nil)
 	if err != nil {
@@ -43,15 +64,11 @@ func (q *serviceQueryer) refresh(client httpClient) error {
 	if err != nil {
 		return errors.Wrap(err, "error making API services request")
 	}
+	defer resp.Body.Close()
 
 	var response serviceResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return errors.Wrap(err, "error decuding API services response")
-	}
-
-	filter := map[string]bool{}
-	for _, id := range q.ids {
-		filter[id] = true
+		return errors.Wrap(err, "error decoding API services response")
 	}
 
 	var (
@@ -60,8 +77,8 @@ func (q *serviceQueryer) refresh(client httpClient) error {
 	)
 	for _, pair := range response {
 		var (
-			allowAll  = len(filter) == 0
-			allowThis = filter[pair.ID]
+			allowAll  = len(q.whitelist) == 0
+			allowThis = q.whitelist[pair.ID]
 		)
 		if allowAll || allowThis {
 			names[pair.ID] = pair.Name
