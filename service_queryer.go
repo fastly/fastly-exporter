@@ -8,10 +8,10 @@ import (
 )
 
 type serviceQueryer struct {
-	token    string
-	ids      []string // optional
-	resolver nameUpdater
-	manager  idUpdater
+	token     string
+	whitelist map[string]bool // service IDs to use (optional, if not specified, allow all)
+	resolver  nameUpdater
+	manager   idUpdater
 }
 
 type nameUpdater interface {
@@ -23,11 +23,16 @@ type idUpdater interface {
 }
 
 func newServiceQueryer(token string, ids []string, resolver nameUpdater, manager idUpdater) *serviceQueryer {
+	whitelist := map[string]bool{}
+	for _, id := range ids {
+		whitelist[id] = true
+	}
+
 	return &serviceQueryer{
-		token:    token,
-		ids:      ids,
-		resolver: resolver,
-		manager:  manager,
+		token:     token,
+		whitelist: whitelist,
+		resolver:  resolver,
+		manager:   manager,
 	}
 }
 
@@ -47,12 +52,7 @@ func (q *serviceQueryer) refresh(client httpClient) error {
 
 	var response serviceResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return errors.Wrap(err, "error decuding API services response")
-	}
-
-	filter := map[string]bool{}
-	for _, id := range q.ids {
-		filter[id] = true
+		return errors.Wrap(err, "error decoding API services response")
 	}
 
 	var (
@@ -61,8 +61,8 @@ func (q *serviceQueryer) refresh(client httpClient) error {
 	)
 	for _, pair := range response {
 		var (
-			allowAll  = len(filter) == 0
-			allowThis = filter[pair.ID]
+			allowAll  = len(q.whitelist) == 0
+			allowThis = q.whitelist[pair.ID]
 		)
 		if allowAll || allowThis {
 			names[pair.ID] = pair.Name
