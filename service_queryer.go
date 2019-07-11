@@ -43,6 +43,7 @@ func (q *serviceQueryer) refresh(client httpClient) error {
 	if err != nil {
 		return errors.Wrap(err, "error making API services request")
 	}
+	defer resp.Body.Close()
 
 	var response serviceResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
