@@ -11,6 +11,10 @@ import (
 	"github.com/go-kit/kit/log/level"
 )
 
+// monitor polls the Fastly real-time stats API for the provided service ID on a
+// regular cadence. All received metrics are processed and given to the
+// Prometheus metrics struct. The service name label is regularly updated via
+// the name resolver. The function exits when the context is canceled.
 func monitor(ctx context.Context, client httpClient, token string, serviceID string, resolver nameResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) error {
 	var ts uint64
 	for {

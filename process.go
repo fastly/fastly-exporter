@@ -6,6 +6,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// process interprets the data in the realtime response, and feeds the
+// interpreted results to the Prometheus metrics as observations.
 func process(src realtimeResponse, serviceID string, serviceName string, dst prometheusMetrics) {
 	for _, d := range src.Data {
 		for datacenter, stats := range d.Datacenter {
