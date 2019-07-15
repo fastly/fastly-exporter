@@ -8,8 +8,9 @@ import (
 func TestServiceQueryerFixture(t *testing.T) {
 	var (
 		token   = "irrelevant"
-		ids     = []string{"AbcDef123ghiJKlmnOPsq"}
-		cache   = newNameCache()
+		id      = "AbcDef123ghiJKlmnOPsq"
+		ids     = []string{id}
+		cache   = newServiceCache()
 		manager = &mockManager{}
 		queryer = newServiceQueryer(token, ids, cache, manager)
 		client  = fixedResponseClient{200, serviceResponseFixture}
@@ -19,11 +20,15 @@ func TestServiceQueryerFixture(t *testing.T) {
 		t.Fatalf("queryer.refresh: %v", err)
 	}
 
-	if want, have := "My first service", cache.resolve("AbcDef123ghiJKlmnOPsq"); want != have {
-		t.Fatalf("name cache: want %q, have %q", want, have)
+	name, version := cache.resolve(id)
+	if want, have := "My first service", name; want != have {
+		t.Fatalf("service cache: name: want %q, have %q", want, have)
+	}
+	if want, have := "5", version; want != have {
+		t.Fatalf("service cache: version: want %q, have %q", want, have)
 	}
 
-	if want, have := []string{"AbcDef123ghiJKlmnOPsq"}, manager.ids; !reflect.DeepEqual(want, have) {
+	if want, have := []string{id}, manager.ids; !reflect.DeepEqual(want, have) {
 		t.Fatalf("monitor manager: want %v, have %v", want, have)
 	}
 }

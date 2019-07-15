@@ -19,7 +19,7 @@ type monitorManager struct {
 
 	client      httpClient
 	token       string
-	resolver    nameResolver
+	resolver    serviceResolver
 	metrics     prometheusMetrics
 	postprocess func()
 	logger      log.Logger
@@ -30,12 +30,12 @@ type interrupt struct {
 	done   <-chan struct{}
 }
 
-type nameResolver interface {
-	resolve(id string) (name string)
+type serviceResolver interface {
+	resolve(id string) (name, version string)
 }
 
 // newMonitorManager returns an empty, usable monitor manager.
-func newMonitorManager(client httpClient, token string, resolver nameResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) *monitorManager {
+func newMonitorManager(client httpClient, token string, resolver serviceResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) *monitorManager {
 	return &monitorManager{
 		running: map[string]interrupt{},
 
@@ -62,13 +62,15 @@ func (m *monitorManager) update(ids []string) {
 			delete(m.running, id)
 			nextgen[id] = irq
 		} else {
-			level.Info(m.logger).Log("service_id", id, "service_name", m.resolver.resolve(id), "monitor", "start")
+			name, _ := m.resolver.resolve(id)
+			level.Info(m.logger).Log("service_id", id, "service_name", name, "monitor", "start")
 			nextgen[id] = m.spawn(id)
 		}
 	}
 
 	for id, irq := range m.running {
-		level.Info(m.logger).Log("service_id", id, "service_name", m.resolver.resolve(id), "monitor", "stop")
+		name, _ := m.resolver.resolve(id)
+		level.Info(m.logger).Log("service_id", id, "service_name", name, "monitor", "stop")
 		irq.cancel()
 		<-irq.done
 	}
@@ -97,7 +99,8 @@ func (m *monitorManager) stopAll() {
 	defer m.mtx.Unlock()
 
 	for id, irq := range m.running {
-		level.Info(m.logger).Log("service_id", id, "service_name", m.resolver.resolve(id), "monitor", "stop")
+		name, _ := m.resolver.resolve(id)
+		level.Info(m.logger).Log("service_id", id, "service_name", name, "monitor", "stop")
 		irq.cancel()
 		<-irq.done
 		delete(m.running, id)

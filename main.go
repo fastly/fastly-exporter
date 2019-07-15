@@ -18,21 +18,27 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var version = "dev"
+var programVersion = "dev"
 
 func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token      = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
-		serviceIDs = stringslice{}
-		addr       = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
-		namespace  = fs.String("namespace", "fastly", "Prometheus namespace")
-		subsystem  = fs.String("subsystem", "rt", "Prometheus subsystem")
-		debug      = fs.Bool("debug", false, "Log debug information")
+		token       = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
+		serviceIDs  = stringslice{}
+		addr        = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		namespace   = fs.String("namespace", "fastly", "Prometheus namespace")
+		subsystem   = fs.String("subsystem", "rt", "Prometheus subsystem")
+		debug       = fs.Bool("debug", false, "Log debug information")
+		versionflag = fs.Bool("version", false, "print version information and exit")
 	)
 	fs.Var(&serviceIDs, "service", "Specific Fastly service ID (optional, repeatable)")
 	fs.Usage = usage.For(fs, "fastly-exporter [flags]")
 	fs.Parse(os.Args[1:])
+
+	if *versionflag {
+		fmt.Fprintf(os.Stdout, "fastly-exporter v%s\n", programVersion)
+		os.Exit(0)
+	}
 
 	var logger log.Logger
 	{
@@ -67,9 +73,9 @@ func main() {
 		level.Info(logger).Log("prometheus_addr", promURL.Host, "path", promURL.Path, "namespace", *namespace, "subsystem", *subsystem)
 	}
 
-	var cache *nameCache
+	var cache *serviceCache
 	{
-		cache = newNameCache()
+		cache = newServiceCache()
 	}
 
 	var manager *monitorManager

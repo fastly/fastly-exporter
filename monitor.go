@@ -15,7 +15,7 @@ import (
 // regular cadence. All received metrics are processed and given to the
 // Prometheus metrics struct. The service name label is regularly updated via
 // the name resolver. The function exits when the context is canceled.
-func monitor(ctx context.Context, client httpClient, token string, serviceID string, resolver nameResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) error {
+func monitor(ctx context.Context, client httpClient, token string, serviceID string, resolver serviceResolver, metrics prometheusMetrics, postprocess func(), logger log.Logger) error {
 	var ts uint64
 	for {
 		select {
@@ -24,8 +24,8 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 
 		default:
 			var (
-				serviceName = resolver.resolve(serviceID)
-				logger      = log.With(logger, "service_name", serviceName)
+				name, version = resolver.resolve(serviceID)
+				logger        = log.With(logger, "service_name", name)
 			)
 
 			// rt.fastly.com blocks until it has data to return.
@@ -36,7 +36,7 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 				return err // fatal for sure
 			}
 
-			req.Header.Set("User-Agent", "Fastly-Exporter ("+version+")")
+			req.Header.Set("User-Agent", "Fastly-Exporter ("+programVersion+")")
 			req.Header.Set("Fastly-Key", token)
 			req.Header.Set("Accept", "application/json")
 			resp, err := client.Do(req.WithContext(ctx))
@@ -63,7 +63,7 @@ func monitor(ctx context.Context, client httpClient, token string, serviceID str
 			switch resp.StatusCode {
 			case http.StatusOK:
 				level.Debug(logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
-				process(rt, serviceID, serviceName, metrics)
+				process(rt, serviceID, name, version, metrics)
 				postprocess()
 
 			case http.StatusUnauthorized, http.StatusForbidden:

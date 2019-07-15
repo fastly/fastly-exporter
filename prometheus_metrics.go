@@ -9,6 +9,7 @@ import (
 // data retrieved from the Fastly real-time stats API. The same set of metrics
 // are updated for all service IDs, only the labels change.
 type prometheusMetrics struct {
+	serviceInfo                          *prometheus.GaugeVec
 	requestsTotal                        *prometheus.CounterVec
 	tlsTotal                             *prometheus.CounterVec
 	shieldTotal                          *prometheus.CounterVec
@@ -93,6 +94,10 @@ type prometheusMetrics struct {
 }
 
 func (m *prometheusMetrics) register(namespace, subsystem string) {
+	m.serviceInfo = promauto.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem,
+		Name: "service_info",
+		Help: "Static gauge with service ID, name, and version information.",
+	}, []string{"service_id", "service_name", "service_version"})
 	m.requestsTotal = promauto.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "requests_total",
 		Help: "Total number of requests.",
