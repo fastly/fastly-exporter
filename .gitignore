@@ -1,4 +1,5 @@
-dist/
+/dist/
+/fastly-exporter
 
 # Binaries for programs and plugins
 *.exe

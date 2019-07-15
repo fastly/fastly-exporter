@@ -1,11 +1,10 @@
-# fastly-exporter [![Latest Release](https://img.shields.io/github/release/peterbourgon/fastly-exporter.svg?style=flat-square)](https://github.com/peterbourgon/fastly-exporter/releases/latest) [![Travis CI](https://travis-ci.org/peterbourgon/fastly-exporter.svg?branch=master)](https://travis-ci.org/peterbourgon/fastly-exporter) [![Docker Status](https://img.shields.io/docker/build/mrnetops/fastly-exporter.svg)](https://hub.docker.com/r/mrnetops/fastly-exporter)
+# fastly-exporter [![Latest Release](https://img.shields.io/github/release/peterbourgon/fastly-exporter.svg?style=flat-square)](https://github.com/peterbourgon/fastly-exporter/releases/latest) [![builds.sr.ht status](https://builds.sr.ht/~peterbourgon/fastly-exporter.svg)](https://builds.sr.ht/~peterbourgon/fastly-exporter?) [![Docker Status](https://img.shields.io/docker/build/mrnetops/fastly-exporter.svg)](https://hub.docker.com/r/mrnetops/fastly-exporter)
 
 This program consumes from the [Fastly Real-time Analytics API][rt] and makes
-the data available to [Prometheus][prom].
-
-* Provides metrics for every service accessible to your API token.
-* Adapts to Fastly service creation and deletion.
-* Maintains labels dynamically (service_name).
+the data available to [Prometheus][prom]. It can provide metrics for every
+service accessible to your API token, or an explicitly-specified set of
+services. And it reflects when new services are created, old services are
+deleted, or existing services have their names or versions updated.
 
 [rt]: https://docs.fastly.com/api/analytics
 [prom]: https://prometheus.io
@@ -31,7 +30,7 @@ Go to the [releases page][releases].
 
 ### Source
 
-if you have a working Go installation, you can install the latest revision from HEAD.
+If you have a working Go installation, you can install the latest revision from HEAD.
 
 ```
 go get github.com/peterbourgon/fastly-exporter
@@ -49,10 +48,8 @@ FLAGS
   -namespace fastly                        Prometheus namespace
   -service ...                             Specific Fastly service ID (optional, repeatable)
   -subsystem rt                            Prometheus subsystem
-  -token ...                               Fastly API token (required)
-
-VERSION
-  2.1.0
+  -token ...                               Fastly API token (required; also via FASTLY_API_TOKEN)
+  -version false                           print version information and exit
 ```
 
 A valid Fastly API token is mandatory. [See this link][token] for information
