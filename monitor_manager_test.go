@@ -13,7 +13,7 @@ func TestMonitorManager(t *testing.T) {
 	var (
 		client      = fixedResponseClient{200, "{}"}
 		token       = "irrelevant-token"
-		cache       = newNameCache()
+		cache       = newServiceCache()
 		metrics     = prometheusMetrics{}
 		postprocess = func() {}
 		logbuf      = bytes.Buffer{}

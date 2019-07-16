@@ -19,17 +19,18 @@ import (
 func TestMonitorFixture(t *testing.T) {
 	// Bunch of setup.
 	var (
-		ctx, cancel = context.WithCancel(context.Background())
-		done        = make(chan struct{})
-		namespace   = "testspace"
-		subsystem   = "testsystem"
-		client      = &mockRealtimeClient{response: rtResponseFixture}
-		token       = "irrelevant-token"
-		serviceID   = "my-service-id"
-		serviceName = "my-service-name"
-		cache       = newNameCache()
-		metrics     = prometheusMetrics{}
-		logger      = log.NewNopLogger()
+		ctx, cancel    = context.WithCancel(context.Background())
+		done           = make(chan struct{})
+		namespace      = "testspace"
+		subsystem      = "testsystem"
+		client         = &mockRealtimeClient{response: rtResponseFixture}
+		token          = "irrelevant-token"
+		serviceID      = "my-service-id"
+		serviceName    = "my-service-name"
+		serviceVersion = "123"
+		cache          = newServiceCache()
+		metrics        = prometheusMetrics{}
+		logger         = log.NewNopLogger()
 	)
 
 	// Make sure the monitor goroutine terminates.
@@ -39,7 +40,7 @@ func TestMonitorFixture(t *testing.T) {
 	}()
 
 	// Set up the service name mapping, and register the Prometheus metrics.
-	cache.update(map[string]string{serviceID: serviceName})
+	cache.update(map[string]nameVersion{serviceID: {serviceName, serviceVersion}})
 	metrics.register(namespace, subsystem)
 
 	// We're going to wait until the first call to process is done.
@@ -97,7 +98,7 @@ func TestMonitorBadToken(t *testing.T) {
 		client      = &countingRealtimeClient{403, `{"Error": "unauthorized"}`, 0}
 		token       = "presumably-bad-token"
 		serviceID   = "some-service-id"
-		cache       = newNameCache()
+		cache       = newServiceCache()
 		metrics     = prometheusMetrics{}
 		postprocess = func() {}
 		logger      = log.NewNopLogger()
@@ -126,7 +127,7 @@ func TestUserAgent(t *testing.T) {
 		client      = &userAgentCapturingClient{}
 		token       = "presumably-bad-token"
 		serviceID   = "some-service-id"
-		cache       = newNameCache()
+		cache       = newServiceCache()
 		metrics     = prometheusMetrics{}
 		postprocess = func() {}
 		logger      = log.NewNopLogger()
@@ -143,7 +144,7 @@ func TestUserAgent(t *testing.T) {
 	}()
 
 	var (
-		want = "Fastly-Exporter (" + version + ")"
+		want = "Fastly-Exporter (" + programVersion + ")"
 		have string
 	)
 	if !within(time.Second, func() bool {
@@ -337,6 +338,7 @@ testspace_testsystem_req_header_bytes_total{datacenter="BWI",service_id="my-serv
 testspace_testsystem_requests_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1
 testspace_testsystem_resp_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 39
 testspace_testsystem_resp_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 441
+testspace_testsystem_service_info{service_id="my-service-id",service_name="my-service-name",service_version="123"} 1
 testspace_testsystem_shield_resp_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_shield_resp_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_shield_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0

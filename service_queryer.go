@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -13,15 +14,15 @@ import (
 type serviceQueryer struct {
 	token     string
 	whitelist map[string]bool // service IDs to use (optional; if not specified, allow all)
-	resolver  nameUpdater
+	updater   serviceUpdater
 	manager   idUpdater
 }
 
 // nameUpdater is a consumer contract for the write side of the name cache.
 // Whenever the service queryer gets a new mapping of service IDs to names,
 // it will call this method to save that latest mapping.
-type nameUpdater interface {
-	update(names map[string]string)
+type serviceUpdater interface {
+	update(names map[string]nameVersion)
 }
 
 // idUpdater is a consumer contract for the write side of the monitor manager.
@@ -36,7 +37,7 @@ type idUpdater interface {
 	update(ids []string)
 }
 
-func newServiceQueryer(token string, ids []string, resolver nameUpdater, manager idUpdater) *serviceQueryer {
+func newServiceQueryer(token string, ids []string, updater serviceUpdater, manager idUpdater) *serviceQueryer {
 	whitelist := map[string]bool{}
 	for _, id := range ids {
 		whitelist[id] = true
@@ -45,7 +46,7 @@ func newServiceQueryer(token string, ids []string, resolver nameUpdater, manager
 	return &serviceQueryer{
 		token:     token,
 		whitelist: whitelist,
-		resolver:  resolver,
+		updater:   updater,
 		manager:   manager,
 	}
 }
@@ -72,26 +73,27 @@ func (q *serviceQueryer) refresh(client httpClient) error {
 	}
 
 	var (
-		names = map[string]string{}
-		ids   []string
+		services = map[string]nameVersion{}
+		ids      []string
 	)
-	for _, pair := range response {
+	for _, tuple := range response {
 		var (
 			allowAll  = len(q.whitelist) == 0
-			allowThis = q.whitelist[pair.ID]
+			allowThis = q.whitelist[tuple.ID]
 		)
 		if allowAll || allowThis {
-			names[pair.ID] = pair.Name
-			ids = append(ids, pair.ID)
+			services[tuple.ID] = nameVersion{tuple.Name, strconv.Itoa(tuple.Version)}
+			ids = append(ids, tuple.ID)
 		}
 	}
 
-	q.resolver.update(names)
+	q.updater.update(services)
 	q.manager.update(ids)
 	return nil
 }
 
 type serviceResponse []struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Version int    `json:"version"`
 }
