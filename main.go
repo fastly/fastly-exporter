@@ -75,8 +75,13 @@ func main() {
 	var manager *monitorManager
 	{
 		var (
-			postprocess = func() {}                          // only used for tests
-			rtClient    = &http.Client{Timeout: time.Minute} // rt.fastly.com blocks awhile by design
+			postprocess = func() {} // only used for tests
+			rtClient    = &http.Client{
+				Transport: &http.Transport{
+					MaxIdleConnsPerHost: 1024,
+				},
+				Timeout: time.Minute, // rt.fastly.com blocks awhile by design
+			}
 		)
 		manager = newMonitorManager(rtClient, *token, cache, metrics, postprocess, log.With(logger, "component", "monitors"))
 	}
