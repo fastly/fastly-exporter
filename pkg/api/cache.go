@@ -61,24 +61,33 @@ func NewCache(token string, options ...Option) *Cache {
 type Option func(*Cache)
 
 // WithExplicitServiceIDs restricts the cache to fetch metadata only for the
-// provided service IDs.
+// provided service IDs. By default, all service IDs available to the provided
+// token are allowed.
 func WithExplicitServiceIDs(ids ...string) Option {
 	return func(c *Cache) { c.whitelist = newStringSet(ids) }
 }
 
 // WithNameMatching restricts the cache to fetch metadata only for the
-// services whose names match the provided regexp.
+// services whose names match the provided regexp. By default,
+// no name filtering occurs.
 func WithNameMatching(re *regexp.Regexp) Option {
 	return func(c *Cache) { c.match = re }
 }
 
 // WithShard restricts the cache to fetch metadata only for those services whose
-// IDs, when hashed and taken modulo m, equal n. This option is designed to
-// split accounts (tokens) that have a large number of services across multiple
-// exporter processes. For example, to split across 3 processes, each process
-// would set n={0,1,2} and m=3.
+// IDs, when hashed and taken modulo m, equal n. By default, no sharding occurs.
+//
+// This option is designed to allow users to split accounts (tokens) that have a
+// large number of services across multiple exporter processes. For example, to
+// split across 3 processes, each process would set n={0,1,2} and m=3.
 func WithShard(n, m int) Option {
 	return func(c *Cache) { c.shard = shardSlice{n, m} }
+}
+
+// WithLogger sets the logger used by the cache during refresh.
+// By default, no log events are emitted.
+func WithLogger(logger log.Logger) Option {
+	return func(c *Cache) { c.logger = logger }
 }
 
 // Refresh services and their metadata.
@@ -130,8 +139,9 @@ func (c *Cache) Refresh(client HTTPClient) error {
 		nextgen[s.ID] = s
 	}
 	level.Debug(c.logger).Log(
-		"refresh", time.Since(begin),
-		"services", len(nextgen),
+		"refresh_took", time.Since(begin),
+		"total_service_count", len(response),
+		"accepted_service_count", len(nextgen),
 	)
 
 	c.mtx.Lock()
@@ -145,18 +155,30 @@ func (c *Cache) Refresh(client HTTPClient) error {
 // The set can change over time.
 func (c *Cache) Services() (services []Service) {
 	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+
 	services = make([]Service, 0, len(c.services))
 	for _, s := range c.services {
 		services = append(services, s)
 	}
-	c.mtx.RUnlock()
 
-	// Establish determinsitic order, mostly for tests.
-	sort.Slice(services, func(i, j int) bool {
+	sort.Slice(services, func(i, j int) bool { // mostly for tests
 		return services[i].ID < services[j].ID
 	})
 
 	return services
+}
+
+// Service returns the name and version of a specific service ID.
+// If the cache doesn't contain that service ID, found will be false.
+func (c *Cache) Service(id string) (name string, version int, found bool) {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+
+	if s, ok := c.services[id]; ok {
+		name, version, found = s.Name, s.Version, true
+	}
+	return name, version, found
 }
 
 //
@@ -182,15 +204,11 @@ func (ss stringset) has(s string) bool {
 	return ok
 }
 
-//
-//
-//
-
 type shardSlice struct{ n, m int }
 
 func (ss shardSlice) match(serviceID string) bool {
 	if ss.m == 0 {
-		return true
+		return true // the zero value of the type matches all IDs
 	}
 
 	h := xxhash.New()
