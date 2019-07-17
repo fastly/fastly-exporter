@@ -18,7 +18,7 @@ func TestCache(t *testing.T) {
 	)
 	for _, testcase := range []struct {
 		name    string
-		options []api.Option
+		options []api.CacheOption
 		want    []api.Service
 	}{
 		{
@@ -28,67 +28,67 @@ func TestCache(t *testing.T) {
 		},
 		{
 			name:    "whitelist both",
-			options: []api.Option{api.WithExplicitServiceIDs(s1.ID, s2.ID, "additional service ID")},
+			options: []api.CacheOption{api.WithExplicitServiceIDs(s1.ID, s2.ID, "additional service ID")},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "whitelist one",
-			options: []api.Option{api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.CacheOption{api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "whitelist none",
-			options: []api.Option{api.WithExplicitServiceIDs("nonexistant service ID")},
+			options: []api.CacheOption{api.WithExplicitServiceIDs("nonexistant service ID")},
 			want:    []api.Service{},
 		},
 		{
 			name:    "exact name match",
-			options: []api.Option{api.WithNameMatching(regexp.MustCompile(`^` + s1.Name + `$`))},
+			options: []api.CacheOption{api.WithNameMatching(regexp.MustCompile(`^` + s1.Name + `$`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "partial name match",
-			options: []api.Option{api.WithNameMatching(regexp.MustCompile(`mmy`))},
+			options: []api.CacheOption{api.WithNameMatching(regexp.MustCompile(`mmy`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "generous name match",
-			options: []api.Option{api.WithNameMatching(regexp.MustCompile(`.*e.*`))},
+			options: []api.CacheOption{api.WithNameMatching(regexp.MustCompile(`.*e.*`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "no name match",
-			options: []api.Option{api.WithNameMatching(regexp.MustCompile(`not found`))},
+			options: []api.CacheOption{api.WithNameMatching(regexp.MustCompile(`not found`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "single shard",
-			options: []api.Option{api.WithShard(0, 1)},
+			options: []api.CacheOption{api.WithShard(0, 1)},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "shard n0 m3",
-			options: []api.Option{api.WithShard(0, 3)},
+			options: []api.CacheOption{api.WithShard(0, 3)},
 			want:    []api.Service{s1}, // verified experimentally
 		},
 		{
 			name:    "shard n1 m3",
-			options: []api.Option{api.WithShard(1, 3)},
+			options: []api.CacheOption{api.WithShard(1, 3)},
 			want:    []api.Service{s2}, // verified experimentally
 		},
 		{
 			name:    "shard n2 m3",
-			options: []api.Option{api.WithShard(2, 3)},
+			options: []api.CacheOption{api.WithShard(2, 3)},
 			want:    []api.Service{}, // verified experimentally
 		},
 		{
 			name:    "shard and service ID passing",
-			options: []api.Option{api.WithShard(0, 3), api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.CacheOption{api.WithShard(0, 3), api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "shard and service ID failing",
-			options: []api.Option{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.CacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{},
 		},
 	} {
@@ -100,7 +100,15 @@ func TestCache(t *testing.T) {
 			if err := cache.Refresh(client); err != nil {
 				t.Fatal(err)
 			}
-			if want, have := testcase.want, cache.Services(); !cmp.Equal(want, have) {
+			var (
+				serviceIDs = cache.ServiceIDs()
+				services   = make([]api.Service, len(serviceIDs))
+			)
+			for i, id := range serviceIDs {
+				name, version, _ := cache.Metadata(id)
+				services[i] = api.Service{ID: id, Name: name, Version: version}
+			}
+			if want, have := testcase.want, services; !cmp.Equal(want, have) {
 				t.Fatal(cmp.Diff(want, have))
 			}
 		})

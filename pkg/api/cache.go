@@ -22,7 +22,7 @@ type HTTPClient interface {
 }
 
 // Service metadata associated with a single service.
-// (Also serves as a DTO for api.fastly.com/service.)
+// Also serves as a DTO for api.fastly.com/service.
 type Service struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
@@ -45,7 +45,7 @@ type Cache struct {
 // NewCache returns an empty cache of service metadata. By default, it will
 // fetch metadata about all services available to the provided token. Use
 // options to restrict which services the cache should manage.
-func NewCache(token string, options ...Option) *Cache {
+func NewCache(token string, options ...CacheOption) *Cache {
 	c := &Cache{
 		token:  token,
 		logger: log.NewNopLogger(),
@@ -56,21 +56,21 @@ func NewCache(token string, options ...Option) *Cache {
 	return c
 }
 
-// Option provides some additional behavior to a cache. Options that restrict
-// which services are cached combine with AND semantics.
-type Option func(*Cache)
+// CacheOption provides some additional behavior to a cache. Options that
+// restrict which services are cached combine with AND semantics.
+type CacheOption func(*Cache)
 
 // WithExplicitServiceIDs restricts the cache to fetch metadata only for the
 // provided service IDs. By default, all service IDs available to the provided
 // token are allowed.
-func WithExplicitServiceIDs(ids ...string) Option {
+func WithExplicitServiceIDs(ids ...string) CacheOption {
 	return func(c *Cache) { c.whitelist = newStringSet(ids) }
 }
 
 // WithNameMatching restricts the cache to fetch metadata only for the
 // services whose names match the provided regexp. By default,
 // no name filtering occurs.
-func WithNameMatching(re *regexp.Regexp) Option {
+func WithNameMatching(re *regexp.Regexp) CacheOption {
 	return func(c *Cache) { c.match = re }
 }
 
@@ -80,13 +80,13 @@ func WithNameMatching(re *regexp.Regexp) Option {
 // This option is designed to allow users to split accounts (tokens) that have a
 // large number of services across multiple exporter processes. For example, to
 // split across 3 processes, each process would set n={0,1,2} and m=3.
-func WithShard(n, m int) Option {
+func WithShard(n, m int) CacheOption {
 	return func(c *Cache) { c.shard = shardSlice{n, m} }
 }
 
 // WithLogger sets the logger used by the cache during refresh.
 // By default, no log events are emitted.
-func WithLogger(logger log.Logger) Option {
+func WithLogger(logger log.Logger) CacheOption {
 	return func(c *Cache) { c.logger = logger }
 }
 
@@ -151,27 +151,25 @@ func (c *Cache) Refresh(client HTTPClient) error {
 	return nil
 }
 
-// Services currently being monitored by the cache.
+// ServiceIDs currently being monitored by the cache.
 // The set can change over time.
-func (c *Cache) Services() (services []Service) {
+func (c *Cache) ServiceIDs() (ids []string) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
-	services = make([]Service, 0, len(c.services))
+	ids = make([]string, 0, len(c.services))
 	for _, s := range c.services {
-		services = append(services, s)
+		ids = append(ids, s.ID)
 	}
 
-	sort.Slice(services, func(i, j int) bool { // mostly for tests
-		return services[i].ID < services[j].ID
-	})
+	sort.Strings(ids) // mostly for tests
 
-	return services
+	return ids
 }
 
-// Service returns the name and version of a specific service ID.
+// Metadata returns selected metadata associated with a given service ID.
 // If the cache doesn't contain that service ID, found will be false.
-func (c *Cache) Service(id string) (name string, version int, found bool) {
+func (c *Cache) Metadata(id string) (name string, version int, found bool) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
