@@ -36,7 +36,7 @@ func TestSubscriberFixture(t *testing.T) {
 		resolver       = mockResolver{serviceID: api.Service{ID: serviceID, Name: serviceName, Version: serviceVersion}}
 		processed      uint64                                       // we'll spin on this, to wait for the first process
 		postprocess    = func() { atomic.AddUint64(&processed, 1) } // we'll update the processed var with this function
-		options        = []rt.Option{rt.WithServiceResolver(resolver), rt.WithPostprocess(postprocess)}
+		options        = []rt.SubscriberOption{rt.WithServiceResolver(resolver), rt.WithPostprocess(postprocess)}
 		subscriber     = rt.NewSubscriber(client, "irrelevant token", serviceID, metrics, options...)
 	)
 

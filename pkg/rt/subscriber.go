@@ -40,12 +40,12 @@ type Subscriber struct {
 	logger      log.Logger
 }
 
-// Option provides some additional behavior to a subscriber.
-type Option func(*Subscriber)
+// SubscriberOption provides some additional behavior to a subscriber.
+type SubscriberOption func(*Subscriber)
 
 // WithUserAgent sets the User-Agent supplied to rt.fastly.com.
 // By default, the DefaultUserAgent is used.
-func WithUserAgent(ua string) Option {
+func WithUserAgent(ua string) SubscriberOption {
 	return func(s *Subscriber) { s.userAgent = ua }
 }
 
@@ -53,20 +53,20 @@ func WithUserAgent(ua string) Option {
 // versions. By default, a no-op metadata resolver is used, which causes each
 // service to have its name set to its service ID, and its version set to
 // "unknown".
-func WithServiceResolver(r ServiceResolver) Option {
+func WithServiceResolver(r ServiceResolver) SubscriberOption {
 	return func(s *Subscriber) { s.resolver = r }
 }
 
-// WithLogger sets the logger used by the cache during refresh.
+// WithSubscriberLogger sets the logger used by the subscriber while running.
 // By default, no log events are emitted.
-func WithLogger(logger log.Logger) Option {
+func WithSubscriberLogger(logger log.Logger) SubscriberOption {
 	return func(s *Subscriber) { s.logger = logger }
 }
 
 // WithPostprocess sets the postprocess function for the subscriber, which is
 // invoked after each successful call to the real-time stats API. By default, a
 // no-op postprocess function is invoked. This option is only useful for tests.
-func WithPostprocess(f func()) Option {
+func WithPostprocess(f func()) SubscriberOption {
 	return func(s *Subscriber) { s.postprocess = f }
 }
 
@@ -76,7 +76,7 @@ const DefaultUserAgent = "Fastly-Exporter (unknown version)"
 
 // NewSubscriber returns a ready-to-use subscriber.
 // Run must be called to update the metrics.
-func NewSubscriber(client HTTPClient, token, serviceID string, metrics *prom.Metrics, options ...Option) *Subscriber {
+func NewSubscriber(client HTTPClient, token, serviceID string, metrics *prom.Metrics, options ...SubscriberOption) *Subscriber {
 	s := &Subscriber{
 		client:      client,
 		userAgent:   DefaultUserAgent,
