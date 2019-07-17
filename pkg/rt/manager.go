@@ -10,10 +10,10 @@ import (
 )
 
 // Servicer is a consumer contract for a subscriber manager.
-// It models the service ID listing method of an api.Cache.
+// It models the service ID listing and lookup methods of an api.Cache.
 type Servicer interface {
 	ServiceIDs() []string
-	Service(id string) (name string, version int, found bool)
+	Metadata(id string) (name string, version int, found bool)
 }
 
 // Manager owns a set of subscribers, polling a service authority to determine
@@ -58,9 +58,12 @@ func (m *Manager) Refresh() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	nextgen := map[string]interrupt{}
-	for _, id := range m.servicer.ServiceIDs() {
-		name, _, _ := m.servicer.Service(id)
+	var (
+		ids     = m.servicer.ServiceIDs()
+		nextgen = map[string]interrupt{}
+	)
+	for _, id := range ids {
+		name, _, _ := m.servicer.Metadata(id)
 		if irq, ok := m.managed[id]; ok {
 			level.Debug(m.logger).Log("service_id", id, "service_name", name, "subscriber", "maintain")
 			nextgen[id] = irq // move
@@ -71,7 +74,7 @@ func (m *Manager) Refresh() {
 		}
 	}
 	for id, irq := range m.managed {
-		name, _, _ := m.servicer.Service(id)
+		name, _, _ := m.servicer.Metadata(id)
 		level.Info(m.logger).Log("service_id", id, "service_name", name, "subscriber", "stop")
 		irq.cancel()
 		err := <-irq.done
@@ -83,7 +86,7 @@ func (m *Manager) Refresh() {
 		select {
 		default: // good
 		case err := <-irq.done: // bad
-			name, _, _ := m.servicer.Service(id)
+			name, _, _ := m.servicer.Metadata(id)
 			level.Error(m.logger).Log("service_id", id, "service_name", name, "interrupt", err, "err", "premature termination", "msg", "will attempt reconnect on next refresh")
 			delete(nextgen, id) // should get restarted on next refresh
 		}
@@ -113,7 +116,7 @@ func (m *Manager) StopAll() {
 		irq.cancel()
 		err := <-irq.done
 		delete(m.managed, id)
-		name, _, _ := m.servicer.Service(id)
+		name, _, _ := m.servicer.Metadata(id)
 		level.Debug(m.logger).Log("service_id", id, "service_name", name, "interrupt", err)
 	}
 }
