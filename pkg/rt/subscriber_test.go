@@ -33,10 +33,10 @@ func TestSubscriberFixture(t *testing.T) {
 		serviceID      = "my-service-id"
 		serviceName    = "my-service-name"
 		serviceVersion = 123
-		resolver       = mockResolver{serviceID: api.Service{ID: serviceID, Name: serviceName, Version: serviceVersion}}
+		provider       = mockMetadataProvider{serviceID: api.Service{ID: serviceID, Name: serviceName, Version: serviceVersion}}
 		processed      uint64                                       // we'll spin on this, to wait for the first process
 		postprocess    = func() { atomic.AddUint64(&processed, 1) } // we'll update the processed var with this function
-		options        = []rt.SubscriberOption{rt.WithServiceResolver(resolver), rt.WithPostprocess(postprocess)}
+		options        = []rt.SubscriberOption{rt.WithMetadataProvider(provider), rt.WithPostprocess(postprocess)}
 		subscriber     = rt.NewSubscriber(client, "irrelevant token", serviceID, metrics, options...)
 	)
 
@@ -122,10 +122,10 @@ func assertNoErr(t *testing.T, err error) {
 	}
 }
 
-type mockResolver map[string]api.Service
+type mockMetadataProvider map[string]api.Service
 
-func (r mockResolver) Service(id string) (name string, version int, found bool) {
-	if s, ok := r[id]; ok {
+func (p mockMetadataProvider) Metadata(id string) (name string, version int, found bool) {
+	if s, ok := p[id]; ok {
 		name, version, found = s.Name, s.Version, true
 	}
 	return name, version, found

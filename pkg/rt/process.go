@@ -7,10 +7,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// process interprets the data in the realtime response, and feeds the
-// interpreted results to the Prometheus metrics as observations.
-func process(src realtimeResponse, serviceID, serviceName, serviceVersion string, m *prom.Metrics) {
-	for _, d := range src.Data {
+// process the data from the realtime response, and feed the interpreted results
+// to the Prometheus metrics as observations.
+func process(resp realtimeResponse, serviceID, serviceName, serviceVersion string, m *prom.Metrics) {
+	for _, d := range resp.Data {
 		for datacenter, stats := range d.Datacenter {
 			m.ServiceInfo.WithLabelValues(serviceID, serviceName, serviceVersion).Set(1)
 			m.RequestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Requests))

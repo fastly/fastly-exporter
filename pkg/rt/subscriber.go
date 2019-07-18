@@ -21,10 +21,10 @@ type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-// ServiceResolver is a consumer contract for the subscriber.
+// MetadataProvider is a consumer contract for the subscriber.
 // It models the service lookup method of an api.Cache.
-type ServiceResolver interface {
-	Service(id string) (name string, version int, found bool)
+type MetadataProvider interface {
+	Metadata(id string) (name string, version int, found bool)
 }
 
 // Subscriber polls rt.fastly.com for a single service ID.
@@ -34,7 +34,7 @@ type Subscriber struct {
 	userAgent   string
 	token       string
 	serviceID   string
-	resolver    ServiceResolver
+	provider    MetadataProvider
 	metrics     *prom.Metrics
 	postprocess func()
 	logger      log.Logger
@@ -49,17 +49,17 @@ func WithUserAgent(ua string) SubscriberOption {
 	return func(s *Subscriber) { s.userAgent = ua }
 }
 
-// WithServiceResolver sets the resolver used to look up service names and
+// WithMetadataProvider sets the resolver used to look up service names and
 // versions. By default, a no-op metadata resolver is used, which causes each
 // service to have its name set to its service ID, and its version set to
 // "unknown".
-func WithServiceResolver(r ServiceResolver) SubscriberOption {
-	return func(s *Subscriber) { s.resolver = r }
+func WithMetadataProvider(p MetadataProvider) SubscriberOption {
+	return func(s *Subscriber) { s.provider = p }
 }
 
-// WithSubscriberLogger sets the logger used by the subscriber while running.
+// WithLogger sets the logger used by the subscriber while running.
 // By default, no log events are emitted.
-func WithSubscriberLogger(logger log.Logger) SubscriberOption {
+func WithLogger(logger log.Logger) SubscriberOption {
 	return func(s *Subscriber) { s.logger = logger }
 }
 
@@ -83,7 +83,7 @@ func NewSubscriber(client HTTPClient, token, serviceID string, metrics *prom.Met
 		token:       token,
 		serviceID:   serviceID,
 		metrics:     metrics,
-		resolver:    nopServiceResolver{},
+		provider:    nopMetadataProvider{},
 		postprocess: func() {},
 		logger:      log.NewNopLogger(),
 	}
@@ -137,7 +137,7 @@ func (s *Subscriber) Run(ctx context.Context) error {
 				rterr = "<none>"
 			}
 
-			name, ver, found := s.resolver.Service(s.serviceID)
+			name, ver, found := s.provider.Metadata(s.serviceID)
 			version := strconv.Itoa(ver)
 			if !found {
 				name, version = s.serviceID, "unknown"
@@ -163,10 +163,13 @@ func (s *Subscriber) Run(ctx context.Context) error {
 	}
 }
 
-type nopServiceResolver struct{}
+type nopMetadataProvider struct{}
 
-func (nopServiceResolver) Service(string) (string, int, bool) { return "", 0, false }
+func (nopMetadataProvider) Metadata(string) (string, int, bool) { return "", 0, false }
 
+// realtimeResponse models the response from rt.fastly.com. It can get quite
+// large; when there are lots of services being monitored, unmarshaling to this
+// type is the CPU bottleneck of the program.
 type realtimeResponse struct {
 	Timestamp uint64 `json:"Timestamp"`
 	Data      []struct {

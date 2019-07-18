@@ -138,6 +138,7 @@ func (c *Cache) Refresh(client HTTPClient) error {
 		debug.Log("result", "accepted")
 		nextgen[s.ID] = s
 	}
+
 	level.Debug(c.logger).Log(
 		"refresh_took", time.Since(begin),
 		"total_service_count", len(response),
