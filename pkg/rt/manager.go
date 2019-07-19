@@ -59,11 +59,8 @@ func (m *Manager) Refresh() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	var (
-		ids     = m.ids.ServiceIDs()
-		nextgen = map[string]interrupt{}
-	)
-	for _, id := range ids {
+	nextgen := map[string]interrupt{}
+	for _, id := range m.ids.ServiceIDs() {
 		if irq, ok := m.managed[id]; ok {
 			level.Debug(m.logger).Log("service_id", id, "subscriber", "maintain")
 			nextgen[id] = irq // move
@@ -73,8 +70,10 @@ func (m *Manager) Refresh() {
 			nextgen[id] = m.spawn(id)
 		}
 	}
-	for id, irq := range m.managed {
+
+	for _, id := range m.managedIDsWithLock() {
 		level.Info(m.logger).Log("service_id", id, "subscriber", "stop")
+		irq := m.managed[id]
 		irq.cancel()
 		err := <-irq.done
 		delete(m.managed, id)
@@ -98,14 +97,7 @@ func (m *Manager) Refresh() {
 func (m *Manager) Active() (serviceIDs []string) {
 	m.mtx.RLock()
 	defer m.mtx.RUnlock()
-
-	serviceIDs = make([]string, 0, len(m.managed))
-	for id := range m.managed {
-		serviceIDs = append(serviceIDs, id)
-	}
-
-	sort.Strings(serviceIDs)
-	return serviceIDs
+	return m.managedIDsWithLock()
 }
 
 // StopAll terminates and cleans up all active subscribers.
@@ -113,8 +105,9 @@ func (m *Manager) StopAll() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	for id, irq := range m.managed {
+	for _, id := range m.managedIDsWithLock() {
 		level.Info(m.logger).Log("service_id", id, "subscriber", "stop")
+		irq := m.managed[id]
 		irq.cancel()
 		err := <-irq.done
 		delete(m.managed, id)
@@ -132,6 +125,15 @@ func (m *Manager) spawn(serviceID string) interrupt {
 		done <- subscriber.Run(ctx)
 	}()
 	return interrupt{cancel, done}
+}
+
+func (m *Manager) managedIDsWithLock() (ids []string) {
+	ids = make([]string, 0, len(m.managed))
+	for id := range m.managed {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids
 }
 
 type interrupt struct {
