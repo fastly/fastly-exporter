@@ -1,10 +1,9 @@
 # fastly-exporter [![Latest Release](https://img.shields.io/github/release/peterbourgon/fastly-exporter.svg?style=flat-square)](https://github.com/peterbourgon/fastly-exporter/releases/latest) [![builds.sr.ht status](https://builds.sr.ht/~peterbourgon/fastly-exporter.svg)](https://builds.sr.ht/~peterbourgon/fastly-exporter?) [![Docker Status](https://img.shields.io/docker/build/mrnetops/fastly-exporter.svg)](https://hub.docker.com/r/mrnetops/fastly-exporter)
 
 This program consumes from the [Fastly Real-time Analytics API][rt] and makes
-the data available to [Prometheus][prom]. It can provide metrics for every
-service accessible to your API token, or an explicitly-specified set of
-services. And it reflects when new services are created, old services are
-deleted, or existing services have their names or versions updated.
+the data available to [Prometheus][prom]. It should behave like you expect:
+dynamically adding new services, removing old services, and reflecting changes
+to service metadata like name and version.
 
 [rt]: https://docs.fastly.com/api/analytics
 [prom]: https://prometheus.io
@@ -43,24 +42,46 @@ USAGE
   fastly-exporter [flags]
 
 FLAGS
+  -api-refresh 1m0s                        how often to poll api.fastly.com for updated service metadata
   -debug false                             Log debug information
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
+  -name-regex ...                          if provided, only export services whose names match this regex
   -namespace fastly                        Prometheus namespace
-  -service ...                             Specific Fastly service ID (optional, repeatable)
+  -service ...                             if provided, only export services with this service ID (repeatable)
+  -shard ...                               if provided, only export services whose hashed IDs modulo m equal n (format 'n/m')
   -subsystem rt                            Prometheus subsystem
   -token ...                               Fastly API token (required; also via FASTLY_API_TOKEN)
   -version false                           print version information and exit
 ```
 
-A valid Fastly API token is mandatory. [See this link][token] for information
-on creating API tokens. The token can also be provided via the `-token` flag
-or the FASTLY_API_TOKEN environment variable.
-
-Optional `-service` IDs can be specified to limit monitoring to specific
-services. Service IDs are available at the top of your [Fastly dashboard][db].
+A valid Fastly API token is mandatory. [See this link][token] for information on
+creating API tokens. The token can be provided via the `-token` flag or the
+FASTLY_API_TOKEN environment variable.
 
 [token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
 [db]: https://manage.fastly.com/services/all
+
+There are a number of ways to determine which services are exported. By default,
+all services available to your token will be exported. You can specify an
+explicit set of service IDs by using the `-service xxx` flag. (Service IDs are
+available at the top of your [Fastly dashboard][db].) You can also specify only
+those services whose user-defined name matches a regex by using the 
+`-name-regex '^Production'` flag.
+
+For tokens with access to a lot of services, it's possible to "shard" the
+services among different instances of the fastly-exporter by using the `-shard`
+flag. For example, to shard all services between 3 expoters, you would start
+each exporter as
+
+```
+fastly-exporter ... -shard 1/3
+fastly-exporter ... -shard 2/3
+fastly-exporter ... -shard 3/3
+```
+
+Flags which restrict the services that are exported combine with AND semantics.
+That is, `-service A -service B -name-regex 'Foo'` would only export data for
+service A or service B if their names also matched 'Foo'.
 
 ### Docker
 

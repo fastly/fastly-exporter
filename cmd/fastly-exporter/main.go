@@ -35,7 +35,7 @@ func main() {
 		subsystem    = fs.String("subsystem", "rt", "Prometheus subsystem")
 		serviceIDs   = stringslice{}
 		nameRegexStr = fs.String("name-regex", "", "if provided, only export services whose names match this regex")
-		shard        = fs.String("shard", "", "if provided, only export services whose hashed IDs modulo m equal n (format 'n/m')")
+		shard        = fs.String("shard", "", "if provided, only export services whose hashed IDs modulo m equal (n-1) (format 'n/m')")
 		apiRefresh   = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata")
 		debug        = fs.Bool("debug", false, "Log debug information")
 		versionFlag  = fs.Bool("version", false, "print version information and exit")
@@ -99,7 +99,7 @@ func main() {
 		}
 	}
 
-	var shardN, shardM int
+	var shardN, shardM uint64
 	{
 		if *shard != "" {
 			toks := strings.SplitN(*shard, "/", 2)
@@ -108,14 +108,22 @@ func main() {
 				os.Exit(1)
 			}
 			var err error
-			shardN, err = strconv.Atoi(toks[0])
+			shardN, err = strconv.ParseUint(toks[0], 10, 64)
 			if err != nil {
 				level.Error(logger).Log("err", "-shard must be of the format 'n/m'")
 				os.Exit(1)
 			}
-			shardM, err = strconv.Atoi(toks[1])
+			if shardN <= 0 {
+				level.Error(logger).Log("err", "first part of -shard flag should be greater than zero")
+				os.Exit(1)
+			}
+			shardM, err = strconv.ParseUint(toks[1], 10, 64)
 			if err != nil {
 				level.Error(logger).Log("err", "-shard must be of the format 'n/m'")
+				os.Exit(1)
+			}
+			if shardN > shardM {
+				level.Error(logger).Log("err", fmt.Sprintf("-shard with n=%d m=%d is invalid: n must be less than or equal to m", shardN, shardM))
 				os.Exit(1)
 			}
 		}

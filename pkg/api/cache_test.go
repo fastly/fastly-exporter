@@ -63,32 +63,32 @@ func TestCache(t *testing.T) {
 		},
 		{
 			name:    "single shard",
-			options: []api.CacheOption{api.WithShard(0, 1)},
+			options: []api.CacheOption{api.WithShard(1, 1)},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "shard n0 m3",
-			options: []api.CacheOption{api.WithShard(0, 3)},
+			options: []api.CacheOption{api.WithShard(1, 3)},
 			want:    []api.Service{s1}, // verified experimentally
 		},
 		{
 			name:    "shard n1 m3",
-			options: []api.CacheOption{api.WithShard(1, 3)},
+			options: []api.CacheOption{api.WithShard(2, 3)},
 			want:    []api.Service{s2}, // verified experimentally
 		},
 		{
 			name:    "shard n2 m3",
-			options: []api.CacheOption{api.WithShard(2, 3)},
+			options: []api.CacheOption{api.WithShard(3, 3)},
 			want:    []api.Service{}, // verified experimentally
 		},
 		{
 			name:    "shard and service ID passing",
-			options: []api.CacheOption{api.WithShard(0, 3), api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.CacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "shard and service ID failing",
-			options: []api.CacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.CacheOption{api.WithShard(2, 3), api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{},
 		},
 	} {

@@ -75,12 +75,13 @@ func WithNameMatching(re *regexp.Regexp) CacheOption {
 }
 
 // WithShard restricts the cache to fetch metadata only for those services whose
-// IDs, when hashed and taken modulo m, equal n. By default, no sharding occurs.
+// IDs, when hashed and taken modulo m, equal (n-1). By default, no sharding
+// occurs.
 //
 // This option is designed to allow users to split accounts (tokens) that have a
 // large number of services across multiple exporter processes. For example, to
-// split across 3 processes, each process would set n={0,1,2} and m=3.
-func WithShard(n, m int) CacheOption {
+// split across 3 processes, each process would set n={1,2,3} and m=3.
+func WithShard(n, m uint64) CacheOption {
 	return func(c *Cache) { c.shard = shardSlice{n, m} }
 }
 
@@ -203,14 +204,18 @@ func (ss stringset) has(s string) bool {
 	return ok
 }
 
-type shardSlice struct{ n, m int }
+type shardSlice struct{ n, m uint64 }
 
 func (ss shardSlice) match(serviceID string) bool {
 	if ss.m == 0 {
 		return true // the zero value of the type matches all IDs
 	}
 
+	if ss.n == 0 {
+		panic("programmer error: shard with n = 0, m != 0")
+	}
+
 	h := xxhash.New()
 	fmt.Fprint(h, serviceID)
-	return h.Sum64()%uint64(ss.m) == uint64(ss.n)
+	return h.Sum64()%uint64(ss.m) == uint64(ss.n-1)
 }
