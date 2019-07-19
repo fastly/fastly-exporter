@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/pkg/errors"
 )
@@ -124,7 +125,7 @@ func (s *Subscriber) Run(ctx context.Context) error {
 			}
 
 			var rt realtimeResponse
-			if err := json.NewDecoder(resp.Body).Decode(&rt); err != nil {
+			if err := jsoniterAPI.NewDecoder(resp.Body).Decode(&rt); err != nil {
 				resp.Body.Close()
 				level.Error(s.logger).Log("during", "decode response", "err", err)
 				contextSleep(ctx, time.Second)
@@ -178,6 +179,16 @@ type realtimeResponse struct {
 		Recorded   uint64                `json:"recorded"`
 	} `json:"Data"`
 	Error string `json:"error"`
+}
+
+func (resp *realtimeResponse) unmarshalStdlib(data []byte) error {
+	return json.Unmarshal(data, resp)
+}
+
+var jsoniterAPI = jsoniter.ConfigFastest
+
+func (resp *realtimeResponse) unmarshalJsoniter(data []byte) error {
+	return jsoniterAPI.Unmarshal(data, resp)
 }
 
 type datacenter struct {
