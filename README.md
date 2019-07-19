@@ -47,8 +47,8 @@ FLAGS
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
   -name-regex ...                          if provided, only export services whose names match this regex
   -namespace fastly                        Prometheus namespace
-  -service ...                             if provided, only export services with this service ID (repeatable)
-  -shard ...                               if provided, only export services whose hashed IDs modulo m equal n (format 'n/m')
+  -service ...                             if set, only export services with this service ID (repeatable)
+  -shard ...                               if set, only export services whose hashed IDs mod m equal (n-1) (format 'n/m')
   -subsystem rt                            Prometheus subsystem
   -token ...                               Fastly API token (required; also via FASTLY_API_TOKEN)
   -version false                           print version information and exit
