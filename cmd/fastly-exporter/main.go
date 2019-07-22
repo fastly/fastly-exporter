@@ -35,7 +35,7 @@ func main() {
 		namespace   = fs.String("namespace", "fastly", "Prometheus namespace")
 		subsystem   = fs.String("subsystem", "rt", "Prometheus subsystem")
 		serviceIDs  = stringslice{}
-		includeStr  = fs.String("name-include-regex", "", "if set, ignore any service whose name doesn't match this regex")
+		includeStr  = fs.String("name-include-regex", "", "if set, only include services whose name matches this regex")
 		excludeStr  = fs.String("name-exclude-regex", "", "if set, ignore any service whose name matches this regex")
 		shard       = fs.String("shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
 		apiRefresh  = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata")
