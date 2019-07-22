@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
@@ -276,19 +277,18 @@ func main() {
 		})
 	}
 	{
-		// Serve Prometheus metrics over HTTP.
-		mux := http.NewServeMux()
-		mux.Handle(promURL.Path, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+		// Serve Prometheus metrics (and /debug/pprof/...) over HTTP.
+		http.Handle(promURL.Path, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 		server := http.Server{
 			Addr:    promURL.Host,
-			Handler: mux,
+			Handler: http.DefaultServeMux,
 		}
 		g.Add(func() error {
 			return server.ListenAndServe()
 		}, func(error) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
-			level.Debug(logger).Log("msg", "shutting down Prometheus HTTP server")
+			level.Debug(logger).Log("msg", "shutting down HTTP server")
 			server.Shutdown(ctx)
 		})
 	}
