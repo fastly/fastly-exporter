@@ -376,6 +376,7 @@ testspace_testsystem_predeliver_sub_count_total{datacenter="BWI",service_id="my-
 testspace_testsystem_predeliver_sub_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1251
 testspace_testsystem_prehash_sub_count_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1
 testspace_testsystem_prehash_sub_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 689
+testspace_testsystem_realtime_api_requests_total{result="success",service_id="my-service-id",service_name="my-service-name"} 1
 testspace_testsystem_recv_sub_count_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 6
 testspace_testsystem_recv_sub_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1.872661e+06
 testspace_testsystem_req_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 294

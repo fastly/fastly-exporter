@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -106,63 +107,111 @@ func (s *Subscriber) Run(ctx context.Context) error {
 			return ctx.Err()
 
 		default:
-			// rt.fastly.com blocks until it has data to return.
-			// It's safe to call in a (single-threaded!) hot loop.
-			u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
-			req, err := http.NewRequest("GET", u, nil)
+			var err error
+			ts, err = s.runOnce(ctx, ts)
 			if err != nil {
-				return errors.Wrap(err, "error constructing real-time stats API request") // fatal for sure
+				return err
 			}
-
-			req.Header.Set("User-Agent", s.userAgent)
-			req.Header.Set("Fastly-Key", s.token)
-			req.Header.Set("Accept", "application/json")
-			resp, err := s.client.Do(req.WithContext(ctx))
-			if err != nil {
-				level.Error(s.logger).Log("during", "execute request", "err", err)
-				contextSleep(ctx, time.Second)
-				continue
-			}
-
-			var rt realtimeResponse
-			if err := jsoniterAPI.NewDecoder(resp.Body).Decode(&rt); err != nil {
-				resp.Body.Close()
-				level.Error(s.logger).Log("during", "decode response", "err", err)
-				contextSleep(ctx, time.Second)
-				continue
-			}
-			resp.Body.Close()
-
-			rterr := rt.Error
-			if rterr == "" {
-				rterr = "<none>"
-			}
-
-			name, ver, found := s.provider.Metadata(s.serviceID)
-			version := strconv.Itoa(ver)
-			if !found {
-				name, version = s.serviceID, "unknown"
-			}
-
-			switch resp.StatusCode {
-			case http.StatusOK:
-				level.Debug(s.logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
-				process(rt, s.serviceID, name, version, s.metrics)
-				s.postprocess()
-
-			case http.StatusUnauthorized, http.StatusForbidden:
-				level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr, "msg", "token may be invalid")
-				contextSleep(ctx, 15*time.Second)
-
-			default:
-				level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
-				contextSleep(ctx, 5*time.Second)
-			}
-
-			ts = rt.Timestamp
 		}
 	}
 }
+
+// runOnce queries rt.fastly.com for the service ID represented by the
+// subscriber and with the provided timestamp. On success, it processes the
+// received data and updates the metrics, returning the new timestamp value that
+// should be used in the next call.
+//
+// Non-fatal errors are logged. Some non-fatal errors cause runOnce to block for
+// a period of seconds before returning. Any error returned by runOnce should be
+// considered fatal to the subscriber.
+func (s *Subscriber) runOnce(ctx context.Context, ts uint64) (newts uint64, err error) {
+	name, ver, found := s.provider.Metadata(s.serviceID)
+	version := strconv.Itoa(ver)
+	if !found {
+		name, version = s.serviceID, "unknown"
+	}
+
+	result := rtResultUnknown
+	defer func() {
+		s.metrics.RealtimeAPIRequestsTotal.WithLabelValues(s.serviceID, name, string(result)).Inc()
+	}()
+
+	// rt.fastly.com blocks until it has data to return.
+	// It's safe to call in a (single-threaded!) hot loop.
+	u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		result = rtResultError
+		return ts, errors.Wrap(err, "error constructing real-time stats API request") // fatal for sure
+	}
+
+	req.Header.Set("User-Agent", s.userAgent)
+	req.Header.Set("Fastly-Key", s.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := s.client.Do(req.WithContext(ctx))
+	if err != nil {
+		result = rtResultError
+		level.Error(s.logger).Log("during", "execute request", "err", err)
+		contextSleep(ctx, time.Second)
+		return ts, nil
+	}
+
+	var rt realtimeResponse
+	if err := jsoniterAPI.NewDecoder(resp.Body).Decode(&rt); err != nil {
+		result = rtResultError
+		resp.Body.Close()
+		level.Error(s.logger).Log("during", "decode response", "err", err)
+		contextSleep(ctx, time.Second)
+		return ts, nil
+	}
+	resp.Body.Close()
+
+	rterr := rt.Error
+	if rterr == "" {
+		rterr = "<none>"
+	}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		level.Debug(s.logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
+		if strings.Contains(rterr, "No data available") {
+			result = rtResultNoData
+		} else {
+			result = rtResultSuccess
+		}
+		process(rt, s.serviceID, name, version, s.metrics)
+		s.postprocess()
+
+	case http.StatusUnauthorized, http.StatusForbidden:
+		result = rtResultError
+		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr, "msg", "token may be invalid")
+		contextSleep(ctx, 15*time.Second)
+
+	default:
+		result = rtResultUnknown
+		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", rt.Timestamp, "err", rterr)
+		contextSleep(ctx, 5*time.Second)
+	}
+
+	return rt.Timestamp, nil
+}
+
+//
+//
+//
+
+type rtResult string
+
+const (
+	rtResultUnknown rtResult = "unknown"
+	rtResultError   rtResult = "error"
+	rtResultNoData  rtResult = "no data"
+	rtResultSuccess rtResult = "success"
+)
+
+//
+//
+//
 
 type nopMetadataProvider struct{}
 

@@ -12,6 +12,7 @@ import (
 // retrieved from the real-time stats API. The same set of metrics are updated
 // for all service IDs, only the labels change.
 type Metrics struct {
+	RealtimeAPIRequestsTotal             *prometheus.CounterVec
 	ServiceInfo                          *prometheus.GaugeVec
 	RequestsTotal                        *prometheus.CounterVec
 	TLSTotal                             *prometheus.CounterVec
@@ -100,6 +101,10 @@ type Metrics struct {
 // that have been registered to the provided registerer.
 func NewMetrics(namespace, subsystem string, r prometheus.Registerer) (*Metrics, error) {
 	var m Metrics
+	m.RealtimeAPIRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
+		Name: "realtime_api_requests_total",
+		Help: "Total requests made to the real-time stats API.",
+	}, []string{"service_id", "service_name", "result"})
 	m.ServiceInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "service_info",
 		Help: "Static gauge with service ID, name, and version information.",
