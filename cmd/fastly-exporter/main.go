@@ -37,6 +37,8 @@ func main() {
 		nameRegexStr = fs.String("name-regex", "", "if provided, only export services whose names match this regex")
 		shard        = fs.String("shard", "", "if provided, only export services whose hashed IDs modulo m equal (n-1) (format 'n/m')")
 		apiRefresh   = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata")
+		apiTimeout   = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
+		rtTimeout    = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
 		debug        = fs.Bool("debug", false, "Log debug information")
 		versionFlag  = fs.Bool("version", false, "print version information and exit")
 	)
@@ -85,6 +87,22 @@ func main() {
 		if *apiRefresh > 10*time.Minute {
 			level.Warn(logger).Log("msg", "-api-refresh cannot be longer than 10m; setting it to 10m")
 			*apiRefresh = 10 * time.Minute
+		}
+		if *apiTimeout < 5*time.Second {
+			level.Warn(logger).Log("msg", "-api-timeout cannot be shorter than 5s; setting it to 5s")
+			*apiTimeout = 5 * time.Second
+		}
+		if *apiTimeout > 60*time.Second {
+			level.Warn(logger).Log("msg", "-api-timeout cannot be longer than 60s; setting it to 60s")
+			*apiTimeout = 60 * time.Second
+		}
+		if *rtTimeout < 45*time.Second {
+			level.Warn(logger).Log("msg", "-api-timeout cannot be shorter than 45s; setting it to 45s")
+			*rtTimeout = 45 * time.Second
+		}
+		if *rtTimeout > 120*time.Second {
+			level.Warn(logger).Log("msg", "-api-timeout cannot be longer than 120s; setting it to 120s")
+			*rtTimeout = 120 * time.Second
 		}
 	}
 
@@ -172,7 +190,7 @@ func main() {
 	var apiClient *http.Client
 	{
 		apiClient = &http.Client{
-			Timeout: 15 * time.Second, // api.fastly.com should be fast
+			Timeout: *apiTimeout,
 		}
 	}
 
@@ -194,7 +212,7 @@ func main() {
 	var manager *rt.Manager
 	{
 		rtClient := &http.Client{
-			Timeout: 45 * time.Second, // rt.fastly.com may block for up to ~30 seconds
+			Timeout: *rtTimeout,
 		}
 		subscriberOptions := []rt.SubscriberOption{
 			rt.WithLogger(rtLogger),
