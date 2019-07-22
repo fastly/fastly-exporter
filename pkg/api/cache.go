@@ -34,7 +34,8 @@ type Service struct {
 type Cache struct {
 	token     string
 	whitelist stringset
-	match     *regexp.Regexp
+	include   *regexp.Regexp
+	exclude   *regexp.Regexp
 	shard     shardSlice
 	logger    log.Logger
 
@@ -67,11 +68,17 @@ func WithExplicitServiceIDs(ids ...string) CacheOption {
 	return func(c *Cache) { c.whitelist = newStringSet(ids) }
 }
 
-// WithNameMatching restricts the cache to fetch metadata only for the
-// services whose names match the provided regexp. By default,
-// no name filtering occurs.
-func WithNameMatching(re *regexp.Regexp) CacheOption {
-	return func(c *Cache) { c.match = re }
+// WithNameIncluding restricts the cache to fetch metadata only for the services
+// whose names match the provided regexp. By default, no name filtering occurs.
+func WithNameIncluding(re *regexp.Regexp) CacheOption {
+	return func(c *Cache) { c.include = re }
+}
+
+// WithNameExcluding restricts the cache to fetch metadata only for the services
+// whose names do not match the provided regexp. By default, no name filtering
+// occurs.
+func WithNameExcluding(re *regexp.Regexp) CacheOption {
+	return func(c *Cache) { c.exclude = re }
 }
 
 // WithShard restricts the cache to fetch metadata only for those services whose
@@ -122,17 +129,22 @@ func (c *Cache) Refresh(client HTTPClient) error {
 		))
 
 		if reject := !c.whitelist.empty() && !c.whitelist.has(s.ID); reject {
-			debug.Log("result", "rejected", "cause", "not in service ID whitelist")
+			debug.Log("result", "rejected", "reason", "not in service ID whitelist")
 			continue
 		}
 
-		if reject := c.match != nil && !c.match.MatchString(s.Name); reject {
-			debug.Log("result", "rejected", "cause", "failed name regexp")
+		if reject := c.include != nil && !c.include.MatchString(s.Name); reject {
+			debug.Log("result", "rejected", "reason", "service name failed to match include regex")
+			continue
+		}
+
+		if reject := c.exclude != nil && c.exclude.MatchString(s.Name); reject {
+			debug.Log("result", "rejected", "reason", "service name matched exclude regex")
 			continue
 		}
 
 		if reject := !c.shard.match(s.ID); reject {
-			debug.Log("result", "rejected", "cause", "service ID in different shard")
+			debug.Log("result", "rejected", "reason", "service ID in different shard")
 			continue
 		}
 

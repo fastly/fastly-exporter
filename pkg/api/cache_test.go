@@ -42,24 +42,49 @@ func TestCache(t *testing.T) {
 			want:    []api.Service{},
 		},
 		{
-			name:    "exact name match",
-			options: []api.CacheOption{api.WithNameMatching(regexp.MustCompile(`^` + s1.Name + `$`))},
+			name:    "exact name include match",
+			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`^` + s1.Name + `$`))},
 			want:    []api.Service{s1},
 		},
 		{
-			name:    "partial name match",
-			options: []api.CacheOption{api.WithNameMatching(regexp.MustCompile(`mmy`))},
+			name:    "partial name include match",
+			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`mmy`))},
 			want:    []api.Service{s2},
 		},
 		{
-			name:    "generous name match",
-			options: []api.CacheOption{api.WithNameMatching(regexp.MustCompile(`.*e.*`))},
+			name:    "generous name include match",
+			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`.*e.*`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
-			name:    "no name match",
-			options: []api.CacheOption{api.WithNameMatching(regexp.MustCompile(`not found`))},
+			name:    "no name include match",
+			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`not found`))},
 			want:    []api.Service{},
+		},
+		{
+			name:    "exact name exclude match",
+			options: []api.CacheOption{api.WithNameExcluding(regexp.MustCompile(`^` + s1.Name + `$`))},
+			want:    []api.Service{s2},
+		},
+		{
+			name:    "partial name exclude match",
+			options: []api.CacheOption{api.WithNameExcluding(regexp.MustCompile(`mmy`))},
+			want:    []api.Service{s1},
+		},
+		{
+			name:    "generous name exclude match",
+			options: []api.CacheOption{api.WithNameExcluding(regexp.MustCompile(`.*e.*`))},
+			want:    []api.Service{},
+		},
+		{
+			name:    "no name exclude match",
+			options: []api.CacheOption{api.WithNameExcluding(regexp.MustCompile(`not found`))},
+			want:    []api.Service{s1, s2},
+		},
+		{
+			name:    "name exclude and include",
+			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`.*e.*`)), api.WithNameExcluding(regexp.MustCompile(`mmy`))},
+			want:    []api.Service{s1},
 		},
 		{
 			name:    "single shard",

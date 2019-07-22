@@ -29,20 +29,21 @@ var programVersion = "dev"
 func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token        = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
-		addr         = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
-		namespace    = fs.String("namespace", "fastly", "Prometheus namespace")
-		subsystem    = fs.String("subsystem", "rt", "Prometheus subsystem")
-		serviceIDs   = stringslice{}
-		nameRegexStr = fs.String("name-regex", "", "if provided, only export services whose names match this regex")
-		shard        = fs.String("shard", "", "if provided, only export services whose hashed IDs modulo m equal (n-1) (format 'n/m')")
-		apiRefresh   = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata")
-		apiTimeout   = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
-		rtTimeout    = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
-		debug        = fs.Bool("debug", false, "Log debug information")
-		versionFlag  = fs.Bool("version", false, "print version information and exit")
+		token       = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
+		addr        = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		namespace   = fs.String("namespace", "fastly", "Prometheus namespace")
+		subsystem   = fs.String("subsystem", "rt", "Prometheus subsystem")
+		serviceIDs  = stringslice{}
+		includeStr  = fs.String("name-include-regex", "", "if set, ignore any service whose name doesn't match this regex")
+		excludeStr  = fs.String("name-exclude-regex", "", "if set, ignore any service whose name matches this regex")
+		shard       = fs.String("shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
+		apiRefresh  = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata")
+		apiTimeout  = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
+		rtTimeout   = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
+		debug       = fs.Bool("debug", false, "Log debug information")
+		versionFlag = fs.Bool("version", false, "print version information and exit")
 	)
-	fs.Var(&serviceIDs, "service", "if provided, only export services with this service ID (repeatable)")
+	fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
 	fs.Usage = usage.For(fs, "fastly-exporter [flags]")
 	fs.Parse(os.Args[1:])
 
@@ -106,12 +107,18 @@ func main() {
 		}
 	}
 
-	var nameRegex *regexp.Regexp
+	var include, exclude *regexp.Regexp
 	{
-		if *nameRegexStr != "" {
-			var err error
-			if nameRegex, err = regexp.Compile(*nameRegexStr); err != nil {
-				level.Error(logger).Log("err", "-service-name-regex invalid", "msg", err)
+		var err error
+		if *includeStr != "" {
+			if include, err = regexp.Compile(*includeStr); err != nil {
+				level.Error(logger).Log("err", "-name-include-regex invalid", "msg", err)
+				os.Exit(1)
+			}
+		}
+		if *excludeStr != "" {
+			if exclude, err = regexp.Compile(*excludeStr); err != nil {
+				level.Error(logger).Log("err", "-name-exclude-regex invalid", "msg", err)
 				os.Exit(1)
 			}
 		}
@@ -176,9 +183,14 @@ func main() {
 			apiCacheOptions = append(apiCacheOptions, api.WithExplicitServiceIDs(serviceIDs...))
 		}
 
-		if nameRegex != nil {
-			level.Info(apiLogger).Log("filtering_on", "service name regex", "regex", *nameRegexStr)
-			apiCacheOptions = append(apiCacheOptions, api.WithNameMatching(nameRegex))
+		if include != nil {
+			level.Info(apiLogger).Log("filtering_on", "service name include regex", "regex", include.String())
+			apiCacheOptions = append(apiCacheOptions, api.WithNameIncluding(include))
+		}
+
+		if exclude != nil {
+			level.Info(apiLogger).Log("filtering_on", "service name exclude regex", "regex", exclude.String())
+			apiCacheOptions = append(apiCacheOptions, api.WithNameExcluding(exclude))
 		}
 
 		if shardM > 0 {

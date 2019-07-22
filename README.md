@@ -43,12 +43,15 @@ USAGE
 
 FLAGS
   -api-refresh 1m0s                        how often to poll api.fastly.com for updated service metadata
+  -api-timeout 15s                         HTTP client timeout for api.fastly.com requests (5–60s)
   -debug false                             Log debug information
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
-  -name-regex ...                          if provided, only export services whose names match this regex
+  -name-exclude-regex ...                  if set, ignore any service whose name matches this regex
+  -name-include-regex ...                  if set, ignore any service whose name doesn't match this regex
   -namespace fastly                        Prometheus namespace
-  -service ...                             if set, only export services with this service ID (repeatable)
-  -shard ...                               if set, only export services whose hashed IDs mod m equal (n-1) (format 'n/m')
+  -rt-timeout 45s                          HTTP client timeout for rt.fastly.com requests (45–120s)
+  -service ...                             if set, only include this service ID (repeatable)
+  -shard ...                               if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')
   -subsystem rt                            Prometheus subsystem
   -token ...                               Fastly API token (required; also via FASTLY_API_TOKEN)
   -version false                           print version information and exit
@@ -63,8 +66,9 @@ FASTLY_API_TOKEN environment variable.
 By default, all services available to your token will be exported. You can
 specify an explicit set of service IDs by using the `-service xxx` flag.
 (Service IDs are available at the top of your [Fastly dashboard][db].) You can
-also specify only those services whose name matches a regex by using the
-`-name-regex '^Production'` flag.
+also include only those services whose name matches a regex by using the
+`-name-include-regex '^Production'` flag, or reject any service whose name
+matches a regex by using the `-name-exclude-regex '.*TEST.*'` flag.
 
 [db]: https://manage.fastly.com/services/all
 
@@ -80,8 +84,10 @@ fastly-exporter [common flags] -shard 3/3
 ```
 
 Flags which restrict the services that are exported combine with AND semantics.
-That is, `-service A -service B -name-regex 'Foo'` would only export data for
-service A and/or B if their names also matched 'Foo'.
+That is, `-service A -service B -name-include-regex 'Foo'` would only export
+data for service A and/or B if their names also matched 'Foo'. Or, specifying
+`-name-include-regex 'Prod' -name-exclude-regex '^test-'` would only export data
+for services whose names contained "Prod" and did not start with "test-".
 
 ### Docker
 
