@@ -47,7 +47,7 @@ FLAGS
   -debug false                             Log debug information
   -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
   -name-exclude-regex ...                  if set, ignore any service whose name matches this regex
-  -name-include-regex ...                  if set, only include services whose name matches this regex
+  -name-include-regex ...                  if set, only include services whose names match this regex
   -namespace fastly                        Prometheus namespace
   -rt-timeout 45s                          HTTP client timeout for rt.fastly.com requests (45–120s)
   -service ...                             if set, only include this service ID (repeatable)
