@@ -3,7 +3,6 @@ package rt_test
 import (
 	"bytes"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/go-kit/kit/log"
@@ -21,7 +20,7 @@ func TestManager(t *testing.T) {
 		s1         = api.Service{ID: "101010", Name: "service 1", Version: 1}
 		s2         = api.Service{ID: "2f2f2f", Name: "service 2", Version: 2}
 		s3         = api.Service{ID: "3a3b3c", Name: "service 3", Version: 3}
-		client     = &mockRealtimeClient{response: `{}`}
+		client     = newMockRealtimeClient(`{}`)
 		token      = "irrelevant-token"
 		metrics, _ = prom.NewMetrics("namespace", "subsystem", prometheus.NewRegistry())
 		logbuf     = &bytes.Buffer{}
@@ -81,44 +80,3 @@ func TestManager(t *testing.T) {
 //
 //
 //
-
-func assertStringSliceEqual(t *testing.T, want, have []string) {
-	t.Helper()
-	if !cmp.Equal(want, have) {
-		t.Error(cmp.Diff(want, have))
-	}
-}
-
-type mockCache struct {
-	mtx      sync.RWMutex
-	services []api.Service
-}
-
-func (c *mockCache) update(services []api.Service) {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	c.services = services
-}
-
-func (c *mockCache) ServiceIDs() (ids []string) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-
-	for _, s := range c.services {
-		ids = append(ids, s.ID)
-	}
-	return ids
-}
-
-func (c *mockCache) Metadata(id string) (name string, version int, found bool) {
-	c.mtx.RLock()
-	defer c.mtx.RUnlock()
-
-	for _, s := range c.services {
-		if s.ID == id {
-			return s.Name, s.Version, true
-		}
-	}
-	return name, version, false
-}

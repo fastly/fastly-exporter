@@ -122,8 +122,8 @@ func (s *Subscriber) Run(ctx context.Context) error {
 // should be used in the next call.
 //
 // Non-fatal errors are logged. Some non-fatal errors cause runOnce to block for
-// a period of seconds before returning. Any error returned by runOnce should be
-// considered fatal to the subscriber.
+// a period of seconds before returning. Any non-nil error returned by runOnce
+// should be considered fatal to the subscriber.
 func (s *Subscriber) runOnce(ctx context.Context, ts uint64) (newts uint64, err error) {
 	name, ver, found := s.provider.Metadata(s.serviceID)
 	version := strconv.Itoa(ver)

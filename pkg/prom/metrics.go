@@ -12,7 +12,10 @@ import (
 // retrieved from the real-time stats API. The same set of metrics are updated
 // for all service IDs, only the labels change.
 type Metrics struct {
-	RealtimeAPIRequestsTotal             *prometheus.CounterVec
+	// These metrics concern the exporter itself.
+	RealtimeAPIRequestsTotal *prometheus.CounterVec
+
+	// These metrics concern the Fastly service.
 	ServiceInfo                          *prometheus.GaugeVec
 	RequestsTotal                        *prometheus.CounterVec
 	TLSTotal                             *prometheus.CounterVec
