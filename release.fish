@@ -26,8 +26,8 @@ for pair in linux/amd64 darwin/amd64
 	set BIN    $DISTDIR/fastly-exporter-$VERSION-$GOOS-$GOARCH
 	echo $BIN
 	env CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build \
-		-ldflags="-X main.programversion="(git describe | sed -e 's/^v//') \
+		-ldflags="-X main.programVersion="(git describe | sed -e 's/^v//') \
 		-o $BIN \
-		github.com/peterbourgon/fastly-exporter
+		github.com/peterbourgon/fastly-exporter/cmd/fastly-exporter
 end
 
