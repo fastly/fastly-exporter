@@ -1,30 +1,38 @@
 # github.com/beorn7/perks v1.0.0
 github.com/beorn7/perks/quantile
+# github.com/cespare/xxhash v1.1.0
+github.com/cespare/xxhash
 # github.com/go-kit/kit v0.8.0
 github.com/go-kit/kit/log
 github.com/go-kit/kit/log/level
-# github.com/go-logfmt/logfmt v0.3.0
+# github.com/go-logfmt/logfmt v0.4.0
 github.com/go-logfmt/logfmt
 # github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
-# github.com/google/go-cmp v0.2.0
+# github.com/google/go-cmp v0.3.0
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
+github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
+# github.com/json-iterator/go v1.1.6
+github.com/json-iterator/go
 # github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 github.com/kr/logfmt
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
+github.com/modern-go/concurrent
+# github.com/modern-go/reflect2 v1.0.1
+github.com/modern-go/reflect2
 # github.com/oklog/run v1.0.0
 github.com/oklog/run
 # github.com/peterbourgon/usage v1.0.1
 github.com/peterbourgon/usage
-# github.com/pkg/errors v0.8.0
+# github.com/pkg/errors v0.8.1
 github.com/pkg/errors
 # github.com/prometheus/client_golang v1.0.0
 github.com/prometheus/client_golang/prometheus
-github.com/prometheus/client_golang/prometheus/promauto
 github.com/prometheus/client_golang/prometheus/promhttp
 github.com/prometheus/client_golang/prometheus/internal
 # github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90
@@ -36,5 +44,5 @@ github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
 # github.com/prometheus/procfs v0.0.2
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
-# golang.org/x/sys v0.0.0-20181116152217-5ac8a444bdc5
+# golang.org/x/sys v0.0.0-20190412213103-97732733099d
 golang.org/x/sys/windows
