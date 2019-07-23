@@ -134,7 +134,7 @@ func (c *Cache) Refresh(client HTTPClient) error {
 		}
 
 		if reject := c.include != nil && !c.include.MatchString(s.Name); reject {
-			debug.Log("result", "rejected", "reason", "service name failed to match include regex")
+			debug.Log("result", "rejected", "reason", "service name didn't match include regex")
 			continue
 		}
 

@@ -48,8 +48,8 @@ func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics 
 	}
 }
 
-// Refresh the set of subscribers managed by the manager, by asking the ids
-// provided in the constructor for the authoritative set of service IDs, and
+// Refresh the set of subscribers managed by the manager, by asking the
+// authority provided in the constructor for the current set of service IDs, and
 // comparing those IDs with the ones already under management. If a service ID
 // was not previously managed, start a new subscriber. If a service ID was
 // previously managed but isn't in the latest set of IDs, terminate the
