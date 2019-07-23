@@ -74,7 +74,7 @@ matches a regex by using the `-name-exclude-regex '.*TEST.*'` flag.
 
 For tokens with access to a lot of services, it's possible to "shard" the
 services among different instances of the fastly-exporter by using the `-shard`
-flag. For example, to shard all services between 3 expoters, you would start
+flag. For example, to shard all services between 3 exporters, you would start
 each exporter as
 
 ```
