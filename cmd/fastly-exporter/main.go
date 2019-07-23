@@ -38,7 +38,7 @@ func main() {
 		includeStr  = fs.String("name-include-regex", "", "if set, only include services whose names match this regex")
 		excludeStr  = fs.String("name-exclude-regex", "", "if set, ignore any service whose name matches this regex")
 		shard       = fs.String("shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
-		apiRefresh  = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata")
+		apiRefresh  = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
 		apiTimeout  = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
 		rtTimeout   = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
 		debug       = fs.Bool("debug", false, "Log debug information")
@@ -82,7 +82,7 @@ func main() {
 	}
 
 	{
-		if *apiRefresh < 30*time.Second {
+		if *apiRefresh < 15*time.Second {
 			level.Warn(logger).Log("msg", "-api-refresh cannot be shorter than 15s; setting it to 15s")
 			*apiRefresh = 15 * time.Second
 		}
