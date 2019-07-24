@@ -37,6 +37,24 @@ go get github.com/peterbourgon/fastly-exporter/cmd/fastly-exporter
 
 ## Using
 
+### Basic
+
+For simple use cases, all you need is a Fastly API token.
+[See this link][token] for information on creating API tokens. 
+The token can be provided via the `-token` flag or the 
+`FASTLY_API_TOKEN` environment variable.
+
+[token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
+
+```
+fastly-exporter -token XXX
+```
+
+This will collect real-time stats for all Fastly services visible to your
+token, and make them available as Prometheus metrics on 127.0.0.1:8080/metrics.
+
+### Advanced
+
 ```
 USAGE
   fastly-exporter [flags]
@@ -56,12 +74,6 @@ FLAGS
   -token ...                               Fastly API token (required; also via FASTLY_API_TOKEN)
   -version false                           print version information and exit
 ```
-
-A valid Fastly API token is required. [See this link][token] for information on
-creating API tokens. The token can be provided via the `-token` flag or the
-FASTLY_API_TOKEN environment variable.
-
-[token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
 
 By default, all services available to your token will be exported. You can
 specify an explicit set of service IDs by using the `-service xxx` flag.
@@ -85,7 +97,7 @@ fastly-exporter [common flags] -shard 3/3
 
 Flags which restrict the services that are exported combine with AND semantics.
 That is, `-service A -service B -name-include-regex 'Foo'` would only export
-data for service A and/or B if their names also matched 'Foo'. Or, specifying
+data for service A and/or B if their names also matched "Foo". Or, specifying
 `-name-include-regex 'Prod' -name-exclude-regex '^test-'` would only export data
 for services whose names contained "Prod" and did not start with "test-".
 
