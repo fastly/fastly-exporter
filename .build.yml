@@ -10,9 +10,6 @@ tasks:
         sudo tar -C /usr/local -xzf $go_version.linux-amd64.tar.gz
         sudo ln -s /usr/local/go/bin/go /usr/bin/go
         go env
-    - dependencies: |
-        mkdir -p $HOME/go/src/github.com/peterbourgon
-        mv fastly-exporter $HOME/go/src/github.com/peterbourgon
-        go get -t github.com/peterbourgon/fastly-exporter/...
     - test: |
-        go test -race -v github.com/peterbourgon/fastly-exporter/...
+        cd fastly-exporter
+        go test -race -v ./...
