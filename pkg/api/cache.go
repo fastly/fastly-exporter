@@ -115,6 +115,17 @@ func (c *Cache) Refresh(client HTTPClient) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		var response struct {
+			Msg string `json:"msg"`
+		}
+		json.NewDecoder(resp.Body).Decode(&response)
+		if response.Msg == "" {
+			response.Msg = "unknown error"
+		}
+		return errors.Errorf("api.fastly.com responded with %s (%s)", resp.Status, response.Msg)
+	}
+
 	var response []Service
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return errors.Wrap(err, "error decoding API services response")
