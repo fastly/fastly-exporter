@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/run"
 	"github.com/peterbourgon/fastly-exporter/pkg/api"
+	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
 	"github.com/peterbourgon/usage"
@@ -30,14 +30,17 @@ var programVersion = "dev"
 func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token       = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
-		addr        = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
-		namespace   = fs.String("namespace", "fastly", "Prometheus namespace")
-		subsystem   = fs.String("subsystem", "rt", "Prometheus subsystem")
-		serviceIDs  = stringslice{}
-		includeStr  = fs.String("name-include-regex", "", "if set, only include services whose names match this regex")
-		excludeStr  = fs.String("name-exclude-regex", "", "if set, ignore any service whose name matches this regex")
-		shard       = fs.String("shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
+		token            = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
+		addr             = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		namespace        = fs.String("namespace", "fastly", "Prometheus namespace")
+		subsystem        = fs.String("subsystem", "rt", "Prometheus subsystem")
+		serviceShard     = fs.String("service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
+		serviceIDs       = stringslice{}
+		serviceWhitelist = stringslice{}
+		serviceBlacklist = stringslice{}
+		metricWhitelist  = stringslice{}
+		metricBlacklist  = stringslice{}
+
 		apiRefresh  = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
 		apiTimeout  = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
 		rtTimeout   = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
@@ -45,6 +48,10 @@ func main() {
 		versionFlag = fs.Bool("version", false, "print version information and exit")
 	)
 	fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
+	fs.Var(&serviceWhitelist, "service-whitelist", "if set, only include services whose names match this regex (repeatable)")
+	fs.Var(&serviceBlacklist, "service-blacklist", "if set, don't include services whose names match this regex (repeatable)")
+	fs.Var(&metricWhitelist, "metric-whitelist", "if set, only export metrics whose names match this regex (repeatable)")
+	fs.Var(&metricBlacklist, "metric-blacklist", "if set, don't export metrics whose names match this regex (repeatable)")
 	fs.Usage = usage.For(fs, "fastly-exporter [flags]")
 	fs.Parse(os.Args[1:])
 
@@ -108,50 +115,72 @@ func main() {
 		}
 	}
 
-	var include, exclude *regexp.Regexp
+	var serviceNameFilter filter.Filter
 	{
-		var err error
-		if *includeStr != "" {
-			if include, err = regexp.Compile(*includeStr); err != nil {
-				level.Error(logger).Log("err", "-name-include-regex invalid", "msg", err)
+		for _, expr := range serviceWhitelist {
+			if err := serviceNameFilter.Whitelist(expr); err != nil {
+				level.Error(logger).Log("err", "invalid -service-whitelist", "msg", err)
 				os.Exit(1)
 			}
+			level.Info(logger).Log("filter", "services", "type", "name whitelist", "expr", expr)
 		}
-		if *excludeStr != "" {
-			if exclude, err = regexp.Compile(*excludeStr); err != nil {
-				level.Error(logger).Log("err", "-name-exclude-regex invalid", "msg", err)
+		for _, expr := range serviceBlacklist {
+			if err := serviceNameFilter.Blacklist(expr); err != nil {
+				level.Error(logger).Log("err", "invalid -service-blacklist", "msg", err)
 				os.Exit(1)
 			}
+			level.Info(logger).Log("filter", "services", "type", "name blacklist", "expr", expr)
+		}
+	}
+
+	var metricNameFilter filter.Filter
+	{
+		for _, expr := range metricWhitelist {
+			if err := metricNameFilter.Whitelist(expr); err != nil {
+				level.Error(logger).Log("err", "invalid -metric-whitelist", "msg", err)
+				os.Exit(1)
+			}
+			level.Info(logger).Log("filter", "metrics", "type", "name whitelist", "expr", expr)
+
+		}
+		for _, expr := range metricBlacklist {
+			if err := metricNameFilter.Blacklist(expr); err != nil {
+				level.Error(logger).Log("err", "invalid -metric-blacklist", "msg", err)
+				os.Exit(1)
+			}
+			level.Info(logger).Log("filter", "metrics", "type", "name blacklist", "expr", expr)
 		}
 	}
 
 	var shardN, shardM uint64
 	{
-		if *shard != "" {
-			toks := strings.SplitN(*shard, "/", 2)
+		if *serviceShard != "" {
+			toks := strings.SplitN(*serviceShard, "/", 2)
 			if len(toks) != 2 {
-				level.Error(logger).Log("err", "-shard must be of the format 'n/m'")
+				level.Error(logger).Log("err", "-service-shard must be of the format 'n/m'")
 				os.Exit(1)
 			}
 			var err error
 			shardN, err = strconv.ParseUint(toks[0], 10, 64)
 			if err != nil {
-				level.Error(logger).Log("err", "-shard must be of the format 'n/m'")
+				level.Error(logger).Log("err", "-service-shard must be of the format 'n/m'")
 				os.Exit(1)
 			}
 			if shardN <= 0 {
-				level.Error(logger).Log("err", "first part of -shard flag should be greater than zero")
+				level.Error(logger).Log("err", "first part of -service-shard flag should be greater than zero")
 				os.Exit(1)
 			}
 			shardM, err = strconv.ParseUint(toks[1], 10, 64)
 			if err != nil {
-				level.Error(logger).Log("err", "-shard must be of the format 'n/m'")
+				level.Error(logger).Log("err", "-service-shard must be of the format 'n/m'")
 				os.Exit(1)
 			}
 			if shardN > shardM {
-				level.Error(logger).Log("err", fmt.Sprintf("-shard with n=%d m=%d is invalid: n must be less than or equal to m", shardN, shardM))
+				level.Error(logger).Log("err", fmt.Sprintf("-service-shard with n=%d m=%d is invalid: n must be less than or equal to m", shardN, shardM))
 				os.Exit(1)
 			}
+			level.Info(logger).Log("filter", "services", "type", "by shard", "n", shardN, "m", shardM)
+
 		}
 	}
 
@@ -163,7 +192,7 @@ func main() {
 	var metrics *prom.Metrics
 	{
 		var err error
-		metrics, err = prom.NewMetrics(*namespace, *subsystem, registry)
+		metrics, err = prom.NewMetrics(*namespace, *subsystem, metricNameFilter, registry)
 		if err != nil {
 			level.Error(logger).Log("err", err)
 			os.Exit(1)
@@ -177,25 +206,17 @@ func main() {
 
 	var apiCacheOptions []api.CacheOption
 	{
-		apiCacheOptions = append(apiCacheOptions, api.WithLogger(apiLogger))
+		apiCacheOptions = append(apiCacheOptions,
+			api.WithLogger(apiLogger),
+			api.WithNameFilter(serviceNameFilter),
+		)
 
 		if len(serviceIDs) > 0 {
-			level.Info(apiLogger).Log("filtering_on", "explicit service IDs", "count", len(serviceIDs))
+			level.Info(logger).Log("filter", "services", "type", "explicit service IDs", "count", len(serviceIDs))
 			apiCacheOptions = append(apiCacheOptions, api.WithExplicitServiceIDs(serviceIDs...))
 		}
 
-		if include != nil {
-			level.Info(apiLogger).Log("filtering_on", "service name include regex", "regex", include.String())
-			apiCacheOptions = append(apiCacheOptions, api.WithNameIncluding(include))
-		}
-
-		if exclude != nil {
-			level.Info(apiLogger).Log("filtering_on", "service name exclude regex", "regex", exclude.String())
-			apiCacheOptions = append(apiCacheOptions, api.WithNameExcluding(exclude))
-		}
-
 		if shardM > 0 {
-			level.Info(apiLogger).Log("filtering_on", "shard allocation", "shard", *shard, "n", shardN, "m", shardM)
 			apiCacheOptions = append(apiCacheOptions, api.WithShard(shardN, shardM))
 		}
 	}

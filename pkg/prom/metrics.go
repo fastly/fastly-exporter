@@ -3,7 +3,9 @@ package prom
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 
+	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -102,7 +104,7 @@ type Metrics struct {
 
 // NewMetrics returns a usable set of Prometheus metrics
 // that have been registered to the provided registerer.
-func NewMetrics(namespace, subsystem string, r prometheus.Registerer) (*Metrics, error) {
+func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometheus.Registerer) (*Metrics, error) {
 	var m Metrics
 	m.RealtimeAPIRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "realtime_api_requests_total",
@@ -444,10 +446,26 @@ func NewMetrics(namespace, subsystem string, r prometheus.Registerer) (*Metrics,
 		if !ok {
 			panic(fmt.Sprintf("programmer error: field %d/%d in prom.Metrics isn't a prometheus.Collector", i+1, v.NumField()))
 		}
+		if name := getName(c); !nameFilter.Allow(name) {
+			continue
+		}
 		if err := r.Register(c); err != nil {
 			return nil, errors.Wrapf(err, "error registering metric %d/%d", i+1, v.NumField())
 		}
 	}
 
 	return &m, nil
+}
+
+var descNameRegex = regexp.MustCompile(`fqName: "([^"]+)"`)
+
+func getName(c prometheus.Collector) string {
+	d := make(chan *prometheus.Desc, 1)
+	c.Describe(d)
+	desc := (<-d).String()
+	matches := descNameRegex.FindAllStringSubmatch(desc, -1)
+	if len(matches) == 1 && len(matches[0]) == 2 {
+		return matches[0][1]
+	}
+	return ""
 }
