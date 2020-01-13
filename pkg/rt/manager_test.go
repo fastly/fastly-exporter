@@ -22,7 +22,7 @@ func TestManager(t *testing.T) {
 		s3         = api.Service{ID: "3a3b3c", Name: "service 3", Version: 3}
 		client     = newMockRealtimeClient(`{}`)
 		token      = "irrelevant-token"
-		metrics, _ = prom.NewMetrics("namespace", "subsystem", prometheus.NewRegistry())
+		metrics, _ = prom.NewMetrics("namespace", "subsystem", prometheus.NewRegistry(), prom.Stringmap{})
 		logbuf     = &bytes.Buffer{}
 		logger     = log.NewLogfmtLogger(logbuf)
 		options    = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}

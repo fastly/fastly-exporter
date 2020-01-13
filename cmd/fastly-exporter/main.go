@@ -30,21 +30,23 @@ var programVersion = "dev"
 func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token       = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
-		addr        = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
-		namespace   = fs.String("namespace", "fastly", "Prometheus namespace")
-		subsystem   = fs.String("subsystem", "rt", "Prometheus subsystem")
-		serviceIDs  = stringslice{}
-		includeStr  = fs.String("name-include-regex", "", "if set, only include services whose names match this regex")
-		excludeStr  = fs.String("name-exclude-regex", "", "if set, ignore any service whose name matches this regex")
-		shard       = fs.String("shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
-		apiRefresh  = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
-		apiTimeout  = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
-		rtTimeout   = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
-		debug       = fs.Bool("debug", false, "Log debug information")
-		versionFlag = fs.Bool("version", false, "print version information and exit")
+		token          = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
+		addr           = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		namespace      = fs.String("namespace", "fastly", "Prometheus namespace")
+		subsystem      = fs.String("subsystem", "rt", "Prometheus subsystem")
+		serviceIDs     = stringslice{}
+		metricExcludes = prom.Stringmap{}
+		includeStr     = fs.String("name-include-regex", "", "if set, only include services whose names match this regex")
+		excludeStr     = fs.String("name-exclude-regex", "", "if set, ignore any service whose name matches this regex")
+		shard          = fs.String("shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
+		apiRefresh     = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
+		apiTimeout     = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
+		rtTimeout      = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
+		debug          = fs.Bool("debug", false, "Log debug information")
+		versionFlag    = fs.Bool("version", false, "print version information and exit")
 	)
 	fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
+	fs.Var(&metricExcludes, "exclude-metrics", "comma separated list of metric names to exclude from scrapes (with namespace and subsystem left out)")
 	fs.Usage = usage.For(fs, "fastly-exporter [flags]")
 	fs.Parse(os.Args[1:])
 
@@ -163,7 +165,7 @@ func main() {
 	var metrics *prom.Metrics
 	{
 		var err error
-		metrics, err = prom.NewMetrics(*namespace, *subsystem, registry)
+		metrics, err = prom.NewMetrics(*namespace, *subsystem, registry, metricExcludes)
 		if err != nil {
 			level.Error(logger).Log("err", err)
 			os.Exit(1)

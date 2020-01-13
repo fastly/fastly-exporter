@@ -17,7 +17,7 @@ func TestSubscriberFixture(t *testing.T) {
 		namespace  = "testspace"
 		subsystem  = "testsystem"
 		registry   = prometheus.NewRegistry()
-		metrics, _ = prom.NewMetrics(namespace, subsystem, registry)
+		metrics, _ = prom.NewMetrics(namespace, subsystem, registry, prom.Stringmap{})
 	)
 
 	var (
@@ -54,7 +54,7 @@ func TestSubscriberNoData(t *testing.T) {
 	var (
 		client      = newMockRealtimeClient(`{"Error": "No data available, please retry"}`, `{}`)
 		registry    = prometheus.NewRegistry()
-		metrics, _  = prom.NewMetrics("ns", "ss", registry)
+		metrics, _  = prom.NewMetrics("ns", "ss", registry, prom.Stringmap{})
 		processed   = make(chan struct{}, 100)
 		postprocess = func() { processed <- struct{}{} }
 		options     = []rt.SubscriberOption{rt.WithPostprocess(postprocess)}
@@ -79,7 +79,7 @@ func TestUserAgent(t *testing.T) {
 	var (
 		client      = newMockRealtimeClient(`{}`)
 		userAgent   = "Some user agent string"
-		metrics, _  = prom.NewMetrics("ns", "ss", prometheus.NewRegistry())
+		metrics, _  = prom.NewMetrics("ns", "ss", prometheus.NewRegistry(), prom.Stringmap{})
 		processed   = make(chan struct{})
 		postprocess = func() { close(processed) }
 		options     = []rt.SubscriberOption{rt.WithUserAgent(userAgent), rt.WithPostprocess(postprocess)}
@@ -97,7 +97,7 @@ func TestUserAgent(t *testing.T) {
 func TestBadTokenNoSpam(t *testing.T) {
 	var (
 		client     = &countingRealtimeClient{code: 403, response: `{"Error": "unauthorized"}`}
-		metrics, _ = prom.NewMetrics("namespace", "subsystem", prometheus.NewRegistry())
+		metrics, _ = prom.NewMetrics("namespace", "subsystem", prometheus.NewRegistry(), prom.Stringmap{})
 		subscriber = rt.NewSubscriber(client, "presumably bad token", "service ID", metrics)
 	)
 	go subscriber.Run(context.Background())

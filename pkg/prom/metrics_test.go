@@ -15,19 +15,13 @@ func TestRegistration(t *testing.T) {
 	)
 
 	{
-		_, err := prom.NewMetrics(namespace, subsystem, registry)
+		_, err := prom.NewMetrics(namespace, subsystem, registry, prom.Stringmap{})
 		if err != nil {
 			t.Errorf("unexpected error on first construction: %v", err)
 		}
 	}
 	{
-		_, err := prom.NewMetrics(namespace, subsystem, registry)
-		if err == nil {
-			t.Error("unexpected success on second construction")
-		}
-	}
-	{
-		_, err := prom.NewMetrics("alt"+namespace, subsystem, registry)
+		_, err := prom.NewMetrics("alt"+namespace, subsystem, registry, prom.Stringmap{})
 		if err != nil {
 			t.Errorf("unexpected error on third, alt-namespace construction: %v", err)
 		}
