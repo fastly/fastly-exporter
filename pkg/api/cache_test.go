@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/peterbourgon/fastly-exporter/pkg/api"
+	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 )
 
 func TestCache(t *testing.T) {
@@ -43,47 +43,47 @@ func TestCache(t *testing.T) {
 		},
 		{
 			name:    "exact name include match",
-			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`^` + s1.Name + `$`))},
+			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`^` + s1.Name + `$`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "partial name include match",
-			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`mmy`))},
+			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`mmy`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "generous name include match",
-			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`.*e.*`))},
+			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`.*e.*`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "no name include match",
-			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`not found`))},
+			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`not found`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "exact name exclude match",
-			options: []api.CacheOption{api.WithNameExcluding(regexp.MustCompile(`^` + s1.Name + `$`))},
+			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`^` + s1.Name + `$`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "partial name exclude match",
-			options: []api.CacheOption{api.WithNameExcluding(regexp.MustCompile(`mmy`))},
+			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`mmy`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "generous name exclude match",
-			options: []api.CacheOption{api.WithNameExcluding(regexp.MustCompile(`.*e.*`))},
+			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`.*e.*`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "no name exclude match",
-			options: []api.CacheOption{api.WithNameExcluding(regexp.MustCompile(`not found`))},
+			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`not found`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "name exclude and include",
-			options: []api.CacheOption{api.WithNameIncluding(regexp.MustCompile(`.*e.*`)), api.WithNameExcluding(regexp.MustCompile(`mmy`))},
+			options: []api.CacheOption{api.WithNameFilter(filterWhitelistBlacklist(`.*e.*`, `mmy`))},
 			want:    []api.Service{s1},
 		},
 		{
@@ -138,6 +138,22 @@ func TestCache(t *testing.T) {
 			}
 		})
 	}
+}
+
+func filterWhitelist(w string) (f filter.Filter) {
+	f.Whitelist(w)
+	return f
+}
+
+func filterBlacklist(b string) (f filter.Filter) {
+	f.Blacklist(b)
+	return f
+}
+
+func filterWhitelistBlacklist(w, b string) (f filter.Filter) {
+	f.Whitelist(w)
+	f.Blacklist(b)
+	return f
 }
 
 type fixedResponseClient struct {
