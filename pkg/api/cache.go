@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
 	"sort"
 	"sync"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/cespare/xxhash"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 	"github.com/pkg/errors"
 )
 
@@ -32,12 +32,11 @@ type Service struct {
 // Cache polls api.fastly.com/service to keep metadata about
 // one or more service IDs up-to-date.
 type Cache struct {
-	token     string
-	whitelist stringset
-	include   *regexp.Regexp
-	exclude   *regexp.Regexp
-	shard     shardSlice
-	logger    log.Logger
+	token      string
+	serviceIDs stringSet
+	nameFilter filter.Filter
+	shard      shardSlice
+	logger     log.Logger
 
 	mtx      sync.RWMutex
 	services map[string]Service
@@ -65,20 +64,13 @@ type CacheOption func(*Cache)
 // provided service IDs. By default, all service IDs available to the provided
 // token are allowed.
 func WithExplicitServiceIDs(ids ...string) CacheOption {
-	return func(c *Cache) { c.whitelist = newStringSet(ids) }
+	return func(c *Cache) { c.serviceIDs = newStringSet(ids) }
 }
 
-// WithNameIncluding restricts the cache to fetch metadata only for the services
-// whose names match the provided regexp. By default, no name filtering occurs.
-func WithNameIncluding(re *regexp.Regexp) CacheOption {
-	return func(c *Cache) { c.include = re }
-}
-
-// WithNameExcluding restricts the cache to fetch metadata only for the services
-// whose names do not match the provided regexp. By default, no name filtering
-// occurs.
-func WithNameExcluding(re *regexp.Regexp) CacheOption {
-	return func(c *Cache) { c.exclude = re }
+// WithNameFilter restricts the cache to fetch metadata only for the services
+// whose names pass the provided filter. By default, no name filtering occurs.
+func WithNameFilter(f filter.Filter) CacheOption {
+	return func(c *Cache) { c.nameFilter = f }
 }
 
 // WithShard restricts the cache to fetch metadata only for those services whose
@@ -139,18 +131,13 @@ func (c *Cache) Refresh(client HTTPClient) error {
 			"service_version", s.Version,
 		))
 
-		if reject := !c.whitelist.empty() && !c.whitelist.has(s.ID); reject {
-			debug.Log("result", "rejected", "reason", "not in service ID whitelist")
+		if reject := !c.serviceIDs.empty() && !c.serviceIDs.has(s.ID); reject {
+			debug.Log("result", "rejected", "reason", "service ID not explicitly allowed")
 			continue
 		}
 
-		if reject := c.include != nil && !c.include.MatchString(s.Name); reject {
-			debug.Log("result", "rejected", "reason", "service name didn't match include regex")
-			continue
-		}
-
-		if reject := c.exclude != nil && c.exclude.MatchString(s.Name); reject {
-			debug.Log("result", "rejected", "reason", "service name matched exclude regex")
+		if reject := !c.nameFilter.Allow(s.Name); reject {
+			debug.Log("result", "rejected", "reason", "service name rejected by name filter")
 			continue
 		}
 
@@ -208,21 +195,21 @@ func (c *Cache) Metadata(id string) (name string, version int, found bool) {
 //
 //
 
-type stringset map[string]struct{}
+type stringSet map[string]struct{}
 
-func newStringSet(initial []string) stringset {
-	ss := stringset{}
+func newStringSet(initial []string) stringSet {
+	ss := stringSet{}
 	for _, s := range initial {
 		ss[s] = struct{}{}
 	}
 	return ss
 }
 
-func (ss stringset) empty() bool {
+func (ss stringSet) empty() bool {
 	return len(ss) == 0
 }
 
-func (ss stringset) has(s string) bool {
+func (ss stringSet) has(s string) bool {
 	_, ok := ss[s]
 	return ok
 }

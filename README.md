@@ -53,41 +53,21 @@ fastly-exporter -token XXX
 This will collect real-time stats for all Fastly services visible to your
 token, and make them available as Prometheus metrics on 127.0.0.1:8080/metrics.
 
-### Advanced
-
-```
-USAGE
-  fastly-exporter [flags]
-
-FLAGS
-  -api-refresh 1m0s                        how often to poll api.fastly.com for updated service metadata
-  -api-timeout 15s                         HTTP client timeout for api.fastly.com requests (5–60s)
-  -debug false                             Log debug information
-  -endpoint http://127.0.0.1:8080/metrics  Prometheus /metrics endpoint
-  -name-exclude-regex ...                  if set, ignore any service whose name matches this regex
-  -name-include-regex ...                  if set, only include services whose names match this regex
-  -namespace fastly                        Prometheus namespace
-  -rt-timeout 45s                          HTTP client timeout for rt.fastly.com requests (45–120s)
-  -service ...                             if set, only include this service ID (repeatable)
-  -shard ...                               if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')
-  -subsystem rt                            Prometheus subsystem
-  -token ...                               Fastly API token (required; also via FASTLY_API_TOKEN)
-  -version false                           print version information and exit
-```
+### Filtering services
 
 By default, all services available to your token will be exported. You can
-specify an explicit set of service IDs by using the `-service xxx` flag.
-(Service IDs are available at the top of your [Fastly dashboard][db].) You can
-also include only those services whose name matches a regex by using the
-`-name-include-regex '^Production'` flag, or reject any service whose name
-matches a regex by using the `-name-exclude-regex '.*TEST.*'` flag.
+specify an explicit set of service IDs to export by using the `-service xxx`
+flag. (Service IDs are available at the top of your [Fastly dashboard][db].) You
+can also include only those services whose name matches a regex by using the
+`-service-whitelist '^Production'` flag, or skip any service whose name matches
+a regex by using the `-service-blacklist '.*TEST.*'` flag.
 
 [db]: https://manage.fastly.com/services/all
 
 For tokens with access to a lot of services, it's possible to "shard" the
-services among different instances of the fastly-exporter by using the `-shard`
-flag. For example, to shard all services between 3 exporters, you would start
-each exporter as
+services among different instances of the fastly-exporter by using the
+`-service-shard` flag. For example, to shard all services between 3 exporters,
+you would start each exporter as
 
 ```
 fastly-exporter [common flags] -shard 1/3
@@ -95,11 +75,24 @@ fastly-exporter [common flags] -shard 2/3
 fastly-exporter [common flags] -shard 3/3
 ```
 
-Flags which restrict the services that are exported combine with AND semantics.
-That is, `-service A -service B -name-include-regex 'Foo'` would only export
-data for service A and/or B if their names also matched "Foo". Or, specifying
-`-name-include-regex 'Prod' -name-exclude-regex '^test-'` would only export data
-for services whose names contained "Prod" and did not start with "test-".
+### Filtering exported metrics
+
+By default, all metrics provided by the Fastly real-time stats API are exported
+as Prometheus metrics. You can export only those metrics whose name matches a
+regex by using the `-metric-whitelist bytes_total$` flag, or elide any metric
+whose name matches a regex by using the `-metric-blacklist imgopto` flag.
+
+### Filter semantics
+
+All flags that restrict services or metrics are repeatable. Repeating the same
+flag causes its condition to be combined with OR semantics. For example,
+`-service A -service B` would include both services A and B (but not service C).
+Or, `-service-blacklist Test -service-blacklist Staging` would skip any service
+whose name contained Test or Staging.
+
+Different flags (for the same filter target) combine with AND semantics. For
+example, `-metric-whitelist 'bytes_total$' -metric-blacklist imgopto` would only
+export metrics whose names ended in bytes_total, but didn't include imgopto.
 
 ### Docker
 
