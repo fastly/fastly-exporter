@@ -40,12 +40,12 @@ func main() {
 		serviceBlacklist = stringslice{}
 		metricWhitelist  = stringslice{}
 		metricBlacklist  = stringslice{}
-
-		apiRefresh  = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
-		apiTimeout  = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
-		rtTimeout   = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
-		debug       = fs.Bool("debug", false, "Log debug information")
-		versionFlag = fs.Bool("version", false, "print version information and exit")
+		apiRefresh       = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
+		apiTimeout       = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
+		rtTimeout        = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
+		demo             = fs.Bool("demo", false, "export demo metrics for fastly.com")
+		debug            = fs.Bool("debug", false, "Log debug information")
+		versionFlag      = fs.Bool("version", false, "print version information and exit")
 	)
 	fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
 	fs.Var(&serviceWhitelist, "service-whitelist", "if set, only include services whose names match this regex (repeatable)")
@@ -180,7 +180,6 @@ func main() {
 				os.Exit(1)
 			}
 			level.Info(logger).Log("filter", "services", "type", "by shard", "n", shardN, "m", shardM)
-
 		}
 	}
 
@@ -204,7 +203,7 @@ func main() {
 		apiLogger = log.With(logger, "component", "api.fastly.com")
 	}
 
-	var apiCacheOptions []api.CacheOption
+	var apiCacheOptions []api.ServiceCacheOption
 	{
 		apiCacheOptions = append(apiCacheOptions,
 			api.WithLogger(apiLogger),
@@ -228,9 +227,14 @@ func main() {
 		}
 	}
 
-	var cache *api.Cache
+	var cache api.Cache
 	{
-		cache = api.NewCache(*token, apiCacheOptions...)
+		if *demo {
+			level.Warn(logger).Log("msg", "exporting demo metrics for fastly.com only")
+			cache = api.DemoCache{}
+		} else {
+			cache = api.NewServiceCache(*token, apiCacheOptions...)
+		}
 
 		if err := cache.Refresh(apiClient); err != nil {
 			level.Error(apiLogger).Log("during", "initial service refresh", "err", err)

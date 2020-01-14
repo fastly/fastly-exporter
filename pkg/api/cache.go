@@ -15,7 +15,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-// HTTPClient is a consumer contract for the cache.
+// Cache is a producer contract that abstracts over the
+// actual ServiceCache and the DemoCache.
+type Cache interface {
+	Refresh(HTTPClient) error
+	ServiceIDs() (ids []string)
+	Metadata(id string) (name string, version int, found bool)
+}
+
+// HTTPClient is a consumer contract for the caches.
 // It models a concrete http.Client.
 type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
@@ -29,9 +37,13 @@ type Service struct {
 	Version int    `json:"version"`
 }
 
-// Cache polls api.fastly.com/service to keep metadata about
-// one or more service IDs up-to-date.
-type Cache struct {
+//
+//
+//
+
+// ServiceCache implements Cache and polls api.fastly.com/service to keep
+// metadata about one or more service IDs up-to-date.
+type ServiceCache struct {
 	token      string
 	serviceIDs stringSet
 	nameFilter filter.Filter
@@ -42,11 +54,13 @@ type Cache struct {
 	services map[string]Service
 }
 
-// NewCache returns an empty cache of service metadata. By default, it will
-// fetch metadata about all services available to the provided token. Use
+var _ Cache = (*ServiceCache)(nil)
+
+// NewServiceCache returns an empty cache of service metadata. By default, it
+// will fetch metadata about all services available to the provided token. Use
 // options to restrict which services the cache should manage.
-func NewCache(token string, options ...CacheOption) *Cache {
-	c := &Cache{
+func NewServiceCache(token string, options ...ServiceCacheOption) *ServiceCache {
+	c := &ServiceCache{
 		token:  token,
 		logger: log.NewNopLogger(),
 	}
@@ -56,21 +70,21 @@ func NewCache(token string, options ...CacheOption) *Cache {
 	return c
 }
 
-// CacheOption provides some additional behavior to a cache. Options that
+// ServiceCacheOption provides some additional behavior to a cache. Options that
 // restrict which services are cached combine with AND semantics.
-type CacheOption func(*Cache)
+type ServiceCacheOption func(*ServiceCache)
 
 // WithExplicitServiceIDs restricts the cache to fetch metadata only for the
 // provided service IDs. By default, all service IDs available to the provided
 // token are allowed.
-func WithExplicitServiceIDs(ids ...string) CacheOption {
-	return func(c *Cache) { c.serviceIDs = newStringSet(ids) }
+func WithExplicitServiceIDs(ids ...string) ServiceCacheOption {
+	return func(c *ServiceCache) { c.serviceIDs = newStringSet(ids) }
 }
 
 // WithNameFilter restricts the cache to fetch metadata only for the services
 // whose names pass the provided filter. By default, no name filtering occurs.
-func WithNameFilter(f filter.Filter) CacheOption {
-	return func(c *Cache) { c.nameFilter = f }
+func WithNameFilter(f filter.Filter) ServiceCacheOption {
+	return func(c *ServiceCache) { c.nameFilter = f }
 }
 
 // WithShard restricts the cache to fetch metadata only for those services whose
@@ -80,18 +94,18 @@ func WithNameFilter(f filter.Filter) CacheOption {
 // This option is designed to allow users to split accounts (tokens) that have a
 // large number of services across multiple exporter processes. For example, to
 // split across 3 processes, each process would set n={1,2,3} and m=3.
-func WithShard(n, m uint64) CacheOption {
-	return func(c *Cache) { c.shard = shardSlice{n, m} }
+func WithShard(n, m uint64) ServiceCacheOption {
+	return func(c *ServiceCache) { c.shard = shardSlice{n, m} }
 }
 
 // WithLogger sets the logger used by the cache during refresh.
 // By default, no log events are emitted.
-func WithLogger(logger log.Logger) CacheOption {
-	return func(c *Cache) { c.logger = logger }
+func WithLogger(logger log.Logger) ServiceCacheOption {
+	return func(c *ServiceCache) { c.logger = logger }
 }
 
 // Refresh services and their metadata.
-func (c *Cache) Refresh(client HTTPClient) error {
+func (c *ServiceCache) Refresh(client HTTPClient) error {
 	begin := time.Now()
 
 	req, err := http.NewRequest("GET", "https://api.fastly.com/service", nil)
@@ -165,7 +179,7 @@ func (c *Cache) Refresh(client HTTPClient) error {
 
 // ServiceIDs currently being monitored by the cache.
 // The set can change over time.
-func (c *Cache) ServiceIDs() (ids []string) {
+func (c *ServiceCache) ServiceIDs() (ids []string) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -181,7 +195,7 @@ func (c *Cache) ServiceIDs() (ids []string) {
 
 // Metadata returns selected metadata associated with a given service ID.
 // If the cache doesn't contain that service ID, found will be false.
-func (c *Cache) Metadata(id string) (name string, version int, found bool) {
+func (c *ServiceCache) Metadata(id string) (name string, version int, found bool) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -189,6 +203,33 @@ func (c *Cache) Metadata(id string) (name string, version int, found bool) {
 		name, version, found = s.Name, s.Version, true
 	}
 	return name, version, found
+}
+
+//
+//
+//
+
+// DemoCache implements Cache but only returns the service ID "demo".
+type DemoCache struct{}
+
+var _ Cache = DemoCache{}
+
+// Refresh is a no-op.
+func (DemoCache) Refresh(client HTTPClient) error {
+	return nil
+}
+
+// ServiceIDs always returns "demo".
+func (DemoCache) ServiceIDs() (ids []string) {
+	return []string{"demo"}
+}
+
+// Metadata for the "demo" service ID only.
+func (DemoCache) Metadata(id string) (name string, version int, found bool) {
+	if id == "demo" {
+		return "fastly.com", 1, true
+	}
+	return name, version, false
 }
 
 //

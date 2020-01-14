@@ -18,7 +18,7 @@ func TestCache(t *testing.T) {
 	)
 	for _, testcase := range []struct {
 		name    string
-		options []api.CacheOption
+		options []api.ServiceCacheOption
 		want    []api.Service
 	}{
 		{
@@ -28,98 +28,98 @@ func TestCache(t *testing.T) {
 		},
 		{
 			name:    "whitelist both",
-			options: []api.CacheOption{api.WithExplicitServiceIDs(s1.ID, s2.ID, "additional service ID")},
+			options: []api.ServiceCacheOption{api.WithExplicitServiceIDs(s1.ID, s2.ID, "additional service ID")},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "whitelist one",
-			options: []api.CacheOption{api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.ServiceCacheOption{api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "whitelist none",
-			options: []api.CacheOption{api.WithExplicitServiceIDs("nonexistant service ID")},
+			options: []api.ServiceCacheOption{api.WithExplicitServiceIDs("nonexistant service ID")},
 			want:    []api.Service{},
 		},
 		{
 			name:    "exact name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`^` + s1.Name + `$`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterWhitelist(`^` + s1.Name + `$`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "partial name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`mmy`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterWhitelist(`mmy`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "generous name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`.*e.*`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterWhitelist(`.*e.*`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "no name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`not found`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterWhitelist(`not found`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "exact name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`^` + s1.Name + `$`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterBlacklist(`^` + s1.Name + `$`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "partial name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`mmy`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterBlacklist(`mmy`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "generous name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`.*e.*`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterBlacklist(`.*e.*`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "no name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`not found`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterBlacklist(`not found`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "name exclude and include",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelistBlacklist(`.*e.*`, `mmy`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterWhitelistBlacklist(`.*e.*`, `mmy`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "single shard",
-			options: []api.CacheOption{api.WithShard(1, 1)},
+			options: []api.ServiceCacheOption{api.WithShard(1, 1)},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "shard n0 m3",
-			options: []api.CacheOption{api.WithShard(1, 3)},
+			options: []api.ServiceCacheOption{api.WithShard(1, 3)},
 			want:    []api.Service{s1}, // verified experimentally
 		},
 		{
 			name:    "shard n1 m3",
-			options: []api.CacheOption{api.WithShard(2, 3)},
+			options: []api.ServiceCacheOption{api.WithShard(2, 3)},
 			want:    []api.Service{s2}, // verified experimentally
 		},
 		{
 			name:    "shard n2 m3",
-			options: []api.CacheOption{api.WithShard(3, 3)},
+			options: []api.ServiceCacheOption{api.WithShard(3, 3)},
 			want:    []api.Service{}, // verified experimentally
 		},
 		{
 			name:    "shard and service ID passing",
-			options: []api.CacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.ServiceCacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "shard and service ID failing",
-			options: []api.CacheOption{api.WithShard(2, 3), api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.ServiceCacheOption{api.WithShard(2, 3), api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{},
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
 			var (
-				cache  = api.NewCache("irrelevant_token", testcase.options...)
+				cache  = api.NewServiceCache("irrelevant_token", testcase.options...)
 				client = fixedResponseClient{code: 200, response: serviceResponseFixture}
 			)
 			if err := cache.Refresh(client); err != nil {

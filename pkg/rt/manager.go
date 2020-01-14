@@ -10,17 +10,17 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 )
 
-// ServiceIdentifier is a consumer contract for a subscriber manager.
+// ServiceProvider is a consumer contract for a subscriber manager.
 // It models the service ID listing and lookup methods of an api.Cache.
-type ServiceIdentifier interface {
+type ServiceProvider interface {
 	ServiceIDs() []string
 }
 
 // Manager owns a set of subscribers. When refreshed, it will ask a
-// ServiceIdentifier for a set of service IDs that should be active, and manage
+// ServiceProvider for a set of service IDs that should be active, and manage
 // the lifecycles of the corresponding subscribers.
 type Manager struct {
-	ids               ServiceIdentifier
+	provider          ServiceProvider
 	client            HTTPClient
 	token             string
 	metrics           *prom.Metrics
@@ -35,9 +35,9 @@ type Manager struct {
 // regular schedule to keep the set of managed subscribers up-to-date. The HTTP
 // client, token, metrics, and subscriber options parameters are passed thru to
 // constructed subscribers.
-func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics *prom.Metrics, subscriberOptions []SubscriberOption, logger log.Logger) *Manager {
+func NewManager(provider ServiceProvider, client HTTPClient, token string, metrics *prom.Metrics, subscriberOptions []SubscriberOption, logger log.Logger) *Manager {
 	return &Manager{
-		ids:               ids,
+		provider:          provider,
 		client:            client,
 		token:             token,
 		metrics:           metrics,
@@ -60,7 +60,7 @@ func (m *Manager) Refresh() {
 	defer m.mtx.Unlock()
 
 	nextgen := map[string]interrupt{}
-	for _, id := range m.ids.ServiceIDs() {
+	for _, id := range m.provider.ServiceIDs() {
 		if irq, ok := m.managed[id]; ok {
 			level.Debug(m.logger).Log("service_id", id, "subscriber", "maintain")
 			nextgen[id] = irq // move
