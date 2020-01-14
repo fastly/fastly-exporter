@@ -79,7 +79,7 @@ fastly-exporter [common flags] -service-shard 3/3
 
 By default, all metrics provided by the Fastly real-time stats API are exported
 as Prometheus metrics. You can export only those metrics whose name matches a
-regex by using the `-metric-whitelist bytes_total$` flag, or elide any metric
+regex by using the `-metric-whitelist 'bytes_total$'` flag, or elide any metric
 whose name matches a regex by using the `-metric-blacklist imgopto` flag.
 
 ### Filter semantics
@@ -117,3 +117,4 @@ env FASTLY_API_TOKEN=$MY_TOKEN docker-compose up
 Access the Grafana dashboard at http://localhost:3000.
 
 ![Fastly Dashboard in Grafana](https://raw.githubusercontent.com/peterbourgon/fastly-exporter/master/compose/Fastly-Dashboard.png)
+
