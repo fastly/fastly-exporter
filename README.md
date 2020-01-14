@@ -70,9 +70,9 @@ services among different instances of the fastly-exporter by using the
 you would start each exporter as
 
 ```
-fastly-exporter [common flags] -shard 1/3
-fastly-exporter [common flags] -shard 2/3
-fastly-exporter [common flags] -shard 3/3
+fastly-exporter [common flags] -service-shard 1/3
+fastly-exporter [common flags] -service-shard 2/3
+fastly-exporter [common flags] -service-shard 3/3
 ```
 
 ### Filtering exported metrics
