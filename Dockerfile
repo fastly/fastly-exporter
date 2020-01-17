@@ -6,6 +6,11 @@ ARG GO_VERSION=1.12.7
 # First stage: build the executable
 FROM golang:${GO_VERSION}-alpine AS builder
 
+# Fetch go modules
+# https://github.com/golang/go/wiki/Modules
+# https://dev.to/maelvls/why-is-go111module-everywhere-and-everything-about-go-modules-24k
+ENV GO111MODULE=on
+
 # ca-certificates for calls to HTTPS endpoints
 # git for fetching the dependencies
 RUN apk add --no-cache \
