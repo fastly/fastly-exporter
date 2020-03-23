@@ -46,7 +46,7 @@ func main() {
 		apiTimeout = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
 		rtTimeout  = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
 
-		debug             = fs.Bool("debug", false, "Log debug information")
+		debug             = fs.Bool("debug", false, "log debug information")
 		versionFlag       = fs.Bool("version", false, "print version information and exit")
 		_                 = fs.String("config-file", "", "config file (optional)")
 		configFileExample = fs.Bool("config-file-example", false, "print example config file to stdout and exit")
