@@ -31,7 +31,7 @@ func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
 		token            = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
-		addr             = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		addr             = fs.String("endpoint", "", "Prometheus /metrics endpoint (also via PROMETHEUS_METRICS_ENDPOINT}")
 		namespace        = fs.String("namespace", "fastly", "Prometheus namespace")
 		subsystem        = fs.String("subsystem", "rt", "Prometheus subsystem")
 		serviceShard     = fs.String("service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
@@ -47,7 +47,7 @@ func main() {
 		debug       = fs.Bool("debug", false, "Log debug information")
 		versionFlag = fs.Bool("version", false, "print version information and exit")
 	)
-	fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
+	fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable; also via FASTLY_SERVICE_IDS)")
 	fs.Var(&serviceWhitelist, "service-whitelist", "if set, only include services whose names match this regex (repeatable)")
 	fs.Var(&serviceBlacklist, "service-blacklist", "if set, don't include services whose names match this regex (repeatable)")
 	fs.Var(&metricWhitelist, "metric-whitelist", "if set, only export metrics whose names match this regex (repeatable)")
@@ -74,6 +74,19 @@ func main() {
 		if *token = os.Getenv("FASTLY_API_TOKEN"); *token == "" {
 			level.Error(logger).Log("err", "-token or FASTLY_API_TOKEN is required")
 			os.Exit(1)
+		}
+	}
+
+	if len(*addr) == 0 {
+		if *addr = os.Getenv("PROMETHEUS_METRICS_ENDPOINT"); len(*addr) == 0 {
+			*addr = "http://127.0.0.1:8080/metrics"
+		}
+	}
+
+	if len(serviceIDs) == 0 {
+		var envServiceIDs string = os.Getenv("FASTLY_SERVICE_IDS")
+		for _, id := range strings.Split(envServiceIDs, ",") {
+			serviceIDs.Set(id)
 		}
 	}
 
