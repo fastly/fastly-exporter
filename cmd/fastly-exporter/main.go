@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -20,7 +21,7 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
-	"github.com/peterbourgon/usage"
+	"github.com/peterbourgon/ff"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -30,7 +31,7 @@ var programVersion = "dev"
 func main() {
 	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token            = fs.String("token", "", "Fastly API token (required; also via FASTLY_API_TOKEN)")
+		token            = fs.String("token", "", "Fastly API token (required)")
 		addr             = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
 		namespace        = fs.String("namespace", "fastly", "Prometheus namespace")
 		subsystem        = fs.String("subsystem", "rt", "Prometheus subsystem")
@@ -41,22 +42,30 @@ func main() {
 		metricWhitelist  = stringslice{}
 		metricBlacklist  = stringslice{}
 
-		apiRefresh  = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
-		apiTimeout  = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
-		rtTimeout   = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
-		debug       = fs.Bool("debug", false, "Log debug information")
-		versionFlag = fs.Bool("version", false, "print version information and exit")
+		apiRefresh = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
+		apiTimeout = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
+		rtTimeout  = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
+
+		debug             = fs.Bool("debug", false, "Log debug information")
+		versionFlag       = fs.Bool("version", false, "print version information and exit")
+		_                 = fs.String("config-file", "", "config file (optional)")
+		configFileExample = fs.Bool("config-file-example", false, "print example config file to stdout and exit")
 	)
 	fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
 	fs.Var(&serviceWhitelist, "service-whitelist", "if set, only include services whose names match this regex (repeatable)")
 	fs.Var(&serviceBlacklist, "service-blacklist", "if set, don't include services whose names match this regex (repeatable)")
 	fs.Var(&metricWhitelist, "metric-whitelist", "if set, only export metrics whose names match this regex (repeatable)")
 	fs.Var(&metricBlacklist, "metric-blacklist", "if set, don't export metrics whose names match this regex (repeatable)")
-	fs.Usage = usage.For(fs, "fastly-exporter [flags]")
-	fs.Parse(os.Args[1:])
+	fs.Usage = usageFor(fs)
+	ff.Parse(fs, os.Args[1:], ff.WithEnvVarPrefix("FASTLY_EXPORTER"), ff.WithConfigFileFlag("config-file"))
 
 	if *versionFlag {
 		fmt.Fprintf(os.Stdout, "fastly-exporter v%s\n", programVersion)
+		os.Exit(0)
+	}
+
+	if *configFileExample {
+		fmt.Fprintln(os.Stdout, exampleConfigFile)
 		os.Exit(0)
 	}
 
@@ -347,3 +356,54 @@ func (ss *stringslice) String() string {
 	}
 	return strings.Join(*ss, ", ")
 }
+
+func usageFor(fs *flag.FlagSet) func() {
+	return func() {
+		fmt.Fprintf(os.Stderr, "USAGE\n")
+		fmt.Fprintf(os.Stderr, "  fastly-exporter [flags]\n")
+		fmt.Fprintf(os.Stderr, "\n")
+		fmt.Fprintf(os.Stderr, "FLAGS\n")
+
+		tw := tabwriter.NewWriter(os.Stderr, 0, 2, 2, ' ', 0)
+		fs.VisitAll(func(f *flag.Flag) {
+			def := f.DefValue
+			if def == "" {
+				def = "..."
+			}
+			fmt.Fprintf(tw, "  -%s %s\t%s%s\n", f.Name, def, f.Usage, envVarSuffix(f))
+		})
+		tw.Flush()
+
+		fmt.Fprintf(os.Stderr, "\n")
+	}
+}
+
+func envVarSuffix(f *flag.Flag) string {
+	if _, ok := f.Value.(*stringslice); ok {
+		return "" // no repeatable flags as env vars
+	}
+
+	switch f.Name {
+	case "version", "config-file-example":
+		return ""
+
+	case "token":
+		return " (or via FASTLY_API_TOKEN)"
+
+	default:
+		return " (or via FASTLY_EXPORTER_" + strings.Replace(strings.ToUpper(f.Name), "-", "_", -1) + ")"
+	}
+}
+
+var exampleConfigFile = strings.TrimSpace(`
+token ABC123
+
+api-refresh 30s
+api-timeout 60s
+
+service-whitelist Prod
+service-blacklist Staging
+service-blacklist Dev
+
+metric-blacklist imgopto
+`)
