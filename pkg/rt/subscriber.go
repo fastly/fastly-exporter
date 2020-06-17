@@ -258,7 +258,9 @@ type datacenter struct {
 	RespBodyBytes                   uint64            `json:"resp_body_bytes"`
 	BodySize                        uint64            `json:"body_size"`
 	ReqHeaderBytes                  uint64            `json:"req_header_bytes"`
+	ReqBodyBytes                    uint64            `json:"req_body_bytes"`
 	BackendReqHeaderBytes           uint64            `json:"bereq_header_bytes"`
+	BackendReqBodyBytes             uint64            `json:"bereq_body_bytes"`
 	BilledHeaderBytes               uint64            `json:"billed_header_bytes"`
 	BilledBodyBytes                 uint64            `json:"billed_body_bytes"`
 	WAFBlocked                      uint64            `json:"waf_blocked"`

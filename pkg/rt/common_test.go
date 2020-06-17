@@ -186,7 +186,9 @@ const rtResponseFixture = `{
 					"resp_body_bytes": 39,
 					"body_size": 39,
 					"req_header_bytes": 294,
+					"req_body_bytes": 394,
 					"bereq_header_bytes": 599,
+					"bereq_body_bytes": 793,
 					"billed_header_bytes": 441,
 					"billed_body_bytes": 39,
 					"status_4xx": 1,
@@ -225,7 +227,9 @@ const rtResponseFixture = `{
 				"resp_body_bytes": 39,
 				"body_size": 39,
 				"req_header_bytes": 294,
+				"req_body_bytes": 394,
 				"bereq_header_bytes": 599,
+				"bereq_body_bytes": 793,
 				"billed_header_bytes": 441,
 				"billed_body_bytes": 39,
 				"status_4xx": 1,
@@ -274,6 +278,7 @@ testspace_testsystem_attack_req_body_bytes_total{datacenter="BWI",service_id="my
 testspace_testsystem_attack_req_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_attack_resp_synth_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_bereq_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 599
+testspace_testsystem_bereq_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 793
 testspace_testsystem_billed_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 39
 testspace_testsystem_billed_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 441
 testspace_testsystem_body_size_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 39
@@ -356,6 +361,7 @@ testspace_testsystem_realtime_api_requests_total{result="success",service_id="my
 testspace_testsystem_recv_sub_count_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 6
 testspace_testsystem_recv_sub_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1.872661e+06
 testspace_testsystem_req_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 294
+testspace_testsystem_req_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 394
 testspace_testsystem_requests_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1
 testspace_testsystem_resp_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 39
 testspace_testsystem_resp_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 441

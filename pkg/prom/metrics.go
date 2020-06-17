@@ -39,7 +39,9 @@ type Metrics struct {
 	RespBodyBytesTotal                   *prometheus.CounterVec
 	BodySizeTotal                        *prometheus.CounterVec
 	ReqHeaderBytesTotal                  *prometheus.CounterVec
+	ReqBodyBytesTotal                    *prometheus.CounterVec
 	BackendReqHeaderBytesTotal           *prometheus.CounterVec
+	BackendReqBodyBytesTotal             *prometheus.CounterVec
 	BilledHeaderBytesTotal               *prometheus.CounterVec
 	BilledBodyBytesTotal                 *prometheus.CounterVec
 	WAFBlockedTotal                      *prometheus.CounterVec
@@ -194,9 +196,17 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		Name: "req_header_bytes_total",
 		Help: "Total size of request headers, in bytes",
 	}, []string{"service_id", "service_name", "datacenter"})
+	m.ReqBodyBytesTotal = prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
+		Name: "req_body_bytes_total",
+		Help: "Total size of request bodies, in bytes",
+	}, []string{"service_id", "service_name", "datacenter"})
 	m.BackendReqHeaderBytesTotal = prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "bereq_header_bytes_total",
 		Help: "Total size of backend headers, in bytes.",
+	}, []string{"service_id", "service_name", "datacenter"})
+	m.BackendReqBodyBytesTotal = prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
+		Name: "bereq_body_bytes_total",
+		Help: "Total size of backend bodies, in bytes.",
 	}, []string{"service_id", "service_name", "datacenter"})
 	m.BilledHeaderBytesTotal = prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem,
 		Name: "billed_header_bytes_total",
