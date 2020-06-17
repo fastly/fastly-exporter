@@ -446,7 +446,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		if !ok {
 			panic(fmt.Sprintf("programmer error: field %d/%d in prom.Metrics isn't a prometheus.Collector", i+1, v.NumField()))
 		}
-		if name := getName(c); !nameFilter.Allow(name) {
+		if name := getName(c); !nameFilter.Permit(name) {
 			continue
 		}
 		if err := r.Register(c); err != nil {
