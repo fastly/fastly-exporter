@@ -40,8 +40,8 @@ go get github.com/peterbourgon/fastly-exporter/cmd/fastly-exporter
 ### Basic
 
 For simple use cases, all you need is a Fastly API token.
-[See this link][token] for information on creating API tokens. 
-The token can be provided via the `-token` flag or the 
+[See this link][token] for information on creating API tokens.
+The token can be provided via the `-token` flag or the
 `FASTLY_API_TOKEN` environment variable.
 
 [token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
@@ -59,8 +59,8 @@ By default, all services available to your token will be exported. You can
 specify an explicit set of service IDs to export by using the `-service xxx`
 flag. (Service IDs are available at the top of your [Fastly dashboard][db].) You
 can also include only those services whose name matches a regex by using the
-`-service-whitelist '^Production'` flag, or skip any service whose name matches
-a regex by using the `-service-blacklist '.*TEST.*'` flag.
+`-service-allowlist '^Production'` flag, or skip any service whose name matches
+a regex by using the `-service-blocklist '.*TEST.*'` flag.
 
 [db]: https://manage.fastly.com/services/all
 
@@ -79,19 +79,19 @@ fastly-exporter [common flags] -service-shard 3/3
 
 By default, all metrics provided by the Fastly real-time stats API are exported
 as Prometheus metrics. You can export only those metrics whose name matches a
-regex by using the `-metric-whitelist 'bytes_total$'` flag, or elide any metric
-whose name matches a regex by using the `-metric-blacklist imgopto` flag.
+regex by using the `-metric-allowlist 'bytes_total$'` flag, or elide any metric
+whose name matches a regex by using the `-metric-blocklist imgopto` flag.
 
 ### Filter semantics
 
 All flags that restrict services or metrics are repeatable. Repeating the same
 flag causes its condition to be combined with OR semantics. For example,
 `-service A -service B` would include both services A and B (but not service C).
-Or, `-service-blacklist Test -service-blacklist Staging` would skip any service
+Or, `-service-blocklist Test -service-blocklist Staging` would skip any service
 whose name contained Test or Staging.
 
 Different flags (for the same filter target) combine with AND semantics. For
-example, `-metric-whitelist 'bytes_total$' -metric-blacklist imgopto` would only
+example, `-metric-allowlist 'bytes_total$' -metric-blocklist imgopto` would only
 export metrics whose names ended in bytes_total, but didn't include imgopto.
 
 ### Docker
@@ -117,4 +117,3 @@ env FASTLY_API_TOKEN=$MY_TOKEN docker-compose up
 Access the Grafana dashboard at http://localhost:3000.
 
 ![Fastly Dashboard in Grafana](https://raw.githubusercontent.com/peterbourgon/fastly-exporter/master/compose/Fastly-Dashboard.png)
-

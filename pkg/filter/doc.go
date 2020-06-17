@@ -1,2 +1,2 @@
-// Package filter provides whitelist- and blacklist-based string filtering.
+// Package filter provides allowlist- and blocklist-based string filtering.
 package filter

@@ -27,17 +27,17 @@ func TestCache(t *testing.T) {
 			want:    []api.Service{s1, s2},
 		},
 		{
-			name:    "whitelist both",
+			name:    "allowlist both",
 			options: []api.CacheOption{api.WithExplicitServiceIDs(s1.ID, s2.ID, "additional service ID")},
 			want:    []api.Service{s1, s2},
 		},
 		{
-			name:    "whitelist one",
+			name:    "allowlist one",
 			options: []api.CacheOption{api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{s1},
 		},
 		{
-			name:    "whitelist none",
+			name:    "allowlist none",
 			options: []api.CacheOption{api.WithExplicitServiceIDs("nonexistant service ID")},
 			want:    []api.Service{},
 		},
