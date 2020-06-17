@@ -106,11 +106,11 @@ func main() {
 			*apiTimeout = 60 * time.Second
 		}
 		if *rtTimeout < 45*time.Second {
-			level.Warn(logger).Log("msg", "-api-timeout cannot be shorter than 45s; setting it to 45s")
+			level.Warn(logger).Log("msg", "-rt-timeout cannot be shorter than 45s; setting it to 45s")
 			*rtTimeout = 45 * time.Second
 		}
 		if *rtTimeout > 120*time.Second {
-			level.Warn(logger).Log("msg", "-api-timeout cannot be longer than 120s; setting it to 120s")
+			level.Warn(logger).Log("msg", "-rt-timeout cannot be longer than 120s; setting it to 120s")
 			*rtTimeout = 120 * time.Second
 		}
 	}
