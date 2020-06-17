@@ -43,47 +43,47 @@ func TestCache(t *testing.T) {
 		},
 		{
 			name:    "exact name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`^` + s1.Name + `$`))},
+			options: []api.CacheOption{api.WithNameFilter(filterAllowlist(`^` + s1.Name + `$`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "partial name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`mmy`))},
+			options: []api.CacheOption{api.WithNameFilter(filterAllowlist(`mmy`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "generous name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`.*e.*`))},
+			options: []api.CacheOption{api.WithNameFilter(filterAllowlist(`.*e.*`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "no name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelist(`not found`))},
+			options: []api.CacheOption{api.WithNameFilter(filterAllowlist(`not found`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "exact name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`^` + s1.Name + `$`))},
+			options: []api.CacheOption{api.WithNameFilter(filterBlocklist(`^` + s1.Name + `$`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "partial name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`mmy`))},
+			options: []api.CacheOption{api.WithNameFilter(filterBlocklist(`mmy`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "generous name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`.*e.*`))},
+			options: []api.CacheOption{api.WithNameFilter(filterBlocklist(`.*e.*`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "no name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlacklist(`not found`))},
+			options: []api.CacheOption{api.WithNameFilter(filterBlocklist(`not found`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "name exclude and include",
-			options: []api.CacheOption{api.WithNameFilter(filterWhitelistBlacklist(`.*e.*`, `mmy`))},
+			options: []api.CacheOption{api.WithNameFilter(filterAllowlistBlocklist(`.*e.*`, `mmy`))},
 			want:    []api.Service{s1},
 		},
 		{
@@ -140,19 +140,19 @@ func TestCache(t *testing.T) {
 	}
 }
 
-func filterWhitelist(w string) (f filter.Filter) {
-	f.Whitelist(w)
+func filterAllowlist(a string) (f filter.Filter) {
+	f.Allow(a)
 	return f
 }
 
-func filterBlacklist(b string) (f filter.Filter) {
-	f.Blacklist(b)
+func filterBlocklist(b string) (f filter.Filter) {
+	f.Block(b)
 	return f
 }
 
-func filterWhitelistBlacklist(w, b string) (f filter.Filter) {
-	f.Whitelist(w)
-	f.Blacklist(b)
+func filterAllowlistBlocklist(a, b string) (f filter.Filter) {
+	f.Allow(a)
+	f.Block(b)
 	return f
 }
 

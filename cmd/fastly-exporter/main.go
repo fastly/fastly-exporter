@@ -21,7 +21,7 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
-	"github.com/peterbourgon/ff"
+	"github.com/peterbourgon/ff/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -29,42 +29,54 @@ import (
 var programVersion = "dev"
 
 func main() {
-	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
 	var (
-		token            = fs.String("token", "", "Fastly API token (required)")
-		addr             = fs.String("endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
-		namespace        = fs.String("namespace", "fastly", "Prometheus namespace")
-		subsystem        = fs.String("subsystem", "rt", "Prometheus subsystem")
-		serviceShard     = fs.String("service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
-		serviceIDs       = stringslice{}
-		serviceWhitelist = stringslice{}
-		serviceBlacklist = stringslice{}
-		metricWhitelist  = stringslice{}
-		metricBlacklist  = stringslice{}
-
-		apiRefresh = fs.Duration("api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
-		apiTimeout = fs.Duration("api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
-		rtTimeout  = fs.Duration("rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
-
-		debug             = fs.Bool("debug", false, "log debug information")
-		versionFlag       = fs.Bool("version", false, "print version information and exit")
-		_                 = fs.String("config-file", "", "config file (optional)")
-		configFileExample = fs.Bool("config-file-example", false, "print example config file to stdout and exit")
+		token             string
+		addr              string
+		namespace         string
+		subsystem         string
+		serviceShard      string
+		serviceIDs        stringslice
+		serviceAllowlist  stringslice
+		serviceBlocklist  stringslice
+		metricAllowlist   stringslice
+		metricBlocklist   stringslice
+		apiRefresh        time.Duration
+		apiTimeout        time.Duration
+		rtTimeout         time.Duration
+		debug             bool
+		versionFlag       bool
+		configFileExample bool
 	)
-	fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
-	fs.Var(&serviceWhitelist, "service-whitelist", "if set, only include services whose names match this regex (repeatable)")
-	fs.Var(&serviceBlacklist, "service-blacklist", "if set, don't include services whose names match this regex (repeatable)")
-	fs.Var(&metricWhitelist, "metric-whitelist", "if set, only export metrics whose names match this regex (repeatable)")
-	fs.Var(&metricBlacklist, "metric-blacklist", "if set, don't export metrics whose names match this regex (repeatable)")
-	fs.Usage = usageFor(fs)
+
+	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
+	{
+		fs.StringVar(&token, "token", "", "Fastly API token (required)")
+		fs.StringVar(&addr, "endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		fs.StringVar(&namespace, "namespace", "fastly", "Prometheus namespace")
+		fs.StringVar(&subsystem, "subsystem", "rt", "Prometheus subsystem")
+		fs.StringVar(&serviceShard, "service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
+		fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
+		fs.Var(&serviceAllowlist, "service-allowlist", "if set, only include services whose names match this regex (repeatable)")
+		fs.Var(&serviceBlocklist, "service-blocklist", "if set, don't include services whose names match this regex (repeatable)")
+		fs.Var(&metricAllowlist, "metric-allowlist", "if set, only export metrics whose names match this regex (repeatable)")
+		fs.Var(&metricBlocklist, "metric-blocklist", "if set, don't export metrics whose names match this regex (repeatable)")
+		fs.DurationVar(&apiRefresh, "api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
+		fs.DurationVar(&apiTimeout, "api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
+		fs.DurationVar(&rtTimeout, "rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
+		fs.BoolVar(&debug, "debug", false, "log debug information")
+		fs.BoolVar(&versionFlag, "version", false, "print version information and exit")
+		fs.String("config-file", "", "config file (optional)")
+		fs.BoolVar(&configFileExample, "config-file-example", false, "print example config file to stdout and exit")
+		fs.Usage = usageFor(fs)
+	}
 	ff.Parse(fs, os.Args[1:], ff.WithEnvVarPrefix("FASTLY_EXPORTER"), ff.WithConfigFileFlag("config-file"))
 
-	if *versionFlag {
+	if versionFlag {
 		fmt.Fprintf(os.Stdout, "fastly-exporter v%s\n", programVersion)
 		os.Exit(0)
 	}
 
-	if *configFileExample {
+	if configFileExample {
 		fmt.Fprintln(os.Stdout, exampleConfigFile)
 		os.Exit(0)
 	}
@@ -73,14 +85,14 @@ func main() {
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
 		loglevel := level.AllowInfo()
-		if *debug {
+		if debug {
 			loglevel = level.AllowDebug()
 		}
 		logger = level.NewFilter(logger, loglevel)
 	}
 
-	if *token == "" {
-		if *token = os.Getenv("FASTLY_API_TOKEN"); *token == "" {
+	if token == "" {
+		if token = os.Getenv("FASTLY_API_TOKEN"); token == "" {
 			level.Error(logger).Log("err", "-token or FASTLY_API_TOKEN is required")
 			os.Exit(1)
 		}
@@ -89,82 +101,82 @@ func main() {
 	var promURL *url.URL
 	{
 		var err error
-		promURL, err = url.Parse(*addr)
+		promURL, err = url.Parse(addr)
 		if err != nil {
 			level.Error(logger).Log("err", err)
 			os.Exit(1)
 		}
-		level.Info(logger).Log("prometheus_addr", promURL.Host, "path", promURL.Path, "namespace", *namespace, "subsystem", *subsystem)
+		level.Info(logger).Log("prometheus_addr", promURL.Host, "path", promURL.Path, "namespace", namespace, "subsystem", subsystem)
 	}
 
 	{
-		if *apiRefresh < 15*time.Second {
+		if apiRefresh < 15*time.Second {
 			level.Warn(logger).Log("msg", "-api-refresh cannot be shorter than 15s; setting it to 15s")
-			*apiRefresh = 15 * time.Second
+			apiRefresh = 15 * time.Second
 		}
-		if *apiRefresh > 10*time.Minute {
+		if apiRefresh > 10*time.Minute {
 			level.Warn(logger).Log("msg", "-api-refresh cannot be longer than 10m; setting it to 10m")
-			*apiRefresh = 10 * time.Minute
+			apiRefresh = 10 * time.Minute
 		}
-		if *apiTimeout < 5*time.Second {
+		if apiTimeout < 5*time.Second {
 			level.Warn(logger).Log("msg", "-api-timeout cannot be shorter than 5s; setting it to 5s")
-			*apiTimeout = 5 * time.Second
+			apiTimeout = 5 * time.Second
 		}
-		if *apiTimeout > 60*time.Second {
+		if apiTimeout > 60*time.Second {
 			level.Warn(logger).Log("msg", "-api-timeout cannot be longer than 60s; setting it to 60s")
-			*apiTimeout = 60 * time.Second
+			apiTimeout = 60 * time.Second
 		}
-		if *rtTimeout < 45*time.Second {
+		if rtTimeout < 45*time.Second {
 			level.Warn(logger).Log("msg", "-rt-timeout cannot be shorter than 45s; setting it to 45s")
-			*rtTimeout = 45 * time.Second
+			rtTimeout = 45 * time.Second
 		}
-		if *rtTimeout > 120*time.Second {
+		if rtTimeout > 120*time.Second {
 			level.Warn(logger).Log("msg", "-rt-timeout cannot be longer than 120s; setting it to 120s")
-			*rtTimeout = 120 * time.Second
+			rtTimeout = 120 * time.Second
 		}
 	}
 
 	var serviceNameFilter filter.Filter
 	{
-		for _, expr := range serviceWhitelist {
-			if err := serviceNameFilter.Whitelist(expr); err != nil {
-				level.Error(logger).Log("err", "invalid -service-whitelist", "msg", err)
+		for _, expr := range serviceAllowlist {
+			if err := serviceNameFilter.Allow(expr); err != nil {
+				level.Error(logger).Log("err", "invalid -service-allowlist", "msg", err)
 				os.Exit(1)
 			}
-			level.Info(logger).Log("filter", "services", "type", "name whitelist", "expr", expr)
+			level.Info(logger).Log("filter", "services", "type", "name allowlist", "expr", expr)
 		}
-		for _, expr := range serviceBlacklist {
-			if err := serviceNameFilter.Blacklist(expr); err != nil {
-				level.Error(logger).Log("err", "invalid -service-blacklist", "msg", err)
+		for _, expr := range serviceBlocklist {
+			if err := serviceNameFilter.Block(expr); err != nil {
+				level.Error(logger).Log("err", "invalid -service-blocklist", "msg", err)
 				os.Exit(1)
 			}
-			level.Info(logger).Log("filter", "services", "type", "name blacklist", "expr", expr)
+			level.Info(logger).Log("filter", "services", "type", "name blocklist", "expr", expr)
 		}
 	}
 
 	var metricNameFilter filter.Filter
 	{
-		for _, expr := range metricWhitelist {
-			if err := metricNameFilter.Whitelist(expr); err != nil {
-				level.Error(logger).Log("err", "invalid -metric-whitelist", "msg", err)
+		for _, expr := range metricAllowlist {
+			if err := metricNameFilter.Allow(expr); err != nil {
+				level.Error(logger).Log("err", "invalid -metric-allowlist", "msg", err)
 				os.Exit(1)
 			}
-			level.Info(logger).Log("filter", "metrics", "type", "name whitelist", "expr", expr)
+			level.Info(logger).Log("filter", "metrics", "type", "name allowlist", "expr", expr)
 
 		}
-		for _, expr := range metricBlacklist {
-			if err := metricNameFilter.Blacklist(expr); err != nil {
-				level.Error(logger).Log("err", "invalid -metric-blacklist", "msg", err)
+		for _, expr := range metricBlocklist {
+			if err := metricNameFilter.Block(expr); err != nil {
+				level.Error(logger).Log("err", "invalid -metricblocklist", "msg", err)
 				os.Exit(1)
 			}
-			level.Info(logger).Log("filter", "metrics", "type", "name blacklist", "expr", expr)
+			level.Info(logger).Log("filter", "metrics", "type", "name blocklist", "expr", expr)
 		}
 	}
 
 	var shardN, shardM uint64
 	{
-		if *serviceShard != "" {
-			toks := strings.SplitN(*serviceShard, "/", 2)
+		if serviceShard != "" {
+			toks := strings.SplitN(serviceShard, "/", 2)
 			if len(toks) != 2 {
 				level.Error(logger).Log("err", "-service-shard must be of the format 'n/m'")
 				os.Exit(1)
@@ -201,7 +213,7 @@ func main() {
 	var metrics *prom.Metrics
 	{
 		var err error
-		metrics, err = prom.NewMetrics(*namespace, *subsystem, metricNameFilter, registry)
+		metrics, err = prom.NewMetrics(namespace, subsystem, metricNameFilter, registry)
 		if err != nil {
 			level.Error(logger).Log("err", err)
 			os.Exit(1)
@@ -233,13 +245,13 @@ func main() {
 	var apiClient *http.Client
 	{
 		apiClient = &http.Client{
-			Timeout: *apiTimeout,
+			Timeout: apiTimeout,
 		}
 	}
 
 	var cache *api.Cache
 	{
-		cache = api.NewCache(*token, apiCacheOptions...)
+		cache = api.NewCache(token, apiCacheOptions...)
 
 		if err := cache.Refresh(apiClient); err != nil {
 			level.Error(apiLogger).Log("during", "initial service refresh", "err", err)
@@ -255,7 +267,7 @@ func main() {
 	var manager *rt.Manager
 	{
 		rtClient := &http.Client{
-			Timeout: *rtTimeout,
+			Timeout: rtTimeout,
 		}
 		subscriberOptions := []rt.SubscriberOption{
 			rt.WithLogger(rtLogger),
@@ -263,7 +275,7 @@ func main() {
 			rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
 		}
 
-		manager = rt.NewManager(cache, rtClient, *token, metrics, subscriberOptions, rtLogger)
+		manager = rt.NewManager(cache, rtClient, token, metrics, subscriberOptions, rtLogger)
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
 
@@ -274,7 +286,7 @@ func main() {
 		// its set of rt.Subscribers, based on those latest services.
 		var (
 			ctx, cancel = context.WithCancel(context.Background())
-			ticker      = time.NewTicker(*apiRefresh)
+			ticker      = time.NewTicker(apiRefresh)
 		)
 		g.Add(func() error {
 			for {
@@ -401,9 +413,9 @@ token ABC123
 api-refresh 30s
 api-timeout 60s
 
-service-whitelist Prod
-service-blacklist Staging
-service-blacklist Dev
+service-allowlist Prod
+service-blocklist Staging
+service-blocklist Dev
 
-metric-blacklist imgopto
+metric-blocklist imgopto
 `)

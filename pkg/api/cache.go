@@ -136,7 +136,7 @@ func (c *Cache) Refresh(client HTTPClient) error {
 			continue
 		}
 
-		if reject := !c.nameFilter.Allow(s.Name); reject {
+		if reject := !c.nameFilter.Permit(s.Name); reject {
 			debug.Log("result", "rejected", "reason", "service name rejected by name filter")
 			continue
 		}
