@@ -19,7 +19,7 @@ import (
 	"github.com/oklog/run"
 	"github.com/peterbourgon/fastly-exporter/pkg/api"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/prom"
+	"github.com/peterbourgon/fastly-exporter/pkg/gen"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
 	"github.com/peterbourgon/ff/v3"
 	"github.com/prometheus/client_golang/prometheus"
@@ -210,10 +210,10 @@ func main() {
 		registry = prometheus.NewRegistry()
 	}
 
-	var metrics *prom.Metrics
+	var metrics *gen.Metrics
 	{
 		var err error
-		metrics, err = prom.NewMetrics(namespace, subsystem, metricNameFilter, registry)
+		metrics, err = gen.NewMetrics(namespace, subsystem, metricNameFilter, registry)
 		if err != nil {
 			level.Error(logger).Log("err", err)
 			os.Exit(1)

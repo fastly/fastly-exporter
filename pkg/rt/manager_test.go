@@ -10,7 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/peterbourgon/fastly-exporter/pkg/api"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/prom"
+	"github.com/peterbourgon/fastly-exporter/pkg/gen"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -23,7 +23,7 @@ func TestManager(t *testing.T) {
 		s3         = api.Service{ID: "3a3b3c", Name: "service 3", Version: 3}
 		client     = newMockRealtimeClient(`{}`)
 		token      = "irrelevant-token"
-		metrics, _ = prom.NewMetrics("namespace", "subsystem", filter.Filter{}, prometheus.NewRegistry())
+		metrics, _ = gen.NewMetrics("namespace", "subsystem", filter.Filter{}, prometheus.NewRegistry())
 		logbuf     = &bytes.Buffer{}
 		logger     = log.NewLogfmtLogger(logbuf)
 		options    = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}

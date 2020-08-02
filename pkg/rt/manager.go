@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/peterbourgon/fastly-exporter/pkg/prom"
+	"github.com/peterbourgon/fastly-exporter/pkg/gen"
 )
 
 // ServiceIdentifier is a consumer contract for a subscriber manager.
@@ -23,7 +23,7 @@ type Manager struct {
 	ids               ServiceIdentifier
 	client            HTTPClient
 	token             string
-	metrics           *prom.Metrics
+	metrics           *gen.Metrics
 	subscriberOptions []SubscriberOption
 	logger            log.Logger
 
@@ -35,7 +35,7 @@ type Manager struct {
 // regular schedule to keep the set of managed subscribers up-to-date. The HTTP
 // client, token, metrics, and subscriber options parameters are passed thru to
 // constructed subscribers.
-func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics *prom.Metrics, subscriberOptions []SubscriberOption, logger log.Logger) *Manager {
+func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics *gen.Metrics, subscriberOptions []SubscriberOption, logger log.Logger) *Manager {
 	return &Manager{
 		ids:               ids,
 		client:            client,
