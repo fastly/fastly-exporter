@@ -53,22 +53,22 @@ func exec() error {
 	}
 
 	if !*invalid {
-		unmapped := map[string]bool{}
+		unmappedAPIFields := map[string]bool{}
 		for _, f := range fields {
-			unmapped[f.FieldName] = true
+			unmappedAPIFields[f.FieldName] = true
 		}
 		for _, m := range mappings {
-			delete(unmapped, m.APIField)
+			delete(unmappedAPIFields, m.APIField)
 			for _, pair := range m.APIFieldLabels {
-				delete(unmapped, pair[0])
+				delete(unmappedAPIFields, pair[0])
 			}
 			for _, f := range m.APIFieldSizes {
-				delete(unmapped, f)
+				delete(unmappedAPIFields, f)
 			}
 		}
-		if len(unmapped) > 0 {
+		if len(unmappedAPIFields) > 0 {
 			var names []string
-			for f := range unmapped {
+			for f := range unmappedAPIFields {
 				names = append(names, f)
 			}
 			return fmt.Errorf("unmapped API fields: %s", strings.Join(names, ", "))
