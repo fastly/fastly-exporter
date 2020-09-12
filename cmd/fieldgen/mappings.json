@@ -74,7 +74,7 @@
     {"exporter_metric": "OTFPTransformTimeTotal",                          "kind": "Counter",          "api_field":        "OTFPTransformTime"},
     {"exporter_metric": "OTFPTransformTotal",                              "kind": "Counter",          "api_field":        "OTFPTransform"},
     {"exporter_metric": "ObjectSizeBytes",                                 "kind": "ObjectSize",       "api_field_sizes":  ["ObjectSize100k",  "ObjectSize100m", "ObjectSize10k", "ObjectSize10m", "ObjectSize1g", "ObjectSize1k", "ObjectSize1m"]},
-    {"exporter_metric": "ObjectSizeOtherTotal",                            "kind": "Counter",          "api_field":        "ObjectSizeOther"},
+    {"exporter_metric": "ObjectSizeOtherTotal",                            "kind": "Ignored",          "api_field":        "-"},
     {"exporter_metric": "OriginFetchBodyBytesTotal",                       "kind": "Counter",          "api_field":        "OriginFetchBodyBytes"},
     {"exporter_metric": "OriginFetchHeaderBytesTotal",                     "kind": "Counter",          "api_field":        "OriginFetchHeaderBytes"},
     {"exporter_metric": "OriginFetchRespBodyBytesTotal",                   "kind": "Counter",          "api_field":        "OriginFetchRespBodyBytes"},

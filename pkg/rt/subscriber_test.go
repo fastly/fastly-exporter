@@ -33,7 +33,7 @@ func TestSubscriberFixture(t *testing.T) {
 		options        = []rt.SubscriberOption{rt.WithMetadataProvider(cache), rt.WithPostprocess(postprocess)}
 		subscriber     = rt.NewSubscriber(client, "irrelevant token", serviceID, metrics, options...)
 	)
-	cache.update([]api.Service{api.Service{ID: serviceID, Name: serviceName, Version: serviceVersion}})
+	cache.update([]api.Service{{ID: serviceID, Name: serviceName, Version: serviceVersion}})
 
 	var (
 		ctx, cancel = context.WithCancel(context.Background())

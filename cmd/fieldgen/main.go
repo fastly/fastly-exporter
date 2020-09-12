@@ -102,7 +102,7 @@ func exec() error {
 	fmt.Printf("// NewMetrics returns a new set of metrics registered to the registerer.\n")
 	fmt.Printf("// Only metrics whose names pass the name filter are registered.\n")
 	fmt.Printf("func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometheus.Registerer) (*Metrics, error) {\n")
-	fmt.Printf("\tm := &Metrics{\n")
+	fmt.Printf("\tm := Metrics{\n")
 	fmt.Printf("\t\t" + `RealtimeAPIRequestsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "realtime_api_requests_total", Help: "Total requests made to the real-time stats API.", }, []string{"service_id", "service_name", "result"}),` + "\n")
 	fmt.Printf("\t\t" + `ServiceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem, Name: "service_info", Help: "Static gauge with service ID, name, and version information.", }, []string{"service_id", "service_name", "service_version"}),` + "\n")
 	for _, m := range metrics {
@@ -111,7 +111,7 @@ func exec() error {
 	fmt.Printf("\t}\n")
 	fmt.Printf("\n")
 	fmt.Printf("%s\n", registerBlock)
-	fmt.Printf("\treturn m, nil\n")
+	fmt.Printf("\treturn &m, nil\n")
 	fmt.Printf("}\n\n")
 	fmt.Printf("%s\n", getNameBlock)
 	fmt.Printf("\n")
@@ -133,6 +133,8 @@ func exec() error {
 			fmt.Printf("\t\t\tprocessHistogram(stats.%s, m.%s.WithLabelValues(serviceID, serviceName, datacenter))\n", m.APIField, m.ExporterMetric)
 		case "ObjectSize":
 			fmt.Printf("\t\t\tprocessObjectSizes(stats.ObjectSize1k, stats.ObjectSize10k, stats.ObjectSize100k, stats.ObjectSize1m, stats.ObjectSize10m, stats.ObjectSize100m, stats.ObjectSize1g, m.%s.WithLabelValues(serviceID, serviceName, datacenter))\n", m.ExporterMetric) // hacky hack
+		case "Ignored":
+			//
 		default:
 			fmt.Printf("\t\t\t// %s: unknown mapping kind %q\n", m.ExporterMetric, m.Kind)
 		}

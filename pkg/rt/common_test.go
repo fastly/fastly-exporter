@@ -273,8 +273,11 @@ testspace_testsystem_attack_passed_req_header_bytes_total{datacenter="BWI",servi
 testspace_testsystem_attack_req_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_attack_req_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_attack_resp_synth_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_bereq_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_bereq_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 599
 testspace_testsystem_billed_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 39
+testspace_testsystem_billed_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_blacklist_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_billed_header_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 441
 testspace_testsystem_body_size_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 39
 testspace_testsystem_deliver_sub_count_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1
