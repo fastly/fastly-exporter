@@ -28,7 +28,7 @@ type MetadataProvider interface {
 	Metadata(id string) (name string, version int, found bool)
 }
 
-// Subscriber polls response.fastly.com for a single service ID.
+// Subscriber polls rt.fastly.com for a single service ID.
 // It emits the received real-time stats data to Prometheus.
 type Subscriber struct {
 	client      HTTPClient
@@ -44,7 +44,7 @@ type Subscriber struct {
 // SubscriberOption provides some additional behavior to a subscriber.
 type SubscriberOption func(*Subscriber)
 
-// WithUserAgent sets the User-Agent supplied to response.fastly.com.
+// WithUserAgent sets the User-Agent supplied to rt.fastly.com.
 // By default, the DefaultUserAgent is used.
 func WithUserAgent(ua string) SubscriberOption {
 	return func(s *Subscriber) { s.userAgent = ua }
@@ -71,7 +71,7 @@ func WithPostprocess(f func()) SubscriberOption {
 	return func(s *Subscriber) { s.postprocess = f }
 }
 
-// DefaultUserAgent passed to response.fastly.com.
+// DefaultUserAgent passed to rt.fastly.com.
 // To change, use the WithUserAgent option.
 const DefaultUserAgent = "Fastly-Exporter (unknown version)"
 
@@ -94,7 +94,7 @@ func NewSubscriber(client HTTPClient, token, serviceID string, metrics *gen.Metr
 	return s
 }
 
-// Run polls response.fastly.com in a hot loop, collecting real-time stats information
+// Run polls rt.fastly.com in a hot loop, collecting real-time stats information
 // and emitting it to the Prometheus metrics provided to the constructor. The
 // method returns when the context is canceled, or a non-recoverable error
 // occurs.
@@ -119,7 +119,7 @@ func (s *Subscriber) Run(ctx context.Context) error {
 	}
 }
 
-// query response.fastly.com for the service ID represented by the subscriber, and
+// query rt.fastly.com for the service ID represented by the subscriber, and
 // with the provided starting timestamp. The function may block for several
 // seconds; cancel the context to provoke early termination. On success, the
 // received real-time data is processed, and the Prometheus metrics related to
@@ -137,9 +137,9 @@ func (s *Subscriber) query(ctx context.Context, ts uint64) (currentName string, 
 		name, version = s.serviceID, "unknown"
 	}
 
-	// response.fastly.com blocks until it has data to return.
+	// rt.fastly.com blocks until it has data to return.
 	// It's safe to call in a (single-threaded!) hot loop.
-	u := fmt.Sprintf("https://response.fastly.com/v1/channel/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
+	u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return name, apiResultError, 0, ts, errors.Wrap(err, "error constructing real-time stats API request")

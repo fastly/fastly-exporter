@@ -46,7 +46,8 @@ func TestSubscriberFixture(t *testing.T) {
 
 	<-processed
 
-	assertStringSliceEqual(t, expectedMetricsOutputSlice, prometheusOutput(t, registry, namespace+"_"+subsystem+"_"))
+	output := prometheusOutput(t, registry, namespace+"_"+subsystem+"_")
+	assertStringSliceEqual(t, expectedMetricsOutputSlice, output)
 
 	cancel()
 	<-done
