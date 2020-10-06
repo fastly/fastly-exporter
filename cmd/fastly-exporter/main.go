@@ -69,7 +69,7 @@ func main() {
 		fs.BoolVar(&configFileExample, "config-file-example", false, "print example config file to stdout and exit")
 		fs.Usage = usageFor(fs)
 	}
-	ff.Parse(fs, os.Args[1:], ff.WithEnvVarPrefix("FASTLY_EXPORTER"), ff.WithConfigFileFlag("config-file"))
+	ff.Parse(fs, os.Args[1:], ff.WithEnvVarPrefix("FASTLY_EXPORTER"), ff.WithConfigFileFlag("config-file"), ff.WithConfigFileParser(ff.PlainParser))
 
 	if versionFlag {
 		fmt.Fprintf(os.Stdout, "fastly-exporter v%s\n", programVersion)
