@@ -31,14 +31,23 @@ func exec() error {
 	}
 
 	if !*invalid {
-		var noHelp []string
+		var (
+			noHelp   []string
+			todoHelp []string
+		)
 		for _, m := range metrics {
-			if m.Help == "" || strings.Contains(m.Help, "TODO") {
+			if m.Help == "" {
 				noHelp = append(noHelp, m.FieldName)
+			}
+			if strings.Contains(m.Help, "TODO") {
+				todoHelp = append(todoHelp, m.FieldName)
 			}
 		}
 		if len(noHelp) > 0 {
 			return fmt.Errorf("metrics with undefined Help strings: %s", strings.Join(noHelp, ", "))
+		}
+		if len(todoHelp) > 0 {
+			fmt.Fprintf(os.Stderr, "warning: metrics with TODO Help strings: %s\n", strings.Join(todoHelp, ", "))
 		}
 	}
 
