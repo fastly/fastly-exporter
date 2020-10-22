@@ -45,7 +45,7 @@ type Datacenter struct {
 	BodySize                        uint64            `json:"body_size"`
 	DeliverSubCount                 uint64            `json:"deliver_sub_count"`
 	DeliverSubTime                  uint64            `json:"deliver_sub_time"`
-	Edge                            uint64            `json:"edge"`
+	Edge                            uint64            `json:"edge_requests"`
 	EdgeRespBodyBytes               uint64            `json:"edge_resp_body_bytes"`
 	EdgeRespHeaderBytes             uint64            `json:"edge_resp_header_bytes"`
 	Errors                          uint64            `json:"errors"`
