@@ -17,7 +17,7 @@
     {"field_name": "BodySize",                         "type": "uint64",             "key": "body_size"},
     {"field_name": "DeliverSubCount",                  "type": "uint64",             "key": "deliver_sub_count"},
     {"field_name": "DeliverSubTime",                   "type": "uint64",             "key": "deliver_sub_time"},
-    {"field_name": "Edge",                             "type": "uint64",             "key": "edge"},
+    {"field_name": "Edge",                             "type": "uint64",             "key": "edge_requests"},
     {"field_name": "EdgeRespBodyBytes",                "type": "uint64",             "key": "edge_resp_body_bytes"},
     {"field_name": "EdgeRespHeaderBytes",              "type": "uint64",             "key": "edge_resp_header_bytes"},
     {"field_name": "Errors",                           "type": "uint64",             "key": "errors"},
