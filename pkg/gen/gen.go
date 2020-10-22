@@ -472,7 +472,6 @@ func Process(response *APIResponse, serviceID, serviceName, serviceVersion strin
 	for _, d := range response.Data {
 		for datacenter, stats := range d.Datacenter {
 			m.ServiceInfo.WithLabelValues(serviceID, serviceName, serviceVersion).Set(1)
-			m.RequestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Requests))
 			m.AttackBlockedReqBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackBlockedReqBodyBytes))
 			m.AttackBlockedReqHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackBlockedReqHeaderBytes))
 			m.AttackLoggedReqBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackLoggedReqBodyBytes))

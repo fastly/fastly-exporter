@@ -129,7 +129,6 @@ func exec() error {
 	fmt.Printf("\tfor _, d := range response.Data {\n")
 	fmt.Printf("\t\tfor datacenter, stats := range d.Datacenter {\n")
 	fmt.Printf("\t\t\tm.ServiceInfo.WithLabelValues(serviceID, serviceName, serviceVersion).Set(1)\n")
-	fmt.Printf("\t\t\tm.RequestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Requests))\n")
 	for _, m := range mappings {
 		switch m.Kind {
 		case "Counter":
