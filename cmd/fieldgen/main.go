@@ -166,11 +166,12 @@ func readJSON(filename string, data interface{}) error {
 }
 
 type exporterMetric struct {
-	FieldName   string   `json:"field_name"`
-	Type        string   `json:"type"`
-	MetricName  string   `json:"metric_name"`
-	ExtraLabels []string `json:"extra_labels"`
-	Help        string   `json:"help"`
+	FieldName   string    `json:"field_name"`
+	Type        string    `json:"type"`
+	MetricName  string    `json:"metric_name"`
+	ExtraLabels []string  `json:"extra_labels"`
+	Help        string    `json:"help"`
+	Buckets     []float64 `json:"buckets"`
 }
 
 var standardLabels = []string{"service_id", "service_name", "datacenter"}
@@ -184,15 +185,20 @@ func quoteList(a []string) string {
 }
 
 func (m exporterMetric) create() string {
-	var (
-		constructor = fmt.Sprintf("prometheus.New%sVec", m.Type)
-		options     = fmt.Sprintf("prometheus.%sOpts", m.Type)
-		constLabels = quoteList(append(standardLabels, m.ExtraLabels...))
-	)
-	return fmt.Sprintf(
-		`%s(%s{Namespace: namespace, Subsystem: subsystem, Name: "%s", Help: "%s"}, []string{%s})`,
-		constructor, options, m.MetricName, m.Help, constLabels,
-	)
+	var sb strings.Builder
+
+	fmt.Fprintf(&sb, `prometheus.New%sVec(prometheus.%sOpts{`, m.Type, m.Type)
+	fmt.Fprintf(&sb, `Namespace: namespace`)
+	fmt.Fprintf(&sb, `, Subsystem: subsystem`)
+	fmt.Fprintf(&sb, `, Name: "%s"`, m.MetricName)
+	fmt.Fprintf(&sb, `, Help: "%s"`, m.Help)
+	if len(m.Buckets) > 0 {
+		fmt.Fprintf(&sb, `, Buckets: []float64{%s}`, renderFloats(m.Buckets))
+	}
+	fmt.Fprintf(&sb, `}, []string{%s}`, quoteList(append(standardLabels, m.ExtraLabels...)))
+	fmt.Fprintf(&sb, `)`)
+
+	return sb.String()
 }
 
 type apiField struct {
@@ -207,6 +213,14 @@ type mapping struct {
 	APIField       string      `json:"api_field"`        // kind=Counter, kind=Histogram
 	APIFieldLabels [][2]string `json:"api_field_labels"` // Kind=CounterLabels
 	APIFieldSizes  []string    `json:"api_field_sizes"`  // kind=ObjectSize
+}
+
+func renderFloats(a []float64) string {
+	s := make([]string, len(a))
+	for i, f := range a {
+		s[i] = fmt.Sprint(f)
+	}
+	return strings.Join(s, ", ")
 }
 
 //

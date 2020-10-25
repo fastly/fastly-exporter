@@ -47,7 +47,7 @@ func TestSubscriberFixture(t *testing.T) {
 	<-processed
 
 	output := prometheusOutput(t, registry, namespace+"_"+subsystem+"_")
-	assertStringSliceEqual(t, expectedMetricsOutputSlice, output)
+	assertMetricOutput(t, expectedMetricsOutputSlice, output)
 
 	cancel()
 	<-done
@@ -111,7 +111,3 @@ func TestBadTokenNoSpam(t *testing.T) {
 		t.Fatalf("Unauthorized rt.fastly.com request count: want %d, have %d", want, have)
 	}
 }
-
-//
-//
-//
