@@ -4,7 +4,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.15.x]
+        go-version: [1.15.x, 1.16.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -19,8 +19,7 @@ jobs:
       run: pwd && cd .. && go get -v -u golang.org/x/lint/golint && cd -
       shell: bash
     - name: Update PATH
-      # https://github.com/actions/setup-go/issues/12#issuecomment-524631719
-      run: echo "##[add-path]$(go env GOPATH)/bin" 
+      run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
       shell: bash
     - name: Checkout code
       uses: actions/checkout@v1
