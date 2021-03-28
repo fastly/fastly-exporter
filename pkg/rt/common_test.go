@@ -42,7 +42,15 @@ func assertMetricOutput(t *testing.T, want, have []string) {
 	sort.Strings(have)
 
 	if len(want) != len(have) {
-		t.Error(cmp.Diff(want, have))
+		t.Errorf("want %d lines, have %d", len(want), len(have))
+		for i := 0; i < len(want) && i < len(have); i++ {
+			if !strings.HasPrefix(have[i], want[i]) {
+				t.Errorf("first discrepancy on line %d", i+1)
+				t.Errorf("want %s", want[i])
+				t.Errorf("have %s", have[i])
+				break
+			}
+		}
 		return
 	}
 
@@ -2072,6 +2080,46 @@ testspace_testsystem_body_size_total{datacenter="SYD",service_id="my-service-id"
 testspace_testsystem_body_size_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"} 118928
 testspace_testsystem_body_size_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"} 17018
 testspace_testsystem_body_size_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"} 10944
+testspace_testsystem_compute_execution_time_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_execution_time_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_ram_used_bytes_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_request_time_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_compute_requests_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_deliver_sub_count_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"} 1
 testspace_testsystem_deliver_sub_count_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1
 testspace_testsystem_deliver_sub_count_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"} 1
