@@ -133,6 +133,8 @@ func exec() error {
 		switch m.Kind {
 		case "Counter":
 			fmt.Printf("\t\t\tm.%s.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.%s))\n", m.ExporterMetric, m.APIField)
+		case "Counter1000":
+			fmt.Printf("\t\t\tm.%s.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.%s) / 10000.0)\n", m.ExporterMetric, m.APIField)
 		case "CounterLabels":
 			for _, pair := range m.APIFieldLabels {
 				fmt.Printf("\t\t\tm.%s.WithLabelValues(serviceID, serviceName, datacenter, \"%s\").Add(float64(stats.%s))\n", m.ExporterMetric, pair[1], pair[0])
