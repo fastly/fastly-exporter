@@ -27,159 +27,163 @@ type APIResponse struct {
 
 // Datacenter models the per-datacenter portion of the rt.fastly.com response.
 type Datacenter struct {
-	AttackBlockedReqHeaderBytes     uint64            `json:"attack_blocked_req_header_bytes"`
-	AttackBlockedReqBodyBytes       uint64            `json:"attack_blocked_req_body_bytes"`
-	AttackLoggedReqBodyBytes        uint64            `json:"attack_logged_req_body_bytes"`
-	AttackLoggedReqHeaderBytes      uint64            `json:"attack_logged_req_header_bytes"`
-	AttackPassedReqBodyBytes        uint64            `json:"attack_passed_req_body_bytes"`
-	AttackPassedReqHeaderBytes      uint64            `json:"attack_passed_req_header_bytes"`
-	AttackReqBodyBytes              uint64            `json:"attack_req_body_bytes"`
-	AttackReqHeaderBytes            uint64            `json:"attack_req_header_bytes"`
-	AttackRespSynthBytes            uint64            `json:"attack_resp_synth_bytes"`
-	BackendReqBodyBytes             uint64            `json:"bereq_body_bytes"`
-	BackendReqHeaderBytes           uint64            `json:"bereq_header_bytes"`
-	Billed                          uint64            `json:"billed"`
-	BilledBodyBytes                 uint64            `json:"billed_body_bytes"`
-	BilledHeaderBytes               uint64            `json:"billed_header_bytes"`
-	Blacklisted                     uint64            `json:"blacklist"`
-	BodySize                        uint64            `json:"body_size"`
-	DeliverSubCount                 uint64            `json:"deliver_sub_count"`
-	DeliverSubTime                  uint64            `json:"deliver_sub_time"`
-	Edge                            uint64            `json:"edge_requests"`
-	EdgeRespBodyBytes               uint64            `json:"edge_resp_body_bytes"`
-	EdgeRespHeaderBytes             uint64            `json:"edge_resp_header_bytes"`
-	Errors                          uint64            `json:"errors"`
-	ErrorSubCount                   uint64            `json:"error_sub_count"`
-	ErrorSubTime                    uint64            `json:"error_sub_time"`
-	FetchSubCount                   uint64            `json:"fetch_sub_count"`
-	FetchSubTime                    uint64            `json:"fetch_sub_time"`
-	HashSubCount                    uint64            `json:"hash_sub_count"`
-	HashSubTime                     uint64            `json:"hash_sub_time"`
-	HeaderSize                      uint64            `json:"header_size"`
-	HitRespBodyBytes                uint64            `json:"hit_resp_body_bytes"`
-	Hits                            uint64            `json:"hits"`
-	HitsTime                        float64           `json:"hits_time"`
-	HitSubCount                     uint64            `json:"hit_sub_count"`
-	HitSubTime                      uint64            `json:"hit_sub_time"`
-	HTTP2                           uint64            `json:"http2"`
-	ImgOpto                         uint64            `json:"imgopto"`
-	ImgOptoRespBodyBytes            uint64            `json:"imgopto_resp_body_bytes"`
-	ImgOptoRespHeaderBytes          uint64            `json:"imgopto_resp_header_bytes"`
-	ImgOptoShield                   uint64            `json:"imgopto_shield"`
-	ImgOptoShieldRespBodyBytes      uint64            `json:"imgopto_shield_resp_body_bytes"`
-	ImgOptoShieldRespHeaderBytes    uint64            `json:"imgopto_shield_resp_header_bytes"`
-	ImgOptoTransform                uint64            `json:"imgopto_transforms"`
-	ImgOptoTransformRespBodyBytes   uint64            `json:"imgopto_transform_resp_body_bytes"`
-	ImgOptoTransformRespHeaderBytes uint64            `json:"imgopto_transform_resp_header_bytes"`
-	ImgVideo                        uint64            `json:"imgvideo"`
-	ImgVideoFrames                  uint64            `json:"imgvideo_frames"`
-	ImgVideoRespBodyBytes           uint64            `json:"imgvideo_resp_body_bytes"`
-	ImgVideoRespHeaderBytes         uint64            `json:"imgvideo_resp_header_bytes"`
-	ImgVideoShield                  uint64            `json:"imgvideo_shield"`
-	ImgVideoShieldFrames            uint64            `json:"imgvideo_shield_frames"`
-	ImgVideoShieldRespBodyBytes     uint64            `json:"imgvideo_shield_resp_body_bytes"`
-	ImgVideoShieldRespHeaderBytes   uint64            `json:"imgvideo_shield_resp_header_bytes"`
-	IPv6                            uint64            `json:"ipv6"`
-	LogBytes                        uint64            `json:"log_bytes"`
-	Logging                         uint64            `json:"logging"`
-	Misses                          uint64            `json:"miss"`
-	MissHistogram                   map[string]uint64 `json:"miss_histogram"`
-	MissRespBodyBytes               uint64            `json:"miss_resp_body_bytes"`
-	MissSubCount                    uint64            `json:"miss_sub_count"`
-	MissSubTime                     uint64            `json:"miss_sub_time"`
-	MissTime                        float64           `json:"miss_time"`
-	ObjectSize100k                  uint64            `json:"object_size_100k"`
-	ObjectSize100m                  uint64            `json:"object_size_100m"`
-	ObjectSize10k                   uint64            `json:"object_size_10k"`
-	ObjectSize10m                   uint64            `json:"object_size_10m"`
-	ObjectSize1g                    uint64            `json:"object_size_1g"`
-	ObjectSize1k                    uint64            `json:"object_size_1k"`
-	ObjectSize1m                    uint64            `json:"object_size_1m"`
-	ObjectSizeOther                 uint64            `json:"object_size_other"`
-	OriginFetchBodyBytes            uint64            `json:"origin_fetch_body_bytes"`
-	OriginFetches                   uint64            `json:"origin_fetches"`
-	OriginFetchHeaderBytes          uint64            `json:"origin_fetch_header_bytes"`
-	OriginFetchRespBodyBytes        uint64            `json:"origin_fetch_resp_body_bytes"`
-	OriginFetchRespHeaderBytes      uint64            `json:"origin_fetch_resp_header_bytes"`
-	OriginRevalidations             uint64            `json:"origin_revalidations"`
-	OTFP                            uint64            `json:"otfp"`
-	OTFPDeliverTime                 uint64            `json:"otfp_deliver_time"`
-	OTFPManifest                    uint64            `json:"otfp_manifests"`
-	OTFPRespBodyBytes               uint64            `json:"otfp_resp_body_bytes"`
-	OTFPRespHeaderBytes             uint64            `json:"otfp_resp_header_bytes"`
-	OTFPShield                      uint64            `json:"otfp_shield"`
-	OTFPShieldRespBodyBytes         uint64            `json:"otfp_shield_resp_body_bytes"`
-	OTFPShieldRespHeaderBytes       uint64            `json:"otfp_shield_resp_header_bytes"`
-	OTFPShieldTime                  uint64            `json:"otfp_shield_time"`
-	OTFPTransform                   uint64            `json:"otfp_transforms"`
-	OTFPTransformRespBodyBytes      uint64            `json:"otfp_transform_resp_body_bytes"`
-	OTFPTransformRespHeaderBytes    uint64            `json:"otfp_transform_resp_header_bytes"`
-	OTFPTransformTime               uint64            `json:"otfp_transform_time"`
-	Passes                          uint64            `json:"pass"`
-	PassRespBodyBytes               uint64            `json:"pass_resp_body_bytes"`
-	PassSubCount                    uint64            `json:"pass_sub_count"`
-	PassSubTime                     uint64            `json:"pass_sub_time"`
-	PassTime                        float64           `json:"pass_time"`
-	PCI                             uint64            `json:"pci"`
-	PipeSubCount                    uint64            `json:"pipe_sub_count"`
-	PipeSubTime                     uint64            `json:"pipe_sub_time"`
-	PredeliverSubCount              uint64            `json:"predeliver_sub_count"`
-	PredeliverSubTime               uint64            `json:"predeliver_sub_time"`
-	PrehashSubCount                 uint64            `json:"prehash_sub_count"`
-	PrehashSubTime                  uint64            `json:"prehash_sub_time"`
-	RecvSubCount                    uint64            `json:"recv_sub_count"`
-	RecvSubTime                     uint64            `json:"recv_sub_time"`
-	ReqBodyBytes                    uint64            `json:"req_body_bytes"`
-	ReqHeaderBytes                  uint64            `json:"req_header_bytes"`
-	Requests                        uint64            `json:"requests"`
-	RespBodyBytes                   uint64            `json:"resp_body_bytes"`
-	RespHeaderBytes                 uint64            `json:"resp_header_bytes"`
-	Restart                         uint64            `json:"restarts"`
-	SegBlockOriginFetches           uint64            `json:"segblock_origin_fetches"`
-	SegBlockShieldFetches           uint64            `json:"segblock_shield_fetches"`
-	ShieldFetchBodyBytes            uint64            `json:"shield_fetch_body_bytes"`
-	Shield                          uint64            `json:"shield"`
-	ShieldFetches                   uint64            `json:"shield_fetches"`
-	ShieldFetchHeaderBytes          uint64            `json:"shield_fetch_header_bytes"`
-	ShieldFetchRespBodyBytes        uint64            `json:"shield_fetch_resp_body_bytes"`
-	ShieldFetchRespHeaderBytes      uint64            `json:"shield_fetch_resp_header_bytes"`
-	ShieldRespBodyBytes             uint64            `json:"shield_resp_body_bytes"`
-	ShieldRespHeaderBytes           uint64            `json:"shield_resp_header_bytes"`
-	ShieldRevalidations             uint64            `json:"shield_revalidations"`
-	Status1xx                       uint64            `json:"status_1xx"`
-	Status200                       uint64            `json:"status_200"`
-	Status204                       uint64            `json:"status_204"`
-	Status206                       uint64            `json:"status_206"`
-	Status2xx                       uint64            `json:"status_2xx"`
-	Status301                       uint64            `json:"status_301"`
-	Status302                       uint64            `json:"status_302"`
-	Status304                       uint64            `json:"status_304"`
-	Status3xx                       uint64            `json:"status_3xx"`
-	Status400                       uint64            `json:"status_400"`
-	Status401                       uint64            `json:"status_401"`
-	Status403                       uint64            `json:"status_403"`
-	Status404                       uint64            `json:"status_404"`
-	Status416                       uint64            `json:"status_416"`
-	Status429                       uint64            `json:"status_429"`
-	Status4xx                       uint64            `json:"status_4xx"`
-	Status500                       uint64            `json:"status_500"`
-	Status501                       uint64            `json:"status_501"`
-	Status502                       uint64            `json:"status_502"`
-	Status503                       uint64            `json:"status_503"`
-	Status504                       uint64            `json:"status_504"`
-	Status505                       uint64            `json:"status_505"`
-	Status5xx                       uint64            `json:"status_5xx"`
-	Synths                          uint64            `json:"synth"`
-	TLS                             uint64            `json:"tls"`
-	TLSv10                          uint64            `json:"tls_v10"`
-	TLSv11                          uint64            `json:"tls_v11"`
-	TLSv12                          uint64            `json:"tls_v12"`
-	TLSv13                          uint64            `json:"tls_v13"`
-	Uncacheable                     uint64            `json:"uncacheable"`
-	Video                           uint64            `json:"video"`
-	WAFBlocked                      uint64            `json:"waf_blocked"`
-	WAFLogged                       uint64            `json:"waf_logged"`
-	WAFPassed                       uint64            `json:"waf_passed"`
+	AttackBlockedReqBodyBytes        uint64            `json:"attack_blocked_req_body_bytes"`
+	AttackBlockedReqHeaderBytes      uint64            `json:"attack_blocked_req_header_bytes"`
+	AttackLoggedReqBodyBytes         uint64            `json:"attack_logged_req_body_bytes"`
+	AttackLoggedReqHeaderBytes       uint64            `json:"attack_logged_req_header_bytes"`
+	AttackPassedReqBodyBytes         uint64            `json:"attack_passed_req_body_bytes"`
+	AttackPassedReqHeaderBytes       uint64            `json:"attack_passed_req_header_bytes"`
+	AttackReqBodyBytes               uint64            `json:"attack_req_body_bytes"`
+	AttackReqHeaderBytes             uint64            `json:"attack_req_header_bytes"`
+	AttackRespSynthBytes             uint64            `json:"attack_resp_synth_bytes"`
+	BackendReqBodyBytes              uint64            `json:"bereq_body_bytes"`
+	BackendReqHeaderBytes            uint64            `json:"bereq_header_bytes"`
+	Billed                           uint64            `json:"billed"`
+	BilledBodyBytes                  uint64            `json:"billed_body_bytes"`
+	BilledHeaderBytes                uint64            `json:"billed_header_bytes"`
+	Blacklisted                      uint64            `json:"blacklist"`
+	BodySize                         uint64            `json:"body_size"`
+	ComputeExecutionTimeMilliseconds uint64            `json:"compute_execution_time_ms"`
+	ComputeRAMUsed                   uint64            `json:"compute_ram_used"`
+	ComputeRequests                  uint64            `json:"compute_requests"`
+	ComputeRequestTimeMilliseconds   uint64            `json:"compute_request_time_ms"`
+	DeliverSubCount                  uint64            `json:"deliver_sub_count"`
+	DeliverSubTime                   uint64            `json:"deliver_sub_time"`
+	Edge                             uint64            `json:"edge_requests"`
+	EdgeRespBodyBytes                uint64            `json:"edge_resp_body_bytes"`
+	EdgeRespHeaderBytes              uint64            `json:"edge_resp_header_bytes"`
+	Errors                           uint64            `json:"errors"`
+	ErrorSubCount                    uint64            `json:"error_sub_count"`
+	ErrorSubTime                     uint64            `json:"error_sub_time"`
+	FetchSubCount                    uint64            `json:"fetch_sub_count"`
+	FetchSubTime                     uint64            `json:"fetch_sub_time"`
+	HashSubCount                     uint64            `json:"hash_sub_count"`
+	HashSubTime                      uint64            `json:"hash_sub_time"`
+	HeaderSize                       uint64            `json:"header_size"`
+	HitRespBodyBytes                 uint64            `json:"hit_resp_body_bytes"`
+	Hits                             uint64            `json:"hits"`
+	HitsTime                         float64           `json:"hits_time"`
+	HitSubCount                      uint64            `json:"hit_sub_count"`
+	HitSubTime                       uint64            `json:"hit_sub_time"`
+	HTTP2                            uint64            `json:"http2"`
+	ImgOpto                          uint64            `json:"imgopto"`
+	ImgOptoRespBodyBytes             uint64            `json:"imgopto_resp_body_bytes"`
+	ImgOptoRespHeaderBytes           uint64            `json:"imgopto_resp_header_bytes"`
+	ImgOptoShield                    uint64            `json:"imgopto_shield"`
+	ImgOptoShieldRespBodyBytes       uint64            `json:"imgopto_shield_resp_body_bytes"`
+	ImgOptoShieldRespHeaderBytes     uint64            `json:"imgopto_shield_resp_header_bytes"`
+	ImgOptoTransform                 uint64            `json:"imgopto_transforms"`
+	ImgOptoTransformRespBodyBytes    uint64            `json:"imgopto_transform_resp_body_bytes"`
+	ImgOptoTransformRespHeaderBytes  uint64            `json:"imgopto_transform_resp_header_bytes"`
+	ImgVideo                         uint64            `json:"imgvideo"`
+	ImgVideoFrames                   uint64            `json:"imgvideo_frames"`
+	ImgVideoRespBodyBytes            uint64            `json:"imgvideo_resp_body_bytes"`
+	ImgVideoRespHeaderBytes          uint64            `json:"imgvideo_resp_header_bytes"`
+	ImgVideoShield                   uint64            `json:"imgvideo_shield"`
+	ImgVideoShieldFrames             uint64            `json:"imgvideo_shield_frames"`
+	ImgVideoShieldRespBodyBytes      uint64            `json:"imgvideo_shield_resp_body_bytes"`
+	ImgVideoShieldRespHeaderBytes    uint64            `json:"imgvideo_shield_resp_header_bytes"`
+	IPv6                             uint64            `json:"ipv6"`
+	LogBytes                         uint64            `json:"log_bytes"`
+	Logging                          uint64            `json:"logging"`
+	Misses                           uint64            `json:"miss"`
+	MissHistogram                    map[string]uint64 `json:"miss_histogram"`
+	MissRespBodyBytes                uint64            `json:"miss_resp_body_bytes"`
+	MissSubCount                     uint64            `json:"miss_sub_count"`
+	MissSubTime                      uint64            `json:"miss_sub_time"`
+	MissTime                         float64           `json:"miss_time"`
+	ObjectSize100k                   uint64            `json:"object_size_100k"`
+	ObjectSize100m                   uint64            `json:"object_size_100m"`
+	ObjectSize10k                    uint64            `json:"object_size_10k"`
+	ObjectSize10m                    uint64            `json:"object_size_10m"`
+	ObjectSize1g                     uint64            `json:"object_size_1g"`
+	ObjectSize1k                     uint64            `json:"object_size_1k"`
+	ObjectSize1m                     uint64            `json:"object_size_1m"`
+	ObjectSizeOther                  uint64            `json:"object_size_other"`
+	OriginFetchBodyBytes             uint64            `json:"origin_fetch_body_bytes"`
+	OriginFetches                    uint64            `json:"origin_fetches"`
+	OriginFetchHeaderBytes           uint64            `json:"origin_fetch_header_bytes"`
+	OriginFetchRespBodyBytes         uint64            `json:"origin_fetch_resp_body_bytes"`
+	OriginFetchRespHeaderBytes       uint64            `json:"origin_fetch_resp_header_bytes"`
+	OriginRevalidations              uint64            `json:"origin_revalidations"`
+	OTFP                             uint64            `json:"otfp"`
+	OTFPDeliverTime                  uint64            `json:"otfp_deliver_time"`
+	OTFPManifest                     uint64            `json:"otfp_manifests"`
+	OTFPRespBodyBytes                uint64            `json:"otfp_resp_body_bytes"`
+	OTFPRespHeaderBytes              uint64            `json:"otfp_resp_header_bytes"`
+	OTFPShield                       uint64            `json:"otfp_shield"`
+	OTFPShieldRespBodyBytes          uint64            `json:"otfp_shield_resp_body_bytes"`
+	OTFPShieldRespHeaderBytes        uint64            `json:"otfp_shield_resp_header_bytes"`
+	OTFPShieldTime                   uint64            `json:"otfp_shield_time"`
+	OTFPTransform                    uint64            `json:"otfp_transforms"`
+	OTFPTransformRespBodyBytes       uint64            `json:"otfp_transform_resp_body_bytes"`
+	OTFPTransformRespHeaderBytes     uint64            `json:"otfp_transform_resp_header_bytes"`
+	OTFPTransformTime                uint64            `json:"otfp_transform_time"`
+	Passes                           uint64            `json:"pass"`
+	PassRespBodyBytes                uint64            `json:"pass_resp_body_bytes"`
+	PassSubCount                     uint64            `json:"pass_sub_count"`
+	PassSubTime                      uint64            `json:"pass_sub_time"`
+	PassTime                         float64           `json:"pass_time"`
+	PCI                              uint64            `json:"pci"`
+	PipeSubCount                     uint64            `json:"pipe_sub_count"`
+	PipeSubTime                      uint64            `json:"pipe_sub_time"`
+	PredeliverSubCount               uint64            `json:"predeliver_sub_count"`
+	PredeliverSubTime                uint64            `json:"predeliver_sub_time"`
+	PrehashSubCount                  uint64            `json:"prehash_sub_count"`
+	PrehashSubTime                   uint64            `json:"prehash_sub_time"`
+	RecvSubCount                     uint64            `json:"recv_sub_count"`
+	RecvSubTime                      uint64            `json:"recv_sub_time"`
+	ReqBodyBytes                     uint64            `json:"req_body_bytes"`
+	ReqHeaderBytes                   uint64            `json:"req_header_bytes"`
+	Requests                         uint64            `json:"requests"`
+	RespBodyBytes                    uint64            `json:"resp_body_bytes"`
+	RespHeaderBytes                  uint64            `json:"resp_header_bytes"`
+	Restart                          uint64            `json:"restarts"`
+	SegBlockOriginFetches            uint64            `json:"segblock_origin_fetches"`
+	SegBlockShieldFetches            uint64            `json:"segblock_shield_fetches"`
+	Shield                           uint64            `json:"shield"`
+	ShieldFetchBodyBytes             uint64            `json:"shield_fetch_body_bytes"`
+	ShieldFetches                    uint64            `json:"shield_fetches"`
+	ShieldFetchHeaderBytes           uint64            `json:"shield_fetch_header_bytes"`
+	ShieldFetchRespBodyBytes         uint64            `json:"shield_fetch_resp_body_bytes"`
+	ShieldFetchRespHeaderBytes       uint64            `json:"shield_fetch_resp_header_bytes"`
+	ShieldRespBodyBytes              uint64            `json:"shield_resp_body_bytes"`
+	ShieldRespHeaderBytes            uint64            `json:"shield_resp_header_bytes"`
+	ShieldRevalidations              uint64            `json:"shield_revalidations"`
+	Status1xx                        uint64            `json:"status_1xx"`
+	Status200                        uint64            `json:"status_200"`
+	Status204                        uint64            `json:"status_204"`
+	Status206                        uint64            `json:"status_206"`
+	Status2xx                        uint64            `json:"status_2xx"`
+	Status301                        uint64            `json:"status_301"`
+	Status302                        uint64            `json:"status_302"`
+	Status304                        uint64            `json:"status_304"`
+	Status3xx                        uint64            `json:"status_3xx"`
+	Status400                        uint64            `json:"status_400"`
+	Status401                        uint64            `json:"status_401"`
+	Status403                        uint64            `json:"status_403"`
+	Status404                        uint64            `json:"status_404"`
+	Status416                        uint64            `json:"status_416"`
+	Status429                        uint64            `json:"status_429"`
+	Status4xx                        uint64            `json:"status_4xx"`
+	Status500                        uint64            `json:"status_500"`
+	Status501                        uint64            `json:"status_501"`
+	Status502                        uint64            `json:"status_502"`
+	Status503                        uint64            `json:"status_503"`
+	Status504                        uint64            `json:"status_504"`
+	Status505                        uint64            `json:"status_505"`
+	Status5xx                        uint64            `json:"status_5xx"`
+	Synths                           uint64            `json:"synth"`
+	TLS                              uint64            `json:"tls"`
+	TLSv10                           uint64            `json:"tls_v10"`
+	TLSv11                           uint64            `json:"tls_v11"`
+	TLSv12                           uint64            `json:"tls_v12"`
+	TLSv13                           uint64            `json:"tls_v13"`
+	Uncacheable                      uint64            `json:"uncacheable"`
+	Video                            uint64            `json:"video"`
+	WAFBlocked                       uint64            `json:"waf_blocked"`
+	WAFLogged                        uint64            `json:"waf_logged"`
+	WAFPassed                        uint64            `json:"waf_passed"`
 }
 
 // Metrics collects all of the Prometheus metrics exported by this service.
@@ -202,26 +206,29 @@ type Metrics struct {
 	BilledTotal                          *prometheus.CounterVec
 	BlacklistedTotal                     *prometheus.CounterVec
 	BodySizeTotal                        *prometheus.CounterVec
+	ComputeExecutionTimeTotal            *prometheus.CounterVec
+	ComputeRAMUsedBytesTotal             *prometheus.CounterVec
+	ComputeRequestsTotal                 *prometheus.CounterVec
+	ComputeRequestTimeTotal              *prometheus.CounterVec
 	DeliverSubCountTotal                 *prometheus.CounterVec
 	DeliverSubTimeTotal                  *prometheus.CounterVec
 	EdgeRespBodyBytesTotal               *prometheus.CounterVec
 	EdgeRespHeaderBytesTotal             *prometheus.CounterVec
 	EdgeTotal                            *prometheus.CounterVec
+	ErrorsTotal                          *prometheus.CounterVec
 	ErrorSubCountTotal                   *prometheus.CounterVec
 	ErrorSubTimeTotal                    *prometheus.CounterVec
-	ErrorsTotal                          *prometheus.CounterVec
 	FetchSubCountTotal                   *prometheus.CounterVec
 	FetchSubTimeTotal                    *prometheus.CounterVec
-	HTTP2Total                           *prometheus.CounterVec
 	HashSubCountTotal                    *prometheus.CounterVec
 	HashSubTimeTotal                     *prometheus.CounterVec
 	HeaderSizeTotal                      *prometheus.CounterVec
 	HitRespBodyBytesTotal                *prometheus.CounterVec
-	HitSubCountTotal                     *prometheus.CounterVec
-	HitSubTimeTotal                      *prometheus.CounterVec
 	HitsTimeTotal                        *prometheus.CounterVec
 	HitsTotal                            *prometheus.CounterVec
-	IPv6Total                            *prometheus.CounterVec
+	HitSubCountTotal                     *prometheus.CounterVec
+	HitSubTimeTotal                      *prometheus.CounterVec
+	HTTP2Total                           *prometheus.CounterVec
 	ImgOptoRespBodyBytesTotal            *prometheus.CounterVec
 	ImgOptoRespHeaderBytesTotal          *prometheus.CounterVec
 	ImgOptoShieldRespBodyBytesTotal      *prometheus.CounterVec
@@ -239,14 +246,22 @@ type Metrics struct {
 	ImgVideoShieldRespHeaderBytesTotal   *prometheus.CounterVec
 	ImgVideoShieldTotal                  *prometheus.CounterVec
 	ImgVideoTotal                        *prometheus.CounterVec
+	IPv6Total                            *prometheus.CounterVec
 	LogBytesTotal                        *prometheus.CounterVec
 	LoggingTotal                         *prometheus.CounterVec
 	MissDurationSeconds                  *prometheus.HistogramVec
+	MissesTotal                          *prometheus.CounterVec
 	MissRespBodyBytesTotal               *prometheus.CounterVec
 	MissSubCountTotal                    *prometheus.CounterVec
 	MissSubTimeTotal                     *prometheus.CounterVec
 	MissTimeTotal                        *prometheus.CounterVec
-	MissesTotal                          *prometheus.CounterVec
+	ObjectSizeBytes                      *prometheus.HistogramVec
+	OriginFetchBodyBytesTotal            *prometheus.CounterVec
+	OriginFetchesTotal                   *prometheus.CounterVec
+	OriginFetchHeaderBytesTotal          *prometheus.CounterVec
+	OriginFetchRespBodyBytesTotal        *prometheus.CounterVec
+	OriginFetchRespHeaderBytesTotal      *prometheus.CounterVec
+	OriginRevalidationsTotal             *prometheus.CounterVec
 	OTFPDeliverTimeTotal                 *prometheus.CounterVec
 	OTFPManifestTotal                    *prometheus.CounterVec
 	OTFPRespBodyBytesTotal               *prometheus.CounterVec
@@ -260,19 +275,12 @@ type Metrics struct {
 	OTFPTransformRespHeaderBytesTotal    *prometheus.CounterVec
 	OTFPTransformTimeTotal               *prometheus.CounterVec
 	OTFPTransformTotal                   *prometheus.CounterVec
-	ObjectSizeBytes                      *prometheus.HistogramVec
-	OriginFetchBodyBytesTotal            *prometheus.CounterVec
-	OriginFetchHeaderBytesTotal          *prometheus.CounterVec
-	OriginFetchRespBodyBytesTotal        *prometheus.CounterVec
-	OriginFetchRespHeaderBytesTotal      *prometheus.CounterVec
-	OriginFetchesTotal                   *prometheus.CounterVec
-	OriginRevalidationsTotal             *prometheus.CounterVec
-	PCITotal                             *prometheus.CounterVec
+	PassesTotal                          *prometheus.CounterVec
 	PassRespBodyBytesTotal               *prometheus.CounterVec
 	PassSubCountTotal                    *prometheus.CounterVec
 	PassSubTimeTotal                     *prometheus.CounterVec
 	PassTimeTotal                        *prometheus.CounterVec
-	PassesTotal                          *prometheus.CounterVec
+	PCITotal                             *prometheus.CounterVec
 	PipeSubCountTotal                    *prometheus.CounterVec
 	PipeSubTimeTotal                     *prometheus.CounterVec
 	PredeliverSubCountTotal              *prometheus.CounterVec
@@ -290,10 +298,10 @@ type Metrics struct {
 	SegBlockOriginFetchesTotal           *prometheus.CounterVec
 	SegBlockShieldFetchesTotal           *prometheus.CounterVec
 	ShieldFetchBodyBytesTotal            *prometheus.CounterVec
+	ShieldFetchesTotal                   *prometheus.CounterVec
 	ShieldFetchHeaderBytesTotal          *prometheus.CounterVec
 	ShieldFetchRespBodyBytesTotal        *prometheus.CounterVec
 	ShieldFetchRespHeaderBytesTotal      *prometheus.CounterVec
-	ShieldFetchesTotal                   *prometheus.CounterVec
 	ShieldRespBodyBytesTotal             *prometheus.CounterVec
 	ShieldRespHeaderBytesTotal           *prometheus.CounterVec
 	ShieldRevalidationsTotal             *prometheus.CounterVec
@@ -331,26 +339,29 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		BilledTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "billed_total", Help: "TODO"}, []string{"service_id", "service_name", "datacenter"}),
 		BlacklistedTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "blacklist_total", Help: "TODO"}, []string{"service_id", "service_name", "datacenter"}),
 		BodySizeTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "body_size_total", Help: "Total body bytes delivered (alias for resp_body_bytes)."}, []string{"service_id", "service_name", "datacenter"}),
+		ComputeExecutionTimeTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_execution_time_total", Help: "The amount of active CPU time used to process your requests (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
+		ComputeRAMUsedBytesTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_ram_used_bytes_total", Help: "The amount of RAM used for your site by Fastly."}, []string{"service_id", "service_name", "datacenter"}),
+		ComputeRequestsTotal:                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_requests_total", Help: "The total number of requests that were received for your site by Fastly."}, []string{"service_id", "service_name", "datacenter"}),
+		ComputeRequestTimeTotal:              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_request_time_total", Help: "The total amount of time used to process your requests, including active CPU time (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		DeliverSubCountTotal:                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "deliver_sub_count_total", Help: "Number of executions of the 'deliver' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		DeliverSubTimeTotal:                  prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "deliver_sub_time_total", Help: "Time spent inside the 'deliver' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		EdgeRespBodyBytesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_resp_body_bytes_total", Help: "Total body bytes delivered from Fastly to the end user."}, []string{"service_id", "service_name", "datacenter"}),
 		EdgeRespHeaderBytesTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_resp_header_bytes_total", Help: "Total header bytes delivered from Fastly to the end user."}, []string{"service_id", "service_name", "datacenter"}),
 		EdgeTotal:                            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_total", Help: "Number of requests sent by end users to Fastly."}, []string{"service_id", "service_name", "datacenter"}),
+		ErrorsTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "errors_total", Help: "Number of cache errors."}, []string{"service_id", "service_name", "datacenter"}),
 		ErrorSubCountTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "error_sub_count_total", Help: "Number of executions of the 'error' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		ErrorSubTimeTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "error_sub_time_total", Help: "Time spent inside the 'error' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
-		ErrorsTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "errors_total", Help: "Number of cache errors."}, []string{"service_id", "service_name", "datacenter"}),
 		FetchSubCountTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "fetch_sub_count_total", Help: "Number of executions of the 'fetch' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		FetchSubTimeTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "fetch_sub_time_total", Help: "Time spent inside the 'fetch' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
-		HTTP2Total:                           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http2_total", Help: "Number of requests received over HTTP2."}, []string{"service_id", "service_name", "datacenter"}),
 		HashSubCountTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hash_sub_count_total", Help: "Number of executions of the 'hash' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		HashSubTimeTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hash_sub_time_total", Help: "Time spent inside the 'hash' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		HeaderSizeTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "header_size_total", Help: "Total header bytes delivered (alias for resp_header_bytes)."}, []string{"service_id", "service_name", "datacenter"}),
 		HitRespBodyBytesTotal:                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hit_resp_body_bytes_total", Help: "Total body bytes delivered for cache hits."}, []string{"service_id", "service_name", "datacenter"}),
-		HitSubCountTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hit_sub_count_total", Help: "Number of executions of the 'hit' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
-		HitSubTimeTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hit_sub_time_total", Help: "Time spent inside the 'hit' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		HitsTimeTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hits_time_total", Help: "Total amount of time spent processing cache hits (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		HitsTotal:                            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hits_total", Help: "Number of cache hits."}, []string{"service_id", "service_name", "datacenter"}),
-		IPv6Total:                            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "ipv6_total", Help: "Number of requests that were received over IPv6."}, []string{"service_id", "service_name", "datacenter"}),
+		HitSubCountTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hit_sub_count_total", Help: "Number of executions of the 'hit' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
+		HitSubTimeTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hit_sub_time_total", Help: "Time spent inside the 'hit' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
+		HTTP2Total:                           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http2_total", Help: "Number of requests received over HTTP2."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoRespBodyBytesTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_resp_body_bytes_total", Help: "Total body bytes delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoRespHeaderBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_resp_header_bytes_total", Help: "Total header bytes delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoShieldRespBodyBytesTotal:      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_shield_resp_body_bytes_total", Help: "Total body bytes delivered via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
@@ -368,14 +379,22 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		ImgVideoShieldRespHeaderBytesTotal:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_shield_resp_header_bytes_total", Help: "Total header bytes of video delivered via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgVideoShieldTotal:                  prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_shield_total", Help: "Number of video responses that came via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgVideoTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_total", Help: "Number of video responses that came via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
+		IPv6Total:                            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "ipv6_total", Help: "Number of requests that were received over IPv6."}, []string{"service_id", "service_name", "datacenter"}),
 		LogBytesTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "log_bytes_total", Help: "Total log bytes sent."}, []string{"service_id", "service_name", "datacenter"}),
 		LoggingTotal:                         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "logging_total", Help: "Number of log lines sent."}, []string{"service_id", "service_name", "datacenter"}),
 		MissDurationSeconds:                  prometheus.NewHistogramVec(prometheus.HistogramOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_duration_seconds", Help: "Histogram of time spent processing cache misses (in seconds).", Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 60}}, []string{"service_id", "service_name", "datacenter"}),
+		MissesTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_total", Help: "Number of cache misses."}, []string{"service_id", "service_name", "datacenter"}),
 		MissRespBodyBytesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_resp_body_bytes_total", Help: "Total body bytes delivered for cache misses."}, []string{"service_id", "service_name", "datacenter"}),
 		MissSubCountTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_sub_count_total", Help: "Number of executions of the 'miss' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		MissSubTimeTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_sub_time_total", Help: "Time spent inside the 'miss' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		MissTimeTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_time_total", Help: "Total amount of time spent processing cache misses (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
-		MissesTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_total", Help: "Number of cache misses."}, []string{"service_id", "service_name", "datacenter"}),
+		ObjectSizeBytes:                      prometheus.NewHistogramVec(prometheus.HistogramOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_size_bytes", Help: "Histogram of count of objects served, bucketed by object size range.", Buckets: []float64{1024, 10240, 102400, 1.024e+06, 1.024e+07, 1.024e+08, 1.024e+09}}, []string{"service_id", "service_name", "datacenter"}),
+		OriginFetchBodyBytesTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_body_bytes_total", Help: "Total request body bytes sent to origin."}, []string{"service_id", "service_name", "datacenter"}),
+		OriginFetchesTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetches_total", Help: "Number of requests sent to origin."}, []string{"service_id", "service_name", "datacenter"}),
+		OriginFetchHeaderBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_header_bytes_total", Help: "Total request header bytes sent to origin."}, []string{"service_id", "service_name", "datacenter"}),
+		OriginFetchRespBodyBytesTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_resp_body_bytes_total", Help: "Total body bytes received from origin."}, []string{"service_id", "service_name", "datacenter"}),
+		OriginFetchRespHeaderBytesTotal:      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_resp_header_bytes_total", Help: "Total header bytes received from origin."}, []string{"service_id", "service_name", "datacenter"}),
+		OriginRevalidationsTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_revalidations_total", Help: "Number of responses received from origin with a 304 status code in response to an If-Modified-Since or If-None-Match request. Under regular scenarios, a revalidation will imply a cache hit. However, if using Fastly Image Optimizer or segmented caching this may result in a cache miss."}, []string{"service_id", "service_name", "datacenter"}),
 		OTFPDeliverTimeTotal:                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "otfp_total", Help: "Number of responses that came from the Fastly On-the-Fly Packager."}, []string{"service_id", "service_name", "datacenter"}),
 		OTFPManifestTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "otfp_deliver_time_total", Help: "Total amount of time spent delivering a response from the Fastly On-the-Fly Packager (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		OTFPRespBodyBytesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "otfp_manifests_total", Help: "Number of responses that were manifest files from the Fastly On-the-Fly Packager."}, []string{"service_id", "service_name", "datacenter"}),
@@ -389,19 +408,12 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		OTFPTransformRespHeaderBytesTotal:    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "otfp_transform_resp_body_bytes_total", Help: "Total body bytes of transforms delivered from the Fastly On-the-Fly Packager."}, []string{"service_id", "service_name", "datacenter"}),
 		OTFPTransformTimeTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "otfp_transform_resp_header_bytes_total", Help: "Total body bytes of transforms delivered from the Fastly On-the-Fly Packager."}, []string{"service_id", "service_name", "datacenter"}),
 		OTFPTransformTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "otfp_transform_time_total", Help: "Total amount of time spent performing transforms from the Fastly On-the-Fly Packager."}, []string{"service_id", "service_name", "datacenter"}),
-		ObjectSizeBytes:                      prometheus.NewHistogramVec(prometheus.HistogramOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_size_bytes", Help: "Histogram of count of objects served, bucketed by object size range.", Buckets: []float64{1024, 10240, 102400, 1.024e+06, 1.024e+07, 1.024e+08, 1.024e+09}}, []string{"service_id", "service_name", "datacenter"}),
-		OriginFetchBodyBytesTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_body_bytes_total", Help: "Total request body bytes sent to origin."}, []string{"service_id", "service_name", "datacenter"}),
-		OriginFetchHeaderBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_header_bytes_total", Help: "Total request header bytes sent to origin."}, []string{"service_id", "service_name", "datacenter"}),
-		OriginFetchRespBodyBytesTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_resp_body_bytes_total", Help: "Total body bytes received from origin."}, []string{"service_id", "service_name", "datacenter"}),
-		OriginFetchRespHeaderBytesTotal:      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_resp_header_bytes_total", Help: "Total header bytes received from origin."}, []string{"service_id", "service_name", "datacenter"}),
-		OriginFetchesTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetches_total", Help: "Number of requests sent to origin."}, []string{"service_id", "service_name", "datacenter"}),
-		OriginRevalidationsTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_revalidations_total", Help: "Number of responses received from origin with a 304 status code in response to an If-Modified-Since or If-None-Match request. Under regular scenarios, a revalidation will imply a cache hit. However, if using Fastly Image Optimizer or segmented caching this may result in a cache miss."}, []string{"service_id", "service_name", "datacenter"}),
-		PCITotal:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pci_total", Help: "Number of responses with the PCI flag turned on."}, []string{"service_id", "service_name", "datacenter"}),
+		PassesTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pass_total", Help: "Number of requests that passed through the CDN without being cached."}, []string{"service_id", "service_name", "datacenter"}),
 		PassRespBodyBytesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pass_resp_body_bytes_total", Help: "Total body bytes delivered for cache passes."}, []string{"service_id", "service_name", "datacenter"}),
 		PassSubCountTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pass_sub_count_total", Help: "Number of executions of the 'pass' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		PassSubTimeTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pass_sub_time_total", Help: "Time spent inside the 'pass' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		PassTimeTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pass_time_total", Help: "Total amount of time spent processing cache passes (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
-		PassesTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pass_total", Help: "Number of requests that passed through the CDN without being cached."}, []string{"service_id", "service_name", "datacenter"}),
+		PCITotal:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pci_total", Help: "Number of responses with the PCI flag turned on."}, []string{"service_id", "service_name", "datacenter"}),
 		PipeSubCountTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pipe_sub_count_total", Help: "Number of executions of the 'pipe' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		PipeSubTimeTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pipe_sub_time_total", Help: "Time spent inside the 'pipe' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		PredeliverSubCountTotal:              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "predeliver_sub_count_total", Help: "Number of executions of the 'predeliver' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
@@ -419,10 +431,10 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		SegBlockOriginFetchesTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "segblock_origin_fetches_total", Help: "Number of Range requests to origin for segments of resources when using segmented caching."}, []string{"service_id", "service_name", "datacenter"}),
 		SegBlockShieldFetchesTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "segblock_shield_fetches_total", Help: "Number of Range requests to a shield for segments of resources when using segmented caching."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldFetchBodyBytesTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetch_body_bytes_total", Help: "Total request body bytes sent to a shield."}, []string{"service_id", "service_name", "datacenter"}),
+		ShieldFetchesTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetches_total", Help: "Number of requests made from one Fastly data center to another, as part of shielding."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldFetchHeaderBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetch_header_bytes_total", Help: "Total request header bytes sent to a shield."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldFetchRespBodyBytesTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetch_resp_body_bytes_total", Help: "Total response body bytes sent from a shield to the edge."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldFetchRespHeaderBytesTotal:      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetch_resp_header_bytes_total", Help: "Total response header bytes sent from a shield to the edge."}, []string{"service_id", "service_name", "datacenter"}),
-		ShieldFetchesTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetches_total", Help: "Number of requests made from one Fastly data center to another, as part of shielding."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldRespBodyBytesTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_resp_body_bytes_total", Help: "Total body bytes delivered via a shield."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldRespHeaderBytesTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_resp_header_bytes_total", Help: "Total header bytes delivered via a shield."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldRevalidationsTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_revalidations_total", Help: "Number of responses received from origin with a 304 status code, in response to an If-Modified-Since or If-None-Match request to a shield. Under regular scenarios, a revalidation will imply a cache hit. However, if using segmented caching this may result in a cache miss."}, []string{"service_id", "service_name", "datacenter"}),
@@ -488,26 +500,29 @@ func Process(response *APIResponse, serviceID, serviceName, serviceVersion strin
 			m.BilledTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Billed))
 			m.BlacklistedTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Blacklisted))
 			m.BodySizeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.BodySize))
+			m.ComputeExecutionTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeExecutionTimeMilliseconds) / 10000.0)
+			m.ComputeRAMUsedBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeRAMUsed))
+			m.ComputeRequestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeRequests))
+			m.ComputeRequestTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeRequestTimeMilliseconds) / 10000.0)
 			m.DeliverSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DeliverSubCount))
 			m.DeliverSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DeliverSubTime))
 			m.EdgeRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeRespBodyBytes))
 			m.EdgeRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeRespHeaderBytes))
 			m.EdgeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Edge))
+			m.ErrorsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Errors))
 			m.ErrorSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ErrorSubCount))
 			m.ErrorSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ErrorSubTime))
-			m.ErrorsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Errors))
 			m.FetchSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.FetchSubCount))
 			m.FetchSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.FetchSubTime))
-			m.HTTP2Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HTTP2))
 			m.HashSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HashSubCount))
 			m.HashSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HashSubTime))
 			m.HeaderSizeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HeaderSize))
 			m.HitRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitRespBodyBytes))
-			m.HitSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitSubCount))
-			m.HitSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitSubTime))
 			m.HitsTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitsTime))
 			m.HitsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Hits))
-			m.IPv6Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.IPv6))
+			m.HitSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitSubCount))
+			m.HitSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitSubTime))
+			m.HTTP2Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HTTP2))
 			m.ImgOptoRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgOptoRespBodyBytes))
 			m.ImgOptoRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgOptoRespHeaderBytes))
 			m.ImgOptoShieldRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgOptoShieldRespBodyBytes))
@@ -525,14 +540,22 @@ func Process(response *APIResponse, serviceID, serviceName, serviceVersion strin
 			m.ImgVideoShieldRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgVideoShieldRespHeaderBytes))
 			m.ImgVideoShieldTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgVideoShield))
 			m.ImgVideoTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgVideo))
+			m.IPv6Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.IPv6))
 			m.LogBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.LogBytes))
 			m.LoggingTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Logging))
 			processHistogram(stats.MissHistogram, m.MissDurationSeconds.WithLabelValues(serviceID, serviceName, datacenter))
+			m.MissesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Misses))
 			m.MissRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.MissRespBodyBytes))
 			m.MissSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.MissSubCount))
 			m.MissSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.MissSubTime))
 			m.MissTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.MissTime))
-			m.MissesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Misses))
+			processObjectSizes(stats.ObjectSize1k, stats.ObjectSize10k, stats.ObjectSize100k, stats.ObjectSize1m, stats.ObjectSize10m, stats.ObjectSize100m, stats.ObjectSize1g, m.ObjectSizeBytes.WithLabelValues(serviceID, serviceName, datacenter))
+			m.OriginFetchBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetchBodyBytes))
+			m.OriginFetchesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetches))
+			m.OriginFetchHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetchHeaderBytes))
+			m.OriginFetchRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetchRespBodyBytes))
+			m.OriginFetchRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetchRespHeaderBytes))
+			m.OriginRevalidationsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginRevalidations))
 			m.OTFPDeliverTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OTFPDeliverTime))
 			m.OTFPManifestTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OTFPManifest))
 			m.OTFPRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OTFPRespBodyBytes))
@@ -546,19 +569,12 @@ func Process(response *APIResponse, serviceID, serviceName, serviceVersion strin
 			m.OTFPTransformRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OTFPTransformRespHeaderBytes))
 			m.OTFPTransformTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OTFPTransformTime))
 			m.OTFPTransformTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OTFPTransform))
-			processObjectSizes(stats.ObjectSize1k, stats.ObjectSize10k, stats.ObjectSize100k, stats.ObjectSize1m, stats.ObjectSize10m, stats.ObjectSize100m, stats.ObjectSize1g, m.ObjectSizeBytes.WithLabelValues(serviceID, serviceName, datacenter))
-			m.OriginFetchBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetchBodyBytes))
-			m.OriginFetchHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetchHeaderBytes))
-			m.OriginFetchRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetchRespBodyBytes))
-			m.OriginFetchRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetchRespHeaderBytes))
-			m.OriginFetchesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginFetches))
-			m.OriginRevalidationsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.OriginRevalidations))
-			m.PCITotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PCI))
+			m.PassesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Passes))
 			m.PassRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PassRespBodyBytes))
 			m.PassSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PassSubCount))
 			m.PassSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PassSubTime))
 			m.PassTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PassTime))
-			m.PassesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Passes))
+			m.PCITotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PCI))
 			m.PipeSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PipeSubCount))
 			m.PipeSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PipeSubTime))
 			m.PredeliverSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PredeliverSubCount))
@@ -576,10 +592,10 @@ func Process(response *APIResponse, serviceID, serviceName, serviceVersion strin
 			m.SegBlockOriginFetchesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.SegBlockOriginFetches))
 			m.SegBlockShieldFetchesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.SegBlockShieldFetches))
 			m.ShieldFetchBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetchBodyBytes))
+			m.ShieldFetchesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetches))
 			m.ShieldFetchHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetchHeaderBytes))
 			m.ShieldFetchRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetchRespBodyBytes))
 			m.ShieldFetchRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetchRespHeaderBytes))
-			m.ShieldFetchesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetches))
 			m.ShieldRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldRespBodyBytes))
 			m.ShieldRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldRespHeaderBytes))
 			m.ShieldRevalidationsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldRevalidations))
