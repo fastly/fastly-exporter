@@ -321,6 +321,11 @@ func main() {
 	{
 		// Serve Prometheus metrics (and /debug/pprof/...) over HTTP.
 		http.Handle(promURL.Path, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+		// health check endpoint
+		http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(http.StatusText(http.StatusOK)))
+		})
 		server := http.Server{
 			Addr:    promURL.Host,
 			Handler: http.DefaultServeMux,
