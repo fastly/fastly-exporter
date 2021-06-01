@@ -27,22 +27,30 @@ Avaliable as [mrnetops/fastly-exporter][container] from [Docker Hub][hub].
 docker pull mrnetops/fastly-exporter
 ```
 
+See [TODO][todo] for a complete docker-compose based out-of-the-box experience,
+including pre-built Grafana dashboards.
+
+[todo]: https://example.com
+
 ### Source
 
-If you have a working Go installation, you can install the latest revision from HEAD.
+If you have a working Go installation, you can clone the repo and install the
+binary from any revision, including HEAD. Note that the repo doesn't support
+direct installation via e.g. `go get`.
 
 ```
-go get github.com/peterbourgon/fastly-exporter/cmd/fastly-exporter
+git clone git@github.com:peterbourgon/fastly-exporter
+cd fastly-exporter
+env GO111MODULE=on go build ./cmd/fastly-exporter
 ```
 
 ## Using
 
 ### Basic
 
-For simple use cases, all you need is a Fastly API token.
-[See this link][token] for information on creating API tokens.
-The token can be provided via the `-token` flag or the
-`FASTLY_API_TOKEN` environment variable.
+For simple use cases, all you need is a Fastly API token. [See this link][token]
+for information on creating API tokens. The token can be provided via the
+`-token` flag or the `FASTLY_API_TOKEN` environment variable.
 
 [token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
 
@@ -50,8 +58,10 @@ The token can be provided via the `-token` flag or the
 fastly-exporter -token XXX
 ```
 
-This will collect real-time stats for all Fastly services visible to your
-token, and make them available as Prometheus metrics on 127.0.0.1:8080/metrics.
+This will collect real-time stats for all Fastly services visible to your token,
+and make them available as Prometheus metrics on [127.0.0.1:8080/metrics][local].
+
+[local]: http://127.0.0.1:8080/metrics
 
 ### Filtering services
 
@@ -93,27 +103,3 @@ whose name contained Test or Staging.
 Different flags (for the same filter target) combine with AND semantics. For
 example, `-metric-allowlist 'bytes_total$' -metric-blocklist imgopto` would only
 export metrics whose names ended in bytes_total, but didn't include imgopto.
-
-### Docker
-
-This repo contains a Dockerfile if you want to build and package it yourself.
-You can also use a third-party Docker image.
-
-```
-docker run -p 8080:8080 mrnetops/fastly-exporter -token $MY_TOKEN
-```
-
-This repo also contains a [Docker Compose][compose] file, which boots up a full
-fastly-exporter + [Prometheus][prom] + [Grafana][grafana] + Fastly dashboard
-stack.
-
-[compose]: https://github.com/docker/compose
-[grafana]: https://grafana.com
-
-```
-env FASTLY_API_TOKEN=$MY_TOKEN docker-compose up
-```
-
-Access the Grafana dashboard at http://localhost:3000.
-
-![Fastly Dashboard in Grafana](https://raw.githubusercontent.com/peterbourgon/fastly-exporter/master/compose/Fastly-Dashboard.png)
