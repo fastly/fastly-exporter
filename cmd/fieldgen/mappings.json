@@ -91,6 +91,7 @@
     {"exporter_metric": "PassSubTimeTotal",                                "kind": "Counter",          "api_field":        "PassSubTime"},
     {"exporter_metric": "PassTimeTotal",                                   "kind": "Counter",          "api_field":        "PassTime"},
     {"exporter_metric": "PCITotal",                                        "kind": "Counter",          "api_field":        "PCI"},
+    {"exporter_metric": "Pipe",                                            "kind": "Counter",          "api_field":        "Pipe"},
     {"exporter_metric": "PipeSubCountTotal",                               "kind": "Counter",          "api_field":        "PipeSubCount"},
     {"exporter_metric": "PipeSubTimeTotal",                                "kind": "Counter",          "api_field":        "PipeSubTime"},
     {"exporter_metric": "PredeliverSubCountTotal",                         "kind": "Counter",          "api_field":        "PredeliverSubCount"},
