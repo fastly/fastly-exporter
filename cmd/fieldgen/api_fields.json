@@ -97,6 +97,7 @@
     {"field_name": "PassSubTime",                      "type": "uint64",             "key": "pass_sub_time"},
     {"field_name": "PassTime",                         "type": "float64",            "key": "pass_time"},
     {"field_name": "PCI",                              "type": "uint64",             "key": "pci"},
+    {"field_name": "Pipe",                             "type": "uint64",             "key": "pipe"},
     {"field_name": "PipeSubCount",                     "type": "uint64",             "key": "pipe_sub_count"},
     {"field_name": "PipeSubTime",                      "type": "uint64",             "key": "pipe_sub_time"},
     {"field_name": "PredeliverSubCount",               "type": "uint64",             "key": "predeliver_sub_count"},

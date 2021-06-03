@@ -125,6 +125,7 @@ type Datacenter struct {
 	PassSubTime                      uint64            `json:"pass_sub_time"`
 	PassTime                         float64           `json:"pass_time"`
 	PCI                              uint64            `json:"pci"`
+	Pipe                             uint64            `json:"pipe"`
 	PipeSubCount                     uint64            `json:"pipe_sub_count"`
 	PipeSubTime                      uint64            `json:"pipe_sub_time"`
 	PredeliverSubCount               uint64            `json:"predeliver_sub_count"`
@@ -281,6 +282,7 @@ type Metrics struct {
 	PassSubTimeTotal                     *prometheus.CounterVec
 	PassTimeTotal                        *prometheus.CounterVec
 	PCITotal                             *prometheus.CounterVec
+	Pipe                                 *prometheus.CounterVec
 	PipeSubCountTotal                    *prometheus.CounterVec
 	PipeSubTimeTotal                     *prometheus.CounterVec
 	PredeliverSubCountTotal              *prometheus.CounterVec
@@ -414,6 +416,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		PassSubTimeTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pass_sub_time_total", Help: "Time spent inside the 'pass' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		PassTimeTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pass_time_total", Help: "Total amount of time spent processing cache passes (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		PCITotal:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pci_total", Help: "Number of responses with the PCI flag turned on."}, []string{"service_id", "service_name", "datacenter"}),
+		Pipe:                                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pipe", Help: "Pipe operations performed."}, []string{"service_id", "service_name", "datacenter"}),
 		PipeSubCountTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pipe_sub_count_total", Help: "Number of executions of the 'pipe' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		PipeSubTimeTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "pipe_sub_time_total", Help: "Time spent inside the 'pipe' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		PredeliverSubCountTotal:              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "predeliver_sub_count_total", Help: "Number of executions of the 'predeliver' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
@@ -575,6 +578,7 @@ func Process(response *APIResponse, serviceID, serviceName, serviceVersion strin
 			m.PassSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PassSubTime))
 			m.PassTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PassTime))
 			m.PCITotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PCI))
+			m.Pipe.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Pipe))
 			m.PipeSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PipeSubCount))
 			m.PipeSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PipeSubTime))
 			m.PredeliverSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.PredeliverSubCount))

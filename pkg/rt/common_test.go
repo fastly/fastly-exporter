@@ -3100,6 +3100,16 @@ testspace_testsystem_pipe_sub_time_total{datacenter="SYD",service_id="my-service
 testspace_testsystem_pipe_sub_time_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_pipe_sub_time_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_pipe_sub_time_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"} 0
+testspace_testsystem_pipe{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"} 0
 testspace_testsystem_predeliver_sub_count_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"} 1
 testspace_testsystem_predeliver_sub_count_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"} 1
 testspace_testsystem_predeliver_sub_count_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"} 1
