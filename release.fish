@@ -23,11 +23,11 @@ mkdir -p $DISTDIR
 for pair in linux/amd64 darwin/amd64
 	set GOOS   (echo $pair | cut -d'/' -f1)
 	set GOARCH (echo $pair | cut -d'/' -f2)
-	set BIN    $DISTDIR/fastly-exporter-$VERSION-$GOOS-$GOARCH
+	set FNAME  fastly-exporter-$VERSION-$GOOS-$GOARCH
+	set BIN    $DISTDIR/$FNAME
+	set TGZ    $DISTDIR/$FNAME.tar.gz
 	echo $BIN
-	env CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build \
-		-ldflags="-X main.programVersion="(git describe | sed -e 's/^v//') \
-		-o $BIN \
-		github.com/peterbourgon/fastly-exporter/cmd/fastly-exporter
+	env CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -o $BIN -ldflags="-X main.programVersion=$VERSION" github.com/peterbourgon/fastly-exporter/cmd/fastly-exporter
+	tar -C $DISTDIR --create --gzip --verbose --file $TGZ $FNAME
+	rm $BIN
 end
-
