@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/google/go-cmp/cmp"
 	"github.com/peterbourgon/fastly-exporter/pkg/api"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
