@@ -9,11 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/peterbourgon/fastly-exporter/pkg/gen"
-	"github.com/pkg/errors"
 )
 
 // HTTPClient is a consumer contract for the subscriber.
@@ -142,7 +141,7 @@ func (s *Subscriber) query(ctx context.Context, ts uint64) (currentName string, 
 	u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
-		return name, apiResultError, 0, ts, errors.Wrap(err, "error constructing real-time stats API request")
+		return name, apiResultError, 0, ts, fmt.Errorf("error constructing real-time stats API request: %w", err)
 	}
 
 	req.Header.Set("User-Agent", s.userAgent)

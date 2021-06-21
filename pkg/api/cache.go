@@ -9,10 +9,9 @@ import (
 	"time"
 
 	"github.com/cespare/xxhash"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/pkg/errors"
 )
 
 // HTTPClient is a consumer contract for the cache.
@@ -96,14 +95,14 @@ func (c *Cache) Refresh(client HTTPClient) error {
 
 	req, err := http.NewRequest("GET", "https://api.fastly.com/service", nil)
 	if err != nil {
-		return errors.Wrap(err, "error constructing API services request")
+		return fmt.Errorf("error constructing API services request: %w", err)
 	}
 
 	req.Header.Set("Fastly-Key", c.token)
 	req.Header.Set("Accept", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "error executing API services request")
+		return fmt.Errorf("error executing API services request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -115,12 +114,12 @@ func (c *Cache) Refresh(client HTTPClient) error {
 		if response.Msg == "" {
 			response.Msg = "unknown error"
 		}
-		return errors.Errorf("api.fastly.com responded with %s (%s)", resp.Status, response.Msg)
+		return fmt.Errorf("api.fastly.com responded with %s (%s)", resp.Status, response.Msg)
 	}
 
 	var response []Service
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return errors.Wrap(err, "error decoding API services response")
+		return fmt.Errorf("error decoding API services response: %w", err)
 	}
 
 	nextgen := map[string]Service{}
@@ -173,9 +172,7 @@ func (c *Cache) ServiceIDs() (ids []string) {
 	for _, s := range c.services {
 		ids = append(ids, s.ID)
 	}
-
 	sort.Strings(ids) // mostly for tests
-
 	return ids
 }
 
