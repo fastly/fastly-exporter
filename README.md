@@ -27,11 +27,6 @@ Avaliable as [mrnetops/fastly-exporter][container] from [Docker Hub][hub].
 docker pull mrnetops/fastly-exporter
 ```
 
-See [TODO][todo] for a complete docker-compose based out-of-the-box experience,
-including pre-built Grafana dashboards.
-
-[todo]: https://example.com
-
 ### Source
 
 If you have a working Go installation, you can clone the repo and install the
