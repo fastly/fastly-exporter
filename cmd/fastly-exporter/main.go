@@ -319,8 +319,24 @@ func main() {
 		})
 	}
 	{
+		// Serve landing page.
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(`<html>
+             <head><title>Fastly Exporter</title></head>
+             <body>
+             <h1>Fastly Exporter` + programVersion + `</h1>
+             <p><a href='` + promURL.Path + `'>Metrics</a></p>
+             </dl>
+             </body>
+             </html>`))
+		})
 		// Serve Prometheus metrics (and /debug/pprof/...) over HTTP.
 		http.Handle(promURL.Path, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+		// Serve readiness endpoint.
+		http.HandleFunc("/-/ready", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, "OK")
+		})
 		server := http.Server{
 			Addr:    promURL.Host,
 			Handler: http.DefaultServeMux,
