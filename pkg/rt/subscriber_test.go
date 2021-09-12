@@ -47,7 +47,7 @@ func TestSubscriberFixture(t *testing.T) {
 	<-processed
 
 	output := prometheusOutput(t, registry, namespace+"_"+subsystem+"_")
-	assertMetricOutput(t, expectedMetricsOutputSlice, output)
+	assertMetricOutput(t, expetedMetricsOutputMap, output)
 
 	cancel()
 	<-done
@@ -71,11 +71,12 @@ func TestSubscriberNoData(t *testing.T) {
 	client.advance()
 	<-processed // OK
 
-	lines := prometheusOutput(t, registry, "ns_ss_realtime_api_requests_total")
-	assertStringSliceEqual(t, []string{
-		`ns_ss_realtime_api_requests_total{result="no data",service_id="service_id",service_name="service_id"} 1`,
-		`ns_ss_realtime_api_requests_total{result="success",service_id="service_id",service_name="service_id"} 2`,
-	}, lines)
+	want := map[string]float64{
+		`ns_ss_realtime_api_requests_total{result="no data",service_id="service_id",service_name="service_id"}`: 1,
+		`ns_ss_realtime_api_requests_total{result="success",service_id="service_id",service_name="service_id"}`: 2,
+	}
+	have := prometheusOutput(t, registry, "ns_ss_realtime_api_requests_total")
+	assertMetricOutput(t, want, have)
 }
 
 func TestUserAgent(t *testing.T) {
