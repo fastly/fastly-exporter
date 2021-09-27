@@ -156,6 +156,24 @@ func (c *Cache) Refresh(client HTTPClient) error {
 	)
 
 	c.mtx.Lock()
+	for id, next := range nextgen {
+		_, ok := c.services[id]
+		if created := !ok; created {
+			level.Info(c.logger).Log("service", "found", "service_id", id, "name", next.Name, "version", next.Version)
+		}
+	}
+	for id, prev := range c.services {
+		next, ok := nextgen[id]
+		if removed := !ok; removed {
+			level.Info(c.logger).Log("service", "removed", "service_id", id, "name", prev.Name, "version", prev.Version)
+		}
+		if renamed := ok && prev.Name != next.Name; renamed {
+			level.Info(c.logger).Log("service", "renamed", "service_id", id, "from", prev.Name, "to", next.Name)
+		}
+		if updated := ok && prev.Version != next.Version; updated {
+			level.Info(c.logger).Log("service", "updated", "service_id", id, "from", prev.Version, "to", next.Version)
+		}
+	}
 	c.services = nextgen
 	c.mtx.Unlock()
 

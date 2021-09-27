@@ -30,13 +30,13 @@ docker pull mrnetops/fastly-exporter
 ### Source
 
 If you have a working Go installation, you can clone the repo and install the
-binary from any revision, including HEAD. Note that the repo doesn't support
-direct installation via e.g. `go get`.
+binary from any revision, including HEAD.
 
 ```
 git clone git@github.com:peterbourgon/fastly-exporter
 cd fastly-exporter
-env GO111MODULE=on go build ./cmd/fastly-exporter
+go build ./cmd/fastly-exporter
+./fastly-exporter -h
 ```
 
 ## Using
@@ -64,15 +64,15 @@ By default, all services available to your token will be exported. You can
 specify an explicit set of service IDs to export by using the `-service xxx`
 flag. (Service IDs are available at the top of your [Fastly dashboard][db].) You
 can also include only those services whose name matches a regex by using the
-`-service-allowlist '^Production'` flag, or skip any service whose name matches
+`-service-allowlist '^Production'` flag, or elide any service whose name matches
 a regex by using the `-service-blocklist '.*TEST.*'` flag.
 
 [db]: https://manage.fastly.com/services/all
 
 For tokens with access to a lot of services, it's possible to "shard" the
-services among different instances of the fastly-exporter by using the
-`-service-shard` flag. For example, to shard all services between 3 exporters,
-you would start each exporter as
+services among different fastly-exporter instances by using the `-service-shard`
+flag. For example, to shard all services between 3 exporters, you would start
+each exporter as
 
 ```
 fastly-exporter [common flags] -service-shard 1/3
@@ -80,7 +80,7 @@ fastly-exporter [common flags] -service-shard 2/3
 fastly-exporter [common flags] -service-shard 3/3
 ```
 
-### Filtering exported metrics
+### Filtering metrics
 
 By default, all metrics provided by the Fastly real-time stats API are exported
 as Prometheus metrics. You can export only those metrics whose name matches a
@@ -89,7 +89,7 @@ whose name matches a regex by using the `-metric-blocklist imgopto` flag.
 
 ### Filter semantics
 
-All flags that restrict services or metrics are repeatable. Repeating the same
+All flags that filter services or metrics are repeatable. Repeating the same
 flag causes its condition to be combined with OR semantics. For example,
 `-service A -service B` would include both services A and B (but not service C).
 Or, `-service-blocklist Test -service-blocklist Staging` would skip any service
@@ -98,3 +98,12 @@ whose name contained Test or Staging.
 Different flags (for the same filter target) combine with AND semantics. For
 example, `-metric-allowlist 'bytes_total$' -metric-blocklist imgopto` would only
 export metrics whose names ended in bytes_total, but didn't include imgopto.
+
+### Service discovery
+
+Available services are listed as targets on the `/sd` endpoint, in a format
+compatible with the [generic HTTP service discovery][httpsd] feature of
+Prometheus. Metrics for each service be scraped independently via
+`/metrics?target=<service ID>`.
+
+[httpsq]: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config

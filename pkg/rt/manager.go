@@ -16,6 +16,13 @@ type ServiceIdentifier interface {
 	ServiceIDs() []string
 }
 
+// MetricsProvider is a consumer contract for a subscriber manager. It models
+// the method of the prom.Registry which yields a set of Prometheus metrics for
+// a specific service ID.
+type MetricsProvider interface {
+	MetricsFor(serviceID string) *gen.Metrics
+}
+
 // Manager owns a set of subscribers. When refreshed, it will ask a
 // ServiceIdentifier for a set of service IDs that should be active, and manage
 // the lifecycles of the corresponding subscribers.
@@ -23,7 +30,7 @@ type Manager struct {
 	ids               ServiceIdentifier
 	client            HTTPClient
 	token             string
-	metrics           *gen.Metrics
+	metrics           MetricsProvider
 	subscriberOptions []SubscriberOption
 	logger            log.Logger
 
@@ -35,7 +42,7 @@ type Manager struct {
 // regular schedule to keep the set of managed subscribers up-to-date. The HTTP
 // client, token, metrics, and subscriber options parameters are passed thru to
 // constructed subscribers.
-func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics *gen.Metrics, subscriberOptions []SubscriberOption, logger log.Logger) *Manager {
+func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, logger log.Logger) *Manager {
 	return &Manager{
 		ids:               ids,
 		client:            client,
@@ -117,7 +124,7 @@ func (m *Manager) StopAll() {
 
 func (m *Manager) spawn(serviceID string) interrupt {
 	var (
-		subscriber  = NewSubscriber(m.client, m.token, serviceID, m.metrics, m.subscriberOptions...)
+		subscriber  = NewSubscriber(m.client, m.token, serviceID, m.metrics.MetricsFor(serviceID), m.subscriberOptions...)
 		ctx, cancel = context.WithCancel(context.Background())
 		done        = make(chan error, 1)
 	)
