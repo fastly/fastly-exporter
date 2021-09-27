@@ -10,24 +10,23 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/peterbourgon/fastly-exporter/pkg/api"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/gen"
+	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestManager(t *testing.T) {
 	var (
-		cache      = &mockCache{}
-		s1         = api.Service{ID: "101010", Name: "service 1", Version: 1}
-		s2         = api.Service{ID: "2f2f2f", Name: "service 2", Version: 2}
-		s3         = api.Service{ID: "3a3b3c", Name: "service 3", Version: 3}
-		client     = newMockRealtimeClient(`{}`)
-		token      = "irrelevant-token"
-		metrics, _ = gen.NewMetrics("namespace", "subsystem", filter.Filter{}, prometheus.NewRegistry())
-		logbuf     = &bytes.Buffer{}
-		logger     = log.NewLogfmtLogger(logbuf)
-		options    = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}
-		manager    = rt.NewManager(cache, client, token, metrics, options, level.NewFilter(logger, level.AllowInfo()))
+		cache    = &mockCache{}
+		s1       = api.Service{ID: "101010", Name: "service 1", Version: 1}
+		s2       = api.Service{ID: "2f2f2f", Name: "service 2", Version: 2}
+		s3       = api.Service{ID: "3a3b3c", Name: "service 3", Version: 3}
+		client   = newMockRealtimeClient(`{}`)
+		token    = "irrelevant-token"
+		registry = prom.NewRegistry("v0.0.0-DEV", "namespace", "subsystem", filter.Filter{})
+		logbuf   = &bytes.Buffer{}
+		logger   = log.NewLogfmtLogger(logbuf)
+		options  = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}
+		manager  = rt.NewManager(cache, client, token, registry, options, level.NewFilter(logger, level.AllowInfo()))
 	)
 
 	assertStringSliceEqual(t, []string{}, manager.Active())

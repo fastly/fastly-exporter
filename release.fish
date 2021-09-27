@@ -1,18 +1,14 @@
 #!/usr/bin/env fish
 
 function version_prompt
-	echo "Semantic version: "
+	echo "Semantic version (e.g. '0.11.9'): "
 end
 
 read --prompt version_prompt VERSION
 
-if test (echo $VERSION | grep '^v')
-	echo Use the raw semantic version, without a v prefix
-	exit
-end
-
-set REV (git rev-parse --short HEAD)
-echo Tagging $REV as v$VERSION
+set VERSION  (echo $VERSION | sed -e 's/^v//')
+set REVISION (git rev-parse --short HEAD)
+echo Tagging $REVISION as v$VERSION
 git tag --annotate v$VERSION -m "Release v$VERSION"
 echo Be sure to: git push --tags
 echo

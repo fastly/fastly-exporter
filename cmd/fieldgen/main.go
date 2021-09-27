@@ -110,7 +110,7 @@ func exec() error {
 	fmt.Printf("\n")
 	fmt.Printf("// NewMetrics returns a new set of metrics registered to the registerer.\n")
 	fmt.Printf("// Only metrics whose names pass the name filter are registered.\n")
-	fmt.Printf("func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometheus.Registerer) (*Metrics, error) {\n")
+	fmt.Printf("func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometheus.Registerer) *Metrics {\n")
 	fmt.Printf("\tm := Metrics{\n")
 	fmt.Printf("\t\t" + `RealtimeAPIRequestsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "realtime_api_requests_total", Help: "Total requests made to the real-time stats API.", }, []string{"service_id", "service_name", "result"}),` + "\n")
 	fmt.Printf("\t\t" + `ServiceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem, Name: "service_info", Help: "Static gauge with service ID, name, and version information.", }, []string{"service_id", "service_name", "service_version"}),` + "\n")
@@ -120,7 +120,7 @@ func exec() error {
 	fmt.Printf("\t}\n")
 	fmt.Printf("\n")
 	fmt.Printf("%s\n", registerBlock)
-	fmt.Printf("\treturn &m, nil\n")
+	fmt.Printf("\treturn &m\n")
 	fmt.Printf("}\n\n")
 	fmt.Printf("%s\n", getNameBlock)
 	fmt.Printf("\n")
@@ -306,13 +306,13 @@ const registerBlock = `
 for i, v := 0, reflect.ValueOf(m); i < v.NumField(); i++ {
 	c, ok := v.Field(i).Interface().(prometheus.Collector)
 	if !ok {
-		panic(fmt.Sprintf("programmer error: field %d/%d in Metrics type isn't a prometheus.Collector", i+1, v.NumField()))
+		panic(fmt.Errorf("field %d/%d in Metrics type isn't a prometheus.Collector", i+1, v.NumField()))
 	}
 	if name := getName(c); !nameFilter.Permit(name) {
 		continue
 	}
 	if err := r.Register(c); err != nil {
-		return nil, fmt.Errorf("error registering metric %d/%d: %w", i+1, v.NumField(), err)
+		panic(fmt.Errorf("error registering metric %d/%d: %w", i+1, v.NumField(), err))
 	}
 }
 `

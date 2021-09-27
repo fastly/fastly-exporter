@@ -2,6 +2,7 @@ package rt
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -60,7 +61,7 @@ func WithMetadataProvider(p MetadataProvider) SubscriberOption {
 // WithLogger sets the logger used by the subscriber while running.
 // By default, no log events are emitted.
 func WithLogger(logger log.Logger) SubscriberOption {
-	return func(s *Subscriber) { s.logger = logger }
+	return func(s *Subscriber) { s.logger = log.With(logger, "service_id", s.serviceID) }
 }
 
 // WithPostprocess sets the postprocess function for the subscriber, which is
@@ -149,7 +150,7 @@ func (s *Subscriber) query(ctx context.Context, ts uint64) (currentName string, 
 	req.Header.Set("Accept", "application/json")
 	resp, err := s.client.Do(req.WithContext(ctx))
 	if err != nil {
-		level.Error(s.logger).Log("during", "execute request", "err", err)
+		levelForError(s.logger, err).Log("during", "execute request", "err", err)
 		return name, apiResultError, time.Second, ts, nil
 	}
 
@@ -214,5 +215,22 @@ func contextSleep(ctx context.Context, d time.Duration) {
 	select {
 	case <-time.After(d):
 	case <-ctx.Done():
+	}
+}
+
+//
+//
+//
+
+var nopLogger = log.NewNopLogger()
+
+func levelForError(base log.Logger, err error) log.Logger {
+	switch {
+	case errors.Is(err, context.Canceled):
+		return level.Debug(base)
+	case err != nil:
+		return level.Error(base)
+	default:
+		return nopLogger
 	}
 }

@@ -359,7 +359,7 @@ type Metrics struct {
 
 // NewMetrics returns a new set of metrics registered to the registerer.
 // Only metrics whose names pass the name filter are registered.
-func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometheus.Registerer) (*Metrics, error) {
+func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometheus.Registerer) *Metrics {
 	m := Metrics{
 		RealtimeAPIRequestsTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "realtime_api_requests_total", Help: "Total requests made to the real-time stats API."}, []string{"service_id", "service_name", "result"}),
 		ServiceInfo:                          prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem, Name: "service_info", Help: "Static gauge with service ID, name, and version information."}, []string{"service_id", "service_name", "service_version"}),
@@ -511,17 +511,17 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 	for i, v := 0, reflect.ValueOf(m); i < v.NumField(); i++ {
 		c, ok := v.Field(i).Interface().(prometheus.Collector)
 		if !ok {
-			panic(fmt.Sprintf("programmer error: field %d/%d in Metrics type isn't a prometheus.Collector", i+1, v.NumField()))
+			panic(fmt.Errorf("field %d/%d in Metrics type isn't a prometheus.Collector", i+1, v.NumField()))
 		}
 		if name := getName(c); !nameFilter.Permit(name) {
 			continue
 		}
 		if err := r.Register(c); err != nil {
-			return nil, fmt.Errorf("error registering metric %d/%d: %w", i+1, v.NumField(), err)
+			panic(fmt.Errorf("error registering metric %d/%d: %w", i+1, v.NumField(), err))
 		}
 	}
 
-	return &m, nil
+	return &m
 }
 
 var descNameRegex = regexp.MustCompile("fqName: \"([^\"]+)\"")

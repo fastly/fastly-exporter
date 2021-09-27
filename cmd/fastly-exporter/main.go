@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
-	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -19,11 +18,9 @@ import (
 	"github.com/oklog/run"
 	"github.com/peterbourgon/fastly-exporter/pkg/api"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/gen"
+	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
 	"github.com/peterbourgon/ff/v3"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var programVersion = "dev"
@@ -31,7 +28,7 @@ var programVersion = "dev"
 func main() {
 	var (
 		token             string
-		addr              string
+		listen            string
 		namespace         string
 		subsystem         string
 		serviceShard      string
@@ -48,10 +45,10 @@ func main() {
 		configFileExample bool
 	)
 
-	fs := flag.NewFlagSet("fastly-exporter", flag.ExitOnError)
+	fs := flag.NewFlagSet("fastly-exporter", flag.ContinueOnError)
 	{
 		fs.StringVar(&token, "token", "", "Fastly API token (required)")
-		fs.StringVar(&addr, "endpoint", "http://127.0.0.1:8080/metrics", "Prometheus /metrics endpoint")
+		fs.StringVar(&listen, "listen", "127.0.0.1:8080", "listen address for Prometheus metrics")
 		fs.StringVar(&namespace, "namespace", "fastly", "Prometheus namespace")
 		fs.StringVar(&subsystem, "subsystem", "rt", "Prometheus subsystem")
 		fs.StringVar(&serviceShard, "service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
@@ -69,7 +66,14 @@ func main() {
 		fs.BoolVar(&configFileExample, "config-file-example", false, "print example config file to stdout and exit")
 		fs.Usage = usageFor(fs)
 	}
-	ff.Parse(fs, os.Args[1:], ff.WithEnvVarPrefix("FASTLY_EXPORTER"), ff.WithConfigFileFlag("config-file"), ff.WithConfigFileParser(ff.PlainParser))
+	if err := ff.Parse(fs, os.Args[1:],
+		ff.WithEnvVarPrefix("FASTLY_EXPORTER"),
+		ff.WithConfigFileFlag("config-file"),
+		ff.WithConfigFileParser(ff.PlainParser),
+	); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
 
 	if versionFlag {
 		fmt.Fprintf(os.Stdout, "fastly-exporter v%s\n", programVersion)
@@ -96,17 +100,6 @@ func main() {
 			level.Error(logger).Log("err", "-token or FASTLY_API_TOKEN is required")
 			os.Exit(1)
 		}
-	}
-
-	var promURL *url.URL
-	{
-		var err error
-		promURL, err = url.Parse(addr)
-		if err != nil {
-			level.Error(logger).Log("err", err)
-			os.Exit(1)
-		}
-		level.Info(logger).Log("prometheus_addr", promURL.Host, "path", promURL.Path, "namespace", namespace, "subsystem", subsystem)
 	}
 
 	{
@@ -205,21 +198,6 @@ func main() {
 		}
 	}
 
-	var registry *prometheus.Registry
-	{
-		registry = prometheus.NewRegistry()
-	}
-
-	var metrics *gen.Metrics
-	{
-		var err error
-		metrics, err = gen.NewMetrics(namespace, subsystem, metricNameFilter, registry)
-		if err != nil {
-			level.Error(logger).Log("err", err)
-			os.Exit(1)
-		}
-	}
-
 	var apiLogger log.Logger
 	{
 		apiLogger = log.With(logger, "component", "api.fastly.com")
@@ -259,6 +237,11 @@ func main() {
 		}
 	}
 
+	var registry *prom.Registry
+	{
+		registry = prom.NewRegistry(programVersion, namespace, subsystem, metricNameFilter)
+	}
+
 	var rtLogger log.Logger
 	{
 		rtLogger = log.With(logger, "component", "rt.fastly.com")
@@ -275,15 +258,15 @@ func main() {
 			rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
 		}
 
-		manager = rt.NewManager(cache, rtClient, token, metrics, subscriberOptions, rtLogger)
+		manager = rt.NewManager(cache, rtClient, token, registry, subscriberOptions, rtLogger)
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
 
 	var g run.Group
 	{
-		// Every *apiRefresh, ask the api.Cache to refresh the set of services
-		// we should be exporting data for. Then, ask the rt.Manager to refresh
-		// its set of rt.Subscribers, based on those latest services.
+		// Every apiRefresh, ask the api.Cache to refresh the set of services we
+		// should be exporting data for. Then, ask the rt.Manager to refresh its
+		// set of rt.Subscribers, based on those latest services.
 		var (
 			ctx, cancel = context.WithCancel(context.Background())
 			ticker      = time.NewTicker(apiRefresh)
@@ -319,18 +302,19 @@ func main() {
 		})
 	}
 	{
-		// Serve Prometheus metrics (and /debug/pprof/...) over HTTP.
-		http.Handle(promURL.Path, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+		// The HTTP server that Prometheus will speak to.
+		serverLogger := log.With(logger, "component", "server")
 		server := http.Server{
-			Addr:    promURL.Host,
-			Handler: http.DefaultServeMux,
+			Addr:    listen,
+			Handler: registry,
 		}
 		g.Add(func() error {
+			level.Info(serverLogger).Log("listen", listen)
 			return server.ListenAndServe()
 		}, func(error) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
-			level.Debug(logger).Log("msg", "shutting down HTTP server")
+			level.Debug(serverLogger).Log("msg", "shutting down")
 			server.Shutdown(ctx)
 		})
 	}
