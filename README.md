@@ -101,9 +101,23 @@ export metrics whose names ended in bytes_total, but didn't include imgopto.
 
 ### Service discovery
 
-Available services are listed as targets on the `/sd` endpoint, in a format
-compatible with the [generic HTTP service discovery][httpsd] feature of
-Prometheus. Metrics for each service be scraped independently via
-`/metrics?target=<service ID>`.
+Per-service metrics are available via `/metrics?target=<service ID>`. Available
+services are enumerated as targets via the `/sd` endpoint, which is compatible
+with the [generic HTTP service discovery][httpsd] feature of Prometheus. An
+example Prometheus scrape config for the Fastly exporter follows.
 
 [httpsq]: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
+
+```yaml
+scrape_configs:
+  - job_name: fastly
+    http_sd_configs:
+      - url: http://127.0.0.1:8080/sd
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: service
+      - target_label: __address__
+        replacement: 127.0.0.1:8080
+```
