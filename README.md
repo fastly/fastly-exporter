@@ -18,21 +18,24 @@ Go to the [releases page][releases].
 
 ### Docker
 
-Avaliable as [mrnetops/fastly-exporter][container] from [Docker Hub][hub].
+Available on the [packages page][pkg] as [peterbourgon/fastly-exporter][img].
 
-[container]: https://hub.docker.com/r/mrnetops/fastly-exporter
-[hub]: https://hub.docker.com
+[pkg]: https://github.com/peterbourgon/fastly-exporter/packages
+[img]: https://github.com/peterbourgon/fastly-exporter/pkgs/container/fastly-exporter
 
+```sh
+docker pull ghcr.io/peterbourgon/fastly-exporter:latest
 ```
-docker pull mrnetops/fastly-exporter
-```
+
+Note that version `latest` will track RCs, alphas, etc. -- always use an
+explicit version in production.
 
 ### Source
 
 If you have a working Go installation, you can clone the repo and install the
 binary from any revision, including HEAD.
 
-```
+```sh
 git clone git@github.com:peterbourgon/fastly-exporter
 cd fastly-exporter
 go build ./cmd/fastly-exporter
@@ -49,7 +52,7 @@ for information on creating API tokens. The token can be provided via the
 
 [token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
 
-```
+```sh
 fastly-exporter -token XXX
 ```
 
@@ -74,7 +77,7 @@ services among different fastly-exporter instances by using the `-service-shard`
 flag. For example, to shard all services between 3 exporters, you would start
 each exporter as
 
-```
+```sh
 fastly-exporter [common flags] -service-shard 1/3
 fastly-exporter [common flags] -service-shard 2/3
 fastly-exporter [common flags] -service-shard 3/3
@@ -102,7 +105,7 @@ export metrics whose names ended in bytes_total, but didn't include imgopto.
 ### Service discovery
 
 Per-service metrics are available via `/metrics?target=<service ID>`. Available
-services are enumerated as targets via the `/sd` endpoint, which is compatible
+services are enumerated as targets on the `/sd` endpoint, which is compatible
 with the [generic HTTP service discovery][httpsd] feature of Prometheus. An
 example Prometheus scrape config for the Fastly exporter follows.
 
@@ -110,7 +113,7 @@ example Prometheus scrape config for the Fastly exporter follows.
 
 ```yaml
 scrape_configs:
-  - job_name: fastly
+  - job_name: fastly-exporter
     http_sd_configs:
       - url: http://127.0.0.1:8080/sd
     relabel_configs:

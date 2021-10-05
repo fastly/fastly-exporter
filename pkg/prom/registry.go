@@ -21,7 +21,7 @@ import (
 //
 // Writers (i.e. rt.Subscribers) should call MetricsFor with their specific
 // service ID, and update the returned set of Prometheus metrics. Readers (i.e.
-// Prometheus) can scrape metrics for all services via the `/metrics` endpoint,
+// Prometheus) can scrape metrics for all services via the `/metrics` endpoint.
 // or a single service via `/metrics?target=<service ID>`.
 //
 // https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
