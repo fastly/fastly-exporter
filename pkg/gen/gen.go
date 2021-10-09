@@ -212,6 +212,7 @@ type Datacenter struct {
 type Metrics struct {
 	RealtimeAPIRequestsTotal             *prometheus.CounterVec
 	ServiceInfo                          *prometheus.GaugeVec
+	LastSuccessfulResponse               *prometheus.GaugeVec
 	AttackBlockedReqBodyBytesTotal       *prometheus.CounterVec
 	AttackBlockedReqHeaderBytesTotal     *prometheus.CounterVec
 	AttackLoggedReqBodyBytesTotal        *prometheus.CounterVec
@@ -363,6 +364,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 	m := Metrics{
 		RealtimeAPIRequestsTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "realtime_api_requests_total", Help: "Total requests made to the real-time stats API."}, []string{"service_id", "service_name", "result"}),
 		ServiceInfo:                          prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem, Name: "service_info", Help: "Static gauge with service ID, name, and version information."}, []string{"service_id", "service_name", "service_version"}),
+		LastSuccessfulResponse:               prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem, Name: "last_successful_response", Help: "Unix timestamp of the last successful response received from the real-time stats API."}, []string{"service_id", "service_name"}),
 		AttackBlockedReqBodyBytesTotal:       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "attack_blocked_req_body_bytes_total", Help: "Total body bytes received from requests that triggered a WAF rule that was blocked."}, []string{"service_id", "service_name", "datacenter"}),
 		AttackBlockedReqHeaderBytesTotal:     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "attack_blocked_req_header_bytes_total", Help: "Total header bytes received from requests that triggered a WAF rule that was blocked."}, []string{"service_id", "service_name", "datacenter"}),
 		AttackLoggedReqBodyBytesTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "attack_logged_req_body_bytes_total", Help: "Total body bytes received from requests that triggered a WAF rule that was logged."}, []string{"service_id", "service_name", "datacenter"}),
@@ -541,7 +543,6 @@ func getName(c prometheus.Collector) string {
 func Process(response *APIResponse, serviceID, serviceName, serviceVersion string, m *Metrics) {
 	for _, d := range response.Data {
 		for datacenter, stats := range d.Datacenter {
-			m.ServiceInfo.WithLabelValues(serviceID, serviceName, serviceVersion).Set(1)
 			m.AttackBlockedReqBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackBlockedReqBodyBytes))
 			m.AttackBlockedReqHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackBlockedReqHeaderBytes))
 			m.AttackLoggedReqBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackLoggedReqBodyBytes))

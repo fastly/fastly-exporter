@@ -44,11 +44,17 @@ func assertMetricOutput(t *testing.T, want, have map[string]float64) {
 		have,
 	} {
 		for k, v := range m {
+			if strings.Contains(k, "_last_successful_response{") {
+				delete(m, k)
+				continue
+			}
+
 			s := strconv.FormatFloat(v, 'f', 3, 64)
 			f, err := strconv.ParseFloat(s, 64)
 			if err != nil {
 				t.Fatalf("%s: %f -> %s: %v", k, v, s, err)
 			}
+
 			m[k] = f
 		}
 	}

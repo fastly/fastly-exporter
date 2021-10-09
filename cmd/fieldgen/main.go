@@ -103,6 +103,7 @@ func exec() error {
 	fmt.Printf("type Metrics struct {\n")
 	fmt.Printf("\tRealtimeAPIRequestsTotal *prometheus.CounterVec\n")
 	fmt.Printf("\tServiceInfo *prometheus.GaugeVec\n")
+	fmt.Printf("\tLastSuccessfulResponse *prometheus.GaugeVec\n")
 	for _, m := range metrics {
 		fmt.Printf("\t%s *prometheus.%sVec\n", m.FieldName, m.Type)
 	}
@@ -114,6 +115,7 @@ func exec() error {
 	fmt.Printf("\tm := Metrics{\n")
 	fmt.Printf("\t\t" + `RealtimeAPIRequestsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "realtime_api_requests_total", Help: "Total requests made to the real-time stats API.", }, []string{"service_id", "service_name", "result"}),` + "\n")
 	fmt.Printf("\t\t" + `ServiceInfo: prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem, Name: "service_info", Help: "Static gauge with service ID, name, and version information.", }, []string{"service_id", "service_name", "service_version"}),` + "\n")
+	fmt.Printf("\t\t" + `LastSuccessfulResponse: prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: subsystem, Name: "last_successful_response", Help: "Unix timestamp of the last successful response received from the real-time stats API.", }, []string{"service_id", "service_name"}),` + "\n")
 	for _, m := range metrics {
 		fmt.Printf("\t\t%s: %s,\n", m.FieldName, m.create())
 	}
@@ -128,7 +130,6 @@ func exec() error {
 	fmt.Printf("func Process(response *APIResponse, serviceID, serviceName, serviceVersion string, m *Metrics) {\n")
 	fmt.Printf("\tfor _, d := range response.Data {\n")
 	fmt.Printf("\t\tfor datacenter, stats := range d.Datacenter {\n")
-	fmt.Printf("\t\t\tm.ServiceInfo.WithLabelValues(serviceID, serviceName, serviceVersion).Set(1)\n")
 	for _, m := range mappings {
 		switch m.Kind {
 		case "Counter":
