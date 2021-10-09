@@ -248,6 +248,7 @@ var apiResponseBlock = strings.Replace(`
 // the CPU bottleneck of the program.
 type APIResponse struct {
 	Timestamp uint64 ·json:"Timestamp"·
+	AggregateDelay int64 ·json:"AggregateDelay"·
 	Data      []struct {
 		Datacenter map[string]Datacenter ·json:"datacenter"·
 		Aggregated Datacenter            ·json:"aggregated"·

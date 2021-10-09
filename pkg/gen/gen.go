@@ -16,8 +16,9 @@ import (
 // when there are lots of services being monitored, unmarshaling to this type is
 // the CPU bottleneck of the program.
 type APIResponse struct {
-	Timestamp uint64 `json:"Timestamp"`
-	Data      []struct {
+	Timestamp      uint64 `json:"Timestamp"`
+	AggregateDelay int64  `json:"AggregateDelay"`
+	Data           []struct {
 		Datacenter map[string]Datacenter `json:"datacenter"`
 		Aggregated Datacenter            `json:"aggregated"`
 		Recorded   uint64                `json:"recorded"`
