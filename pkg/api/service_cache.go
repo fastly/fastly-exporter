@@ -14,12 +14,6 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 )
 
-// HTTPClient is a consumer contract for the cache.
-// It models a concrete http.Client.
-type HTTPClient interface {
-	Do(*http.Request) (*http.Response, error)
-}
-
 // Service metadata associated with a single service.
 // Also serves as a DTO for api.fastly.com/service.
 type Service struct {
@@ -28,10 +22,12 @@ type Service struct {
 	Version int    `json:"version"`
 }
 
-// Cache polls api.fastly.com/service to keep metadata about
+// ServiceCache polls api.fastly.com/service to keep metadata about
 // one or more service IDs up-to-date.
-type Cache struct {
-	token      string
+type ServiceCache struct {
+	client HTTPClient
+	token  string
+
 	serviceIDs stringSet
 	nameFilter filter.Filter
 	shard      shardSlice
@@ -41,11 +37,12 @@ type Cache struct {
 	services map[string]Service
 }
 
-// NewCache returns an empty cache of service metadata. By default, it will
-// fetch metadata about all services available to the provided token. Use
+// NewServiceCache returns an empty cache of service metadata. By default, it
+// will fetch metadata about all services available to the provided token. Use
 // options to restrict which services the cache should manage.
-func NewCache(token string, options ...CacheOption) *Cache {
-	c := &Cache{
+func NewServiceCache(client HTTPClient, token string, options ...ServiceCacheOption) *ServiceCache {
+	c := &ServiceCache{
+		client: client,
 		token:  token,
 		logger: log.NewNopLogger(),
 	}
@@ -55,21 +52,21 @@ func NewCache(token string, options ...CacheOption) *Cache {
 	return c
 }
 
-// CacheOption provides some additional behavior to a cache. Options that
-// restrict which services are cached combine with AND semantics.
-type CacheOption func(*Cache)
+// ServiceCacheOption provides some additional behavior to a service cache.
+// Options that restrict which services are cached combine with AND semantics.
+type ServiceCacheOption func(*ServiceCache)
 
 // WithExplicitServiceIDs restricts the cache to fetch metadata only for the
 // provided service IDs. By default, all service IDs available to the provided
 // token are allowed.
-func WithExplicitServiceIDs(ids ...string) CacheOption {
-	return func(c *Cache) { c.serviceIDs = newStringSet(ids) }
+func WithExplicitServiceIDs(ids ...string) ServiceCacheOption {
+	return func(c *ServiceCache) { c.serviceIDs = newStringSet(ids) }
 }
 
 // WithNameFilter restricts the cache to fetch metadata only for the services
 // whose names pass the provided filter. By default, no name filtering occurs.
-func WithNameFilter(f filter.Filter) CacheOption {
-	return func(c *Cache) { c.nameFilter = f }
+func WithNameFilter(f filter.Filter) ServiceCacheOption {
+	return func(c *ServiceCache) { c.nameFilter = f }
 }
 
 // WithShard restricts the cache to fetch metadata only for those services whose
@@ -79,18 +76,18 @@ func WithNameFilter(f filter.Filter) CacheOption {
 // This option is designed to allow users to split accounts (tokens) that have a
 // large number of services across multiple exporter processes. For example, to
 // split across 3 processes, each process would set n={1,2,3} and m=3.
-func WithShard(n, m uint64) CacheOption {
-	return func(c *Cache) { c.shard = shardSlice{n, m} }
+func WithShard(n, m uint64) ServiceCacheOption {
+	return func(c *ServiceCache) { c.shard = shardSlice{n, m} }
 }
 
 // WithLogger sets the logger used by the cache during refresh.
 // By default, no log events are emitted.
-func WithLogger(logger log.Logger) CacheOption {
-	return func(c *Cache) { c.logger = logger }
+func WithLogger(logger log.Logger) ServiceCacheOption {
+	return func(c *ServiceCache) { c.logger = logger }
 }
 
 // Refresh services and their metadata.
-func (c *Cache) Refresh(client HTTPClient) error {
+func (c *ServiceCache) Refresh() error {
 	begin := time.Now()
 
 	req, err := http.NewRequest("GET", "https://api.fastly.com/service", nil)
@@ -100,7 +97,7 @@ func (c *Cache) Refresh(client HTTPClient) error {
 
 	req.Header.Set("Fastly-Key", c.token)
 	req.Header.Set("Accept", "application/json")
-	resp, err := client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error executing API services request: %w", err)
 	}
@@ -182,7 +179,7 @@ func (c *Cache) Refresh(client HTTPClient) error {
 
 // ServiceIDs currently being monitored by the cache.
 // The set can change over time.
-func (c *Cache) ServiceIDs() (ids []string) {
+func (c *ServiceCache) ServiceIDs() (ids []string) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -196,7 +193,7 @@ func (c *Cache) ServiceIDs() (ids []string) {
 
 // Metadata returns selected metadata associated with a given service ID.
 // If the cache doesn't contain that service ID, found will be false.
-func (c *Cache) Metadata(id string) (name string, version int, found bool) {
+func (c *ServiceCache) Metadata(id string) (name string, version int, found bool) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 

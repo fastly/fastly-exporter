@@ -140,3 +140,8 @@ func TestRegistryEndpoints(t *testing.T) {
 		checkMetrics(body, want, dont)
 	})
 }
+
+type nopCollector struct{}
+
+func (nopCollector) Describe(ch chan<- *prometheus.Desc) {}
+func (nopCollector) Collect(ch chan<- prometheus.Metric) {}

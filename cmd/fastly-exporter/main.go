@@ -37,7 +37,8 @@ func main() {
 		serviceBlocklist  stringslice
 		metricAllowlist   stringslice
 		metricBlocklist   stringslice
-		apiRefresh        time.Duration
+		datacenterRefresh time.Duration
+		serviceRefresh    time.Duration
 		apiTimeout        time.Duration
 		rtTimeout         time.Duration
 		debug             bool
@@ -57,7 +58,9 @@ func main() {
 		fs.Var(&serviceBlocklist, "service-blocklist", "if set, don't include services whose names match this regex (repeatable)")
 		fs.Var(&metricAllowlist, "metric-allowlist", "if set, only export metrics whose names match this regex (repeatable)")
 		fs.Var(&metricBlocklist, "metric-blocklist", "if set, don't export metrics whose names match this regex (repeatable)")
-		fs.DurationVar(&apiRefresh, "api-refresh", time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
+		fs.DurationVar(&datacenterRefresh, "datacenter-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated datacenter metadata (10m–1h)")
+		fs.DurationVar(&serviceRefresh, "service-refresh", 1*time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
+		fs.DurationVar(&serviceRefresh, "api-refresh", 1*time.Minute, "DEPRECATED -- use service-refresh instead")
 		fs.DurationVar(&apiTimeout, "api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
 		fs.DurationVar(&rtTimeout, "rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
 		fs.BoolVar(&debug, "debug", false, "log debug information")
@@ -102,14 +105,28 @@ func main() {
 		}
 	}
 
-	{
-		if apiRefresh < 15*time.Second {
-			level.Warn(logger).Log("msg", "-api-refresh cannot be shorter than 15s; setting it to 15s")
-			apiRefresh = 15 * time.Second
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == "api-refresh" {
+			level.Warn(logger).Log("msg", "-api-refresh is deprecated and will be removed in a future version, please use -service-refresh instead")
 		}
-		if apiRefresh > 10*time.Minute {
-			level.Warn(logger).Log("msg", "-api-refresh cannot be longer than 10m; setting it to 10m")
-			apiRefresh = 10 * time.Minute
+	})
+
+	{
+		if datacenterRefresh < 10*time.Minute {
+			level.Warn(logger).Log("msg", "-datacenter-refresh cannot be shorter than 10m; setting it to 10m")
+			datacenterRefresh = 10 * time.Minute
+		}
+		if datacenterRefresh > 1*time.Hour {
+			level.Warn(logger).Log("msg", "-datacenter-refresh cannot be longer than 1h; setting it to 1h")
+			datacenterRefresh = 1 * time.Hour
+		}
+		if serviceRefresh < 15*time.Second {
+			level.Warn(logger).Log("msg", "-service-refresh cannot be shorter than 15s; setting it to 15s")
+			serviceRefresh = 15 * time.Second
+		}
+		if serviceRefresh > 10*time.Minute {
+			level.Warn(logger).Log("msg", "-service-refresh cannot be longer than 10m; setting it to 10m")
+			serviceRefresh = 10 * time.Minute
 		}
 		if apiTimeout < 5*time.Second {
 			level.Warn(logger).Log("msg", "-api-timeout cannot be shorter than 5s; setting it to 5s")
@@ -159,7 +176,7 @@ func main() {
 		}
 		for _, expr := range metricBlocklist {
 			if err := metricNameFilter.Block(expr); err != nil {
-				level.Error(logger).Log("err", "invalid -metricblocklist", "msg", err)
+				level.Error(logger).Log("err", "invalid -metric-blocklist", "msg", err)
 				os.Exit(1)
 			}
 			level.Info(logger).Log("filter", "metrics", "type", "name blocklist", "expr", expr)
@@ -203,7 +220,7 @@ func main() {
 		apiLogger = log.With(logger, "component", "api.fastly.com")
 	}
 
-	var apiCacheOptions []api.CacheOption
+	var apiCacheOptions []api.ServiceCacheOption
 	{
 		apiCacheOptions = append(apiCacheOptions,
 			api.WithLogger(apiLogger),
@@ -227,19 +244,35 @@ func main() {
 		}
 	}
 
-	var cache *api.Cache
+	var serviceCache *api.ServiceCache
 	{
-		cache = api.NewCache(token, apiCacheOptions...)
+		serviceCache = api.NewServiceCache(apiClient, token, apiCacheOptions...)
 
-		if err := cache.Refresh(apiClient); err != nil {
+		if err := serviceCache.Refresh(); err != nil {
 			level.Error(apiLogger).Log("during", "initial service refresh", "err", err)
+			os.Exit(1)
+		}
+	}
+
+	var datacenterCache *api.DatacenterCache
+	{
+		datacenterCache = api.NewDatacenterCache(apiClient, token)
+
+		if err := datacenterCache.Refresh(); err != nil { // TODO(pb): concurrently with service cache refresh
+			level.Error(apiLogger).Log("during", "initial datacenter refresh", "err", err)
 			os.Exit(1)
 		}
 	}
 
 	var registry *prom.Registry
 	{
-		registry = prom.NewRegistry(programVersion, namespace, subsystem, metricNameFilter)
+		dcs, err := datacenterCache.Gatherer(namespace, subsystem)
+		if err != nil {
+			level.Error(apiLogger).Log("during", "create datacenter gatherer", "err", err)
+			os.Exit(1)
+		}
+
+		registry = prom.NewRegistry(programVersion, namespace, subsystem, metricNameFilter, dcs)
 	}
 
 	var rtLogger log.Logger
@@ -254,22 +287,21 @@ func main() {
 		}
 		subscriberOptions := []rt.SubscriberOption{
 			rt.WithLogger(rtLogger),
-			rt.WithMetadataProvider(cache),
+			rt.WithMetadataProvider(serviceCache),
 			rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
 		}
 
-		manager = rt.NewManager(cache, rtClient, token, registry, subscriberOptions, rtLogger)
+		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, rtLogger)
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
 
 	var g run.Group
 	{
-		// Every apiRefresh, ask the api.Cache to refresh the set of services we
-		// should be exporting data for. Then, ask the rt.Manager to refresh its
-		// set of rt.Subscribers, based on those latest services.
+		// Every datacenterRefresh, ask the api.DatacenterCache to refresh
+		// metadata from the api.fastly.com/datacenters endpoint.
 		var (
 			ctx, cancel = context.WithCancel(context.Background())
-			ticker      = time.NewTicker(apiRefresh)
+			ticker      = time.NewTicker(datacenterRefresh)
 		)
 		g.Add(func() error {
 			for {
@@ -278,7 +310,32 @@ func main() {
 					return ctx.Err()
 
 				case <-ticker.C:
-					err := cache.Refresh(apiClient)
+					if err := datacenterCache.Refresh(); err != nil {
+						level.Warn(apiLogger).Log("during", "datacenter refresh", "err", err, "msg", "the datacenter info metrics may be stale")
+					}
+				}
+			}
+		}, func(error) {
+			ticker.Stop()
+			cancel()
+		})
+	}
+	{
+		// Every serviceRefresh, ask the api.ServiceCache to refresh the set of
+		// services we should be exporting data for. Then, ask the rt.Manager to
+		// refresh its set of rt.Subscribers, based on those latest services.
+		var (
+			ctx, cancel = context.WithCancel(context.Background())
+			ticker      = time.NewTicker(serviceRefresh)
+		)
+		g.Add(func() error {
+			for {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+
+				case <-ticker.C:
+					err := serviceCache.Refresh()
 					if err != nil {
 						level.Warn(apiLogger).Log("during", "service refresh", "err", err, "msg", "the set of exported services and their metadata may be stale")
 					}
@@ -291,7 +348,8 @@ func main() {
 		})
 	}
 	{
-		// A pseudo-actor that exists only to tear down all managed monitors.
+		// A pseudo-actor for the rt.Manager, which waits for interrupt and then
+		// tears down all of the managed subscribers.
 		ctx, cancel := context.WithCancel(context.Background())
 		g.Add(func() error {
 			<-ctx.Done()
@@ -302,7 +360,7 @@ func main() {
 		})
 	}
 	{
-		// The HTTP server that Prometheus will speak to.
+		// The HTTP server that Prometheus will scrape.
 		serverLogger := log.With(logger, "component", "server")
 		server := http.Server{
 			Addr:    listen,
@@ -394,7 +452,7 @@ func envVarSuffix(f *flag.Flag) string {
 var exampleConfigFile = strings.TrimSpace(`
 token ABC123
 
-api-refresh 30s
+service-refresh 30s
 api-timeout 60s
 
 service-allowlist Prod
