@@ -7,7 +7,6 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"os/signal"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -21,6 +20,8 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
 	"github.com/peterbourgon/ff/v3"
+	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/sync/errgroup"
 )
 
 var programVersion = "dev"
@@ -220,23 +221,6 @@ func main() {
 		apiLogger = log.With(logger, "component", "api.fastly.com")
 	}
 
-	var apiCacheOptions []api.ServiceCacheOption
-	{
-		apiCacheOptions = append(apiCacheOptions,
-			api.WithLogger(apiLogger),
-			api.WithNameFilter(serviceNameFilter),
-		)
-
-		if len(serviceIDs) > 0 {
-			level.Info(logger).Log("filter", "services", "type", "explicit service IDs", "count", len(serviceIDs))
-			apiCacheOptions = append(apiCacheOptions, api.WithExplicitServiceIDs(serviceIDs...))
-		}
-
-		if shardM > 0 {
-			apiCacheOptions = append(apiCacheOptions, api.WithShard(shardN, shardM))
-		}
-	}
-
 	var apiClient *http.Client
 	{
 		apiClient = &http.Client{
@@ -246,51 +230,65 @@ func main() {
 
 	var serviceCache *api.ServiceCache
 	{
-		serviceCache = api.NewServiceCache(apiClient, token, apiCacheOptions...)
-
-		if err := serviceCache.Refresh(); err != nil {
-			level.Error(apiLogger).Log("during", "initial service refresh", "err", err)
-			os.Exit(1)
+		serviceCacheOptions := []api.ServiceCacheOption{
+			api.WithLogger(apiLogger),
+			api.WithNameFilter(serviceNameFilter),
 		}
+
+		if len(serviceIDs) > 0 {
+			level.Info(logger).Log("filter", "services", "type", "explicit service IDs", "count", len(serviceIDs))
+			serviceCacheOptions = append(serviceCacheOptions, api.WithExplicitServiceIDs(serviceIDs...))
+		}
+
+		if shardM > 0 {
+			level.Info(logger).Log("filter", "services", "type", "shard", "shard", fmt.Sprintf("%d/%d", shardN, shardM))
+			serviceCacheOptions = append(serviceCacheOptions, api.WithShard(shardN, shardM))
+		}
+
+		serviceCache = api.NewServiceCache(apiClient, token, serviceCacheOptions...)
 	}
 
 	var datacenterCache *api.DatacenterCache
 	{
 		datacenterCache = api.NewDatacenterCache(apiClient, token)
+	}
 
-		if err := datacenterCache.Refresh(); err != nil { // TODO(pb): concurrently with service cache refresh
-			level.Error(apiLogger).Log("during", "initial datacenter refresh", "err", err)
+	{
+		g, ctx := errgroup.WithContext(context.Background())
+		g.Go(func() error { return serviceCache.Refresh(ctx) })
+		g.Go(func() error { return datacenterCache.Refresh(ctx) })
+		if err := g.Wait(); err != nil {
+			level.Error(apiLogger).Log("during", "initial API calls", "err", err)
 			os.Exit(1)
 		}
 	}
 
-	var registry *prom.Registry
+	var defaultGatherers prometheus.Gatherers
 	{
 		dcs, err := datacenterCache.Gatherer(namespace, subsystem)
 		if err != nil {
 			level.Error(apiLogger).Log("during", "create datacenter gatherer", "err", err)
 			os.Exit(1)
 		}
-
-		registry = prom.NewRegistry(programVersion, namespace, subsystem, metricNameFilter, dcs)
+		defaultGatherers = append(defaultGatherers, dcs)
 	}
 
-	var rtLogger log.Logger
+	var registry *prom.Registry
 	{
-		rtLogger = log.With(logger, "component", "rt.fastly.com")
+		registry = prom.NewRegistry(programVersion, namespace, subsystem, metricNameFilter, defaultGatherers)
 	}
 
 	var manager *rt.Manager
 	{
-		rtClient := &http.Client{
-			Timeout: rtTimeout,
-		}
-		subscriberOptions := []rt.SubscriberOption{
-			rt.WithLogger(rtLogger),
-			rt.WithMetadataProvider(serviceCache),
-			rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
-		}
-
+		var (
+			rtLogger          = log.With(logger, "component", "rt.fastly.com")
+			rtClient          = &http.Client{Timeout: rtTimeout}
+			subscriberOptions = []rt.SubscriberOption{
+				rt.WithLogger(rtLogger),
+				rt.WithMetadataProvider(serviceCache),
+				rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
+			}
+		)
 		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, rtLogger)
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
@@ -306,13 +304,12 @@ func main() {
 		g.Add(func() error {
 			for {
 				select {
-				case <-ctx.Done():
-					return ctx.Err()
-
 				case <-ticker.C:
-					if err := datacenterCache.Refresh(); err != nil {
+					if err := datacenterCache.Refresh(ctx); err != nil {
 						level.Warn(apiLogger).Log("during", "datacenter refresh", "err", err, "msg", "the datacenter info metrics may be stale")
 					}
+				case <-ctx.Done():
+					return ctx.Err()
 				}
 			}
 		}, func(error) {
@@ -331,15 +328,13 @@ func main() {
 		g.Add(func() error {
 			for {
 				select {
-				case <-ctx.Done():
-					return ctx.Err()
-
 				case <-ticker.C:
-					err := serviceCache.Refresh()
-					if err != nil {
+					if err := serviceCache.Refresh(ctx); err != nil {
 						level.Warn(apiLogger).Log("during", "service refresh", "err", err, "msg", "the set of exported services and their metadata may be stale")
 					}
 					manager.Refresh() // safe to do with stale data in the cache
+				case <-ctx.Done():
+					return ctx.Err()
 				}
 			}
 		}, func(error) {
@@ -379,20 +374,10 @@ func main() {
 	{
 		// Catch ctrl-C.
 		var (
-			ctx, cancel = context.WithCancel(context.Background())
-			sigchan     = make(chan os.Signal, 1)
+			ctx     = context.Background()
+			signals = os.Interrupt
 		)
-		signal.Notify(sigchan, os.Interrupt)
-		g.Add(func() error {
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case sig := <-sigchan:
-				return fmt.Errorf("received signal %s", sig)
-			}
-		}, func(error) {
-			cancel()
-		})
+		g.Add(run.SignalHandler(ctx, signals))
 	}
 	level.Info(logger).Log("exit", g.Run())
 }

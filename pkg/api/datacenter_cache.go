@@ -1,28 +1,35 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type DatacenterCache struct {
-	client HTTPClient
-	token  string
-
-	mtx sync.Mutex
-	dcs []datacenter
-}
-
-type datacenter struct {
+// Datacenter models a single datacenter as returned by the Fastly API.
+type Datacenter struct {
 	Code  string `json:"code"` // Prometheus label is "datacenter" to make grouping at query time less tedious
 	Name  string `json:"name"`
 	Group string `json:"group"`
 }
 
+// DatacenterCache polls api.fastly.com/datacenters and maintains a local cache
+// of the returned metadata. That information is exposed as Prometheus metrics.
+type DatacenterCache struct {
+	client HTTPClient
+	token  string
+
+	mtx sync.Mutex
+	dcs []Datacenter
+}
+
+// NewDatacenterCache returns an empty cache of datacenter metadata. Use the
+// Refresh method to update the cache.
 func NewDatacenterCache(client HTTPClient, token string) *DatacenterCache {
 	return &DatacenterCache{
 		client: client,
@@ -30,8 +37,9 @@ func NewDatacenterCache(client HTTPClient, token string) *DatacenterCache {
 	}
 }
 
-func (c *DatacenterCache) Refresh() error {
-	req, err := http.NewRequest("GET", "https://api.fastly.com/datacenters", nil)
+// Refresh the cache with metadata retreived from the Fastly API.
+func (c *DatacenterCache) Refresh(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.fastly.com/datacenters", nil)
 	if err != nil {
 		return fmt.Errorf("error constructing API datacenters request: %w", err)
 	}
@@ -45,20 +53,17 @@ func (c *DatacenterCache) Refresh() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var response struct {
-			Msg string `json:"msg"`
-		}
-		json.NewDecoder(resp.Body).Decode(&response)
-		if response.Msg == "" {
-			response.Msg = "unknown error"
-		}
-		return fmt.Errorf("api.fastly.com responded with %s (%s)", resp.Status, response.Msg)
+		return NewError(resp)
 	}
 
-	var response []datacenter
+	var response []Datacenter
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return fmt.Errorf("error decoding API datacenters response: %w", err)
 	}
+
+	sort.Slice(response, func(i, j int) bool {
+		return response[i].Code < response[j].Code
+	})
 
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
@@ -67,6 +72,17 @@ func (c *DatacenterCache) Refresh() error {
 	return nil
 }
 
+// Datacenters returns a copy of the currently cached datacenters.
+func (c *DatacenterCache) Datacenters() []Datacenter {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	dcs := make([]Datacenter, len(c.dcs))
+	copy(dcs, c.dcs)
+	return dcs
+}
+
+// Gatherer returns a Prometheus gatherer which will yield current metadata
+// about Fastly datacenters as labels on a gauge metric.
 func (c *DatacenterCache) Gatherer(namespace, subsystem string) (prometheus.Gatherer, error) {
 	var (
 		fqName      = prometheus.BuildFQName(namespace, subsystem, "datacenter_info")
@@ -85,18 +101,6 @@ func (c *DatacenterCache) Gatherer(namespace, subsystem string) (prometheus.Gath
 	return registry, nil
 }
 
-func (c *DatacenterCache) getDatacenters() []datacenter {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-	dcs := make([]datacenter, len(c.dcs))
-	copy(dcs, c.dcs)
-	return dcs
-}
-
-//
-//
-//
-
 type datacenterCollector struct {
 	desc  *prometheus.Desc
 	cache *DatacenterCache
@@ -107,7 +111,7 @@ func (c *datacenterCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *datacenterCollector) Collect(ch chan<- prometheus.Metric) {
-	for _, dc := range c.cache.getDatacenters() {
+	for _, dc := range c.cache.Datacenters() {
 		ch <- prometheus.MustNewConstMetric(c.desc, prometheus.GaugeValue, 1, dc.Code, dc.Name, dc.Group)
 	}
 }

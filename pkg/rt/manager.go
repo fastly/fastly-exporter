@@ -134,8 +134,8 @@ func (m *Manager) spawn(serviceID string) interrupt {
 	return interrupt{cancel, done}
 }
 
-func (m *Manager) managedIDsWithLock() (ids []string) {
-	ids = make([]string, 0, len(m.managed))
+func (m *Manager) managedIDsWithLock() []string {
+	ids := make([]string, 0, len(m.managed))
 	for id := range m.managed {
 		ids = append(ids, id)
 	}

@@ -1,9 +1,7 @@
 package api_test
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -11,11 +9,14 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 )
 
-func TestCache(t *testing.T) {
+func TestServiceCache(t *testing.T) {
+	t.Parallel()
+
 	var (
 		s1 = api.Service{ID: "AbcDef123ghiJKlmnOPsq", Name: "My first service", Version: 5}
 		s2 = api.Service{ID: "XXXXXXXXXXXXXXXXXXXXXX", Name: "Dummy service", Version: 1}
 	)
+
 	for _, testcase := range []struct {
 		name    string
 		options []api.ServiceCacheOption
@@ -119,12 +120,14 @@ func TestCache(t *testing.T) {
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
 			var (
-				client = fixedResponseClient{code: 200, response: serviceResponseFixture}
+				ctx    = context.Background()
+				client = fixedResponseClient{code: 200, response: serviceResponseLarge}
 				cache  = api.NewServiceCache(client, "irrelevant_token", testcase.options...)
 			)
-			if err := cache.Refresh(); err != nil {
+			if err := cache.Refresh(ctx); err != nil {
 				t.Fatal(err)
 			}
+
 			var (
 				serviceIDs = cache.ServiceIDs()
 				services   = make([]api.Service, len(serviceIDs))
@@ -133,6 +136,7 @@ func TestCache(t *testing.T) {
 				name, version, _ := cache.Metadata(id)
 				services[i] = api.Service{ID: id, Name: name, Version: version}
 			}
+
 			if want, have := testcase.want, services; !cmp.Equal(want, have) {
 				t.Fatal(cmp.Diff(want, have))
 			}
@@ -156,21 +160,7 @@ func filterAllowlistBlocklist(a, b string) (f filter.Filter) {
 	return f
 }
 
-type fixedResponseClient struct {
-	code     int
-	response string
-}
-
-func (c fixedResponseClient) Do(req *http.Request) (*http.Response, error) {
-	rec := httptest.NewRecorder()
-	http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(c.code)
-		fmt.Fprint(w, c.response)
-	}).ServeHTTP(rec, req)
-	return rec.Result(), nil
-}
-
-const serviceResponseFixture = `[
+const serviceResponseLarge = `[
 	{
 		"version": 5,
 		"name": "My first service",

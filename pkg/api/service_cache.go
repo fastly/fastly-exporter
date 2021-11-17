@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -87,10 +88,10 @@ func WithLogger(logger log.Logger) ServiceCacheOption {
 }
 
 // Refresh services and their metadata.
-func (c *ServiceCache) Refresh() error {
+func (c *ServiceCache) Refresh(ctx context.Context) error {
 	begin := time.Now()
 
-	req, err := http.NewRequest("GET", "https://api.fastly.com/service", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.fastly.com/service", nil)
 	if err != nil {
 		return fmt.Errorf("error constructing API services request: %w", err)
 	}
@@ -104,14 +105,7 @@ func (c *ServiceCache) Refresh() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var response struct {
-			Msg string `json:"msg"`
-		}
-		json.NewDecoder(resp.Body).Decode(&response)
-		if response.Msg == "" {
-			response.Msg = "unknown error"
-		}
-		return fmt.Errorf("api.fastly.com responded with %s (%s)", resp.Status, response.Msg)
+		return NewError(resp)
 	}
 
 	var response []Service

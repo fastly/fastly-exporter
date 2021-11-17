@@ -39,7 +39,6 @@ type Registry struct {
 
 // NewRegistry returns a new and empty registry for Prometheus metrics.
 func NewRegistry(version, namespace, subsystem string, metricNameFilter filter.Filter, defaultGatherers ...prometheus.Gatherer) *Registry {
-
 	r := &Registry{
 		version:          version,
 		namespace:        namespace,
@@ -59,6 +58,10 @@ func NewRegistry(version, namespace, subsystem string, metricNameFilter filter.F
 	return r
 }
 
+// metricsRegistry combines a set of metrics for a single Fastly service with a
+// Prometheus registry that yields those metrics. The registry can be combined
+// with other registries and served as a single set of metrics via the
+// prometheus.Gatherers helper type.
 type metricsRegistry struct {
 	metrics  *gen.Metrics
 	registry *prometheus.Registry

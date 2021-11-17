@@ -12,7 +12,6 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestManager(t *testing.T) {
@@ -77,12 +76,3 @@ func TestManager(t *testing.T) {
 		t.Error(cmp.Diff(want, have))
 	}
 }
-
-//
-//
-//
-
-type nopCollector struct{}
-
-func (nopCollector) Describe(ch chan<- *prometheus.Desc) {}
-func (nopCollector) Collect(ch chan<- prometheus.Metric) {}
