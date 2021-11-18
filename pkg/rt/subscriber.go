@@ -111,6 +111,7 @@ func (s *Subscriber) Run(ctx context.Context) error {
 			if fatal != nil {
 				return fatal
 			}
+			s.metrics.LastSuccessfulResponse.WithLabelValues(s.serviceID, name).Set(float64(time.Now().Unix()))
 			if delay > 0 {
 				contextSleep(ctx, delay)
 			}
@@ -136,6 +137,7 @@ func (s *Subscriber) query(ctx context.Context, ts uint64) (currentName string, 
 	if !found {
 		name, version = s.serviceID, "unknown"
 	}
+	s.metrics.ServiceInfo.WithLabelValues(s.serviceID, name, version).Set(1)
 
 	// rt.fastly.com blocks until it has data to return.
 	// It's safe to call in a (single-threaded!) hot loop.
