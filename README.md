@@ -109,7 +109,7 @@ services are enumerated as targets on the `/sd` endpoint, which is compatible
 with the [generic HTTP service discovery][httpsd] feature of Prometheus. An
 example Prometheus scrape config for the Fastly exporter follows.
 
-[httpsq]: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
+[httpsd]: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
 
 ```yaml
 scrape_configs:
