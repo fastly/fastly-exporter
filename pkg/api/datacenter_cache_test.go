@@ -23,8 +23,8 @@ func TestDatacenterCache(t *testing.T) {
 			client:  fixedResponseClient{code: http.StatusOK, response: datacentersResponseSmall},
 			wantErr: nil,
 			wantDCs: []api.Datacenter{
-				{Code: "AMS", Name: "Amsterdam", Group: "Europe"},
-				{Code: "WLG", Name: "Wellington", Group: "Asia/Pacific"},
+				{Code: "AMS", Name: "Amsterdam", Group: "Europe", Coördinates: api.Coördinates{Latitude: 52.308613, Longitude: 4.763889}},
+				{Code: "WLG", Name: "Wellington", Group: "Asia/Pacific", Coördinates: api.Coördinates{Latitude: -41.327221, Longitude: 174.805278}},
 			},
 		},
 		{

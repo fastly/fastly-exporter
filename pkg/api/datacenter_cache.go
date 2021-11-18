@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -13,9 +14,16 @@ import (
 
 // Datacenter models a single datacenter as returned by the Fastly API.
 type Datacenter struct {
-	Code  string `json:"code"` // Prometheus label is "datacenter" to make grouping at query time less tedious
-	Name  string `json:"name"`
-	Group string `json:"group"`
+	Code        string      `json:"code"` // Prometheus label is "datacenter" to make grouping at query time less tedious
+	Name        string      `json:"name"`
+	Group       string      `json:"group"`
+	Coördinates Coördinates `json:"coordinates"`
+}
+
+// Coördinates of a specific datacenter.
+type Coördinates struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 // DatacenterCache polls api.fastly.com/datacenters and maintains a local cache
@@ -87,7 +95,7 @@ func (c *DatacenterCache) Gatherer(namespace, subsystem string) (prometheus.Gath
 	var (
 		fqName      = prometheus.BuildFQName(namespace, subsystem, "datacenter_info")
 		help        = "Metadata about Fastly datacenters."
-		labels      = []string{"datacenter", "name", "group"}
+		labels      = []string{"datacenter", "name", "group", "latitude", "longitude"}
 		constLabels = prometheus.Labels{}
 		desc        = prometheus.NewDesc(fqName, help, labels, constLabels)
 		collector   = &datacenterCollector{desc: desc, cache: c}
@@ -112,6 +120,14 @@ func (c *datacenterCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *datacenterCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, dc := range c.cache.Datacenters() {
-		ch <- prometheus.MustNewConstMetric(c.desc, prometheus.GaugeValue, 1, dc.Code, dc.Name, dc.Group)
+		var (
+			desc        = c.desc
+			valueType   = prometheus.GaugeValue
+			value       = 1.0
+			latitude    = strconv.FormatFloat(dc.Coördinates.Latitude, 'f', -1, 64)
+			longitude   = strconv.FormatFloat(dc.Coördinates.Longitude, 'f', -1, 64)
+			labelValues = []string{dc.Code, dc.Name, dc.Group, latitude, longitude}
+		)
+		ch <- prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
 	}
 }
