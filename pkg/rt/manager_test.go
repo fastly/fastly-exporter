@@ -76,7 +76,3 @@ func TestManager(t *testing.T) {
 		t.Error(cmp.Diff(want, have))
 	}
 }
-
-//
-//
-//

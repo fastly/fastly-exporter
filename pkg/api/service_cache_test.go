@@ -1,9 +1,7 @@
 package api_test
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -11,14 +9,17 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 )
 
-func TestCache(t *testing.T) {
+func TestServiceCache(t *testing.T) {
+	t.Parallel()
+
 	var (
 		s1 = api.Service{ID: "AbcDef123ghiJKlmnOPsq", Name: "My first service", Version: 5}
 		s2 = api.Service{ID: "XXXXXXXXXXXXXXXXXXXXXX", Name: "Dummy service", Version: 1}
 	)
+
 	for _, testcase := range []struct {
 		name    string
-		options []api.CacheOption
+		options []api.ServiceCacheOption
 		want    []api.Service
 	}{
 		{
@@ -28,103 +29,105 @@ func TestCache(t *testing.T) {
 		},
 		{
 			name:    "allowlist both",
-			options: []api.CacheOption{api.WithExplicitServiceIDs(s1.ID, s2.ID, "additional service ID")},
+			options: []api.ServiceCacheOption{api.WithExplicitServiceIDs(s1.ID, s2.ID, "additional service ID")},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "allowlist one",
-			options: []api.CacheOption{api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.ServiceCacheOption{api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "allowlist none",
-			options: []api.CacheOption{api.WithExplicitServiceIDs("nonexistant service ID")},
+			options: []api.ServiceCacheOption{api.WithExplicitServiceIDs("nonexistant service ID")},
 			want:    []api.Service{},
 		},
 		{
 			name:    "exact name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterAllowlist(`^` + s1.Name + `$`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterAllowlist(`^` + s1.Name + `$`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "partial name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterAllowlist(`mmy`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterAllowlist(`mmy`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "generous name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterAllowlist(`.*e.*`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterAllowlist(`.*e.*`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "no name include match",
-			options: []api.CacheOption{api.WithNameFilter(filterAllowlist(`not found`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterAllowlist(`not found`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "exact name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlocklist(`^` + s1.Name + `$`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterBlocklist(`^` + s1.Name + `$`))},
 			want:    []api.Service{s2},
 		},
 		{
 			name:    "partial name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlocklist(`mmy`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterBlocklist(`mmy`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "generous name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlocklist(`.*e.*`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterBlocklist(`.*e.*`))},
 			want:    []api.Service{},
 		},
 		{
 			name:    "no name exclude match",
-			options: []api.CacheOption{api.WithNameFilter(filterBlocklist(`not found`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterBlocklist(`not found`))},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "name exclude and include",
-			options: []api.CacheOption{api.WithNameFilter(filterAllowlistBlocklist(`.*e.*`, `mmy`))},
+			options: []api.ServiceCacheOption{api.WithNameFilter(filterAllowlistBlocklist(`.*e.*`, `mmy`))},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "single shard",
-			options: []api.CacheOption{api.WithShard(1, 1)},
+			options: []api.ServiceCacheOption{api.WithShard(1, 1)},
 			want:    []api.Service{s1, s2},
 		},
 		{
 			name:    "shard n0 m3",
-			options: []api.CacheOption{api.WithShard(1, 3)},
+			options: []api.ServiceCacheOption{api.WithShard(1, 3)},
 			want:    []api.Service{s1}, // verified experimentally
 		},
 		{
 			name:    "shard n1 m3",
-			options: []api.CacheOption{api.WithShard(2, 3)},
+			options: []api.ServiceCacheOption{api.WithShard(2, 3)},
 			want:    []api.Service{s2}, // verified experimentally
 		},
 		{
 			name:    "shard n2 m3",
-			options: []api.CacheOption{api.WithShard(3, 3)},
+			options: []api.ServiceCacheOption{api.WithShard(3, 3)},
 			want:    []api.Service{}, // verified experimentally
 		},
 		{
 			name:    "shard and service ID passing",
-			options: []api.CacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.ServiceCacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{s1},
 		},
 		{
 			name:    "shard and service ID failing",
-			options: []api.CacheOption{api.WithShard(2, 3), api.WithExplicitServiceIDs(s1.ID)},
+			options: []api.ServiceCacheOption{api.WithShard(2, 3), api.WithExplicitServiceIDs(s1.ID)},
 			want:    []api.Service{},
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
 			var (
-				cache  = api.NewCache("irrelevant_token", testcase.options...)
-				client = fixedResponseClient{code: 200, response: serviceResponseFixture}
+				ctx    = context.Background()
+				client = fixedResponseClient{code: 200, response: serviceResponseLarge}
+				cache  = api.NewServiceCache(client, "irrelevant_token", testcase.options...)
 			)
-			if err := cache.Refresh(client); err != nil {
+			if err := cache.Refresh(ctx); err != nil {
 				t.Fatal(err)
 			}
+
 			var (
 				serviceIDs = cache.ServiceIDs()
 				services   = make([]api.Service, len(serviceIDs))
@@ -133,6 +136,7 @@ func TestCache(t *testing.T) {
 				name, version, _ := cache.Metadata(id)
 				services[i] = api.Service{ID: id, Name: name, Version: version}
 			}
+
 			if want, have := testcase.want, services; !cmp.Equal(want, have) {
 				t.Fatal(cmp.Diff(want, have))
 			}
@@ -156,21 +160,7 @@ func filterAllowlistBlocklist(a, b string) (f filter.Filter) {
 	return f
 }
 
-type fixedResponseClient struct {
-	code     int
-	response string
-}
-
-func (c fixedResponseClient) Do(req *http.Request) (*http.Response, error) {
-	rec := httptest.NewRecorder()
-	http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(c.code)
-		fmt.Fprint(w, c.response)
-	}).ServeHTTP(rec, req)
-	return rec.Result(), nil
-}
-
-const serviceResponseFixture = `[
+const serviceResponseLarge = `[
 	{
 		"version": 5,
 		"name": "My first service",

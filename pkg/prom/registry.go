@@ -32,18 +32,20 @@ type Registry struct {
 	subsystem        string
 	metricNameFilter filter.Filter
 	byServiceID      map[string]*metricsRegistry
+	defaultGatherers []prometheus.Gatherer
 
 	http.Handler
 }
 
 // NewRegistry returns a new and empty registry for Prometheus metrics.
-func NewRegistry(version, namespace, subsystem string, metricNameFilter filter.Filter) *Registry {
+func NewRegistry(version, namespace, subsystem string, metricNameFilter filter.Filter, defaultGatherers ...prometheus.Gatherer) *Registry {
 	r := &Registry{
 		version:          version,
 		namespace:        namespace,
 		subsystem:        subsystem,
 		metricNameFilter: metricNameFilter,
 		byServiceID:      map[string]*metricsRegistry{},
+		defaultGatherers: defaultGatherers,
 	}
 
 	router := mux.NewRouter()
@@ -56,6 +58,10 @@ func NewRegistry(version, namespace, subsystem string, metricNameFilter filter.F
 	return r
 }
 
+// metricsRegistry combines a set of metrics for a single Fastly service with a
+// Prometheus registry that yields those metrics. The registry can be combined
+// with other registries and served as a single set of metrics via the
+// prometheus.Gatherers helper type.
 type metricsRegistry struct {
 	metrics  *gen.Metrics
 	registry *prometheus.Registry
@@ -144,9 +150,9 @@ func (r *Registry) handleServiceDiscovery(w http.ResponseWriter, req *http.Reque
 
 func (r *Registry) handleMetrics(w http.ResponseWriter, req *http.Request) {
 	var (
-		target   = req.URL.Query().Get("target") // empty target string means all targets
-		gatherer = r.gathererFor(target)
-		handler  = promhttp.HandlerFor(gatherer, promhttp.HandlerOpts{})
+		target    = req.URL.Query().Get("target") // empty target string means all targets
+		gatherers = prometheus.Gatherers(append(r.defaultGatherers, r.servicesGathererFor(target)))
+		handler   = promhttp.HandlerFor(gatherers, promhttp.HandlerOpts{})
 	)
 	handler.ServeHTTP(w, req)
 }
@@ -165,7 +171,7 @@ func (r *Registry) serviceIDs() []string {
 	return serviceIDs
 }
 
-func (r *Registry) gathererFor(target string) prometheus.Gatherer {
+func (r *Registry) servicesGathererFor(target string) prometheus.Gatherer {
 	var allow func(candidate string) bool
 	switch target {
 	case "":
