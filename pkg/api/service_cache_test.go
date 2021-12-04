@@ -133,7 +133,7 @@ func TestServiceCache(t *testing.T) {
 				services   = make([]api.Service, len(serviceIDs))
 			)
 			for i, id := range serviceIDs {
-				name, version, _ := cache.Metadata(id)
+				name, version, _ := cache.ServiceMetadata(id)
 				services[i] = api.Service{ID: id, Name: name, Version: version}
 			}
 

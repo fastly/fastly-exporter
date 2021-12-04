@@ -23,9 +23,9 @@ type HTTPClient interface {
 }
 
 // MetadataProvider is a consumer contract for the subscriber.
-// It models the service lookup method of an api.Cache.
+// It models the service lookup method of an api.ServiceCache.
 type MetadataProvider interface {
-	Metadata(id string) (name string, version int, found bool)
+	ServiceMetadata(id string) (name string, version int, found bool)
 }
 
 // Subscriber polls rt.fastly.com for a single service ID.
@@ -35,7 +35,7 @@ type Subscriber struct {
 	userAgent   string
 	token       string
 	serviceID   string
-	provider    MetadataProvider
+	metadata    MetadataProvider
 	metrics     *gen.Metrics
 	postprocess func()
 	logger      log.Logger
@@ -55,7 +55,7 @@ func WithUserAgent(ua string) SubscriberOption {
 // service to have its name set to its service ID, and its version set to
 // "unknown".
 func WithMetadataProvider(p MetadataProvider) SubscriberOption {
-	return func(s *Subscriber) { s.provider = p }
+	return func(s *Subscriber) { s.metadata = p }
 }
 
 // WithLogger sets the logger used by the subscriber while running.
@@ -84,7 +84,7 @@ func NewSubscriber(client HTTPClient, token, serviceID string, metrics *gen.Metr
 		token:       token,
 		serviceID:   serviceID,
 		metrics:     metrics,
-		provider:    nopMetadataProvider{},
+		metadata:    nopMetadataProvider{},
 		postprocess: func() {},
 		logger:      log.NewNopLogger(),
 	}
@@ -132,7 +132,7 @@ func (s *Subscriber) Run(ctx context.Context) error {
 // Recoverable errors are logged internally and not returned, so any non-nil
 // error returned by this method should be considered fatal to the subscriber.
 func (s *Subscriber) query(ctx context.Context, ts uint64) (currentName string, result apiResult, delay time.Duration, newts uint64, fatal error) {
-	name, ver, found := s.provider.Metadata(s.serviceID)
+	name, ver, found := s.metadata.ServiceMetadata(s.serviceID)
 	version := strconv.Itoa(ver)
 	if !found {
 		name, version = s.serviceID, "unknown"
@@ -211,7 +211,7 @@ const (
 
 type nopMetadataProvider struct{}
 
-func (nopMetadataProvider) Metadata(string) (string, int, bool) { return "", 0, false }
+func (nopMetadataProvider) ServiceMetadata(string) (string, int, bool) { return "", 0, false }
 
 func contextSleep(ctx context.Context, d time.Duration) {
 	select {

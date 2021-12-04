@@ -185,9 +185,9 @@ func (c *ServiceCache) ServiceIDs() (ids []string) {
 	return ids
 }
 
-// Metadata returns selected metadata associated with a given service ID.
+// ServiceMetadata returns selected metadata associated with a given service ID.
 // If the cache doesn't contain that service ID, found will be false.
-func (c *ServiceCache) Metadata(id string) (name string, version int, found bool) {
+func (c *ServiceCache) ServiceMetadata(id string) (name string, version int, found bool) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 

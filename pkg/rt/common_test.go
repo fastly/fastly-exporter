@@ -92,7 +92,7 @@ func (c *mockCache) ServiceIDs() (ids []string) {
 	return ids
 }
 
-func (c *mockCache) Metadata(id string) (name string, version int, found bool) {
+func (c *mockCache) ServiceMetadata(id string) (name string, version int, found bool) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
