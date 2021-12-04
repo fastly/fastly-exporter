@@ -130,12 +130,18 @@ func (r *Registry) handleIndex(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Registry) handleServiceDiscovery(w http.ResponseWriter, req *http.Request) {
-	targets := r.serviceIDs()
+	type targetsLabels struct {
+		Targets []string          `json:"targets"`
+		Labels  map[string]string `json:"labels"`
+	}
 
-	response := []struct {
-		Targets []string `json:"targets"`
-	}{
-		{Targets: targets},
+	var response []targetsLabels
+
+	for _, serviceID := range r.serviceIDs() {
+		response = append(response, targetsLabels{
+			Targets: []string{serviceID},
+			Labels:  map[string]string{"__param_target": serviceID},
+		})
 	}
 
 	buf, err := json.MarshalIndent(response, "", "    ")
