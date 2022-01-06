@@ -13,6 +13,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
+	"github.com/peterhellberg/link"
 )
 
 // Service metadata associated with a single service.
@@ -91,58 +92,74 @@ func WithLogger(logger log.Logger) ServiceCacheOption {
 func (c *ServiceCache) Refresh(ctx context.Context) error {
 	begin := time.Now()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.fastly.com/service", nil)
-	if err != nil {
-		return fmt.Errorf("error constructing API services request: %w", err)
-	}
-
-	req.Header.Set("Fastly-Key", c.token)
-	req.Header.Set("Accept", "application/json")
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error executing API services request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return NewError(resp)
-	}
-
-	var response []Service
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return fmt.Errorf("error decoding API services response: %w", err)
-	}
-
+	page := "https://api.fastly.com/service?page=1&per_page=100"
+	total := 0
 	nextgen := map[string]Service{}
-	for _, s := range response {
-		debug := level.Debug(log.With(c.logger,
-			"service_id", s.ID,
-			"service_name", s.Name,
-			"service_version", s.Version,
-		))
 
-		if reject := !c.serviceIDs.empty() && !c.serviceIDs.has(s.ID); reject {
-			debug.Log("result", "rejected", "reason", "service ID not explicitly allowed")
-			continue
+outer:
+	for {
+		req, err := http.NewRequestWithContext(ctx, "GET", page, nil)
+		if err != nil {
+			return fmt.Errorf("error constructing API services request: %w", err)
 		}
 
-		if reject := !c.nameFilter.Permit(s.Name); reject {
-			debug.Log("result", "rejected", "reason", "service name rejected by name filter")
-			continue
+		req.Header.Set("Fastly-Key", c.token)
+		req.Header.Set("Accept", "application/json")
+		resp, err := c.client.Do(req)
+		if err != nil {
+			return fmt.Errorf("error executing API services request: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return NewError(resp)
 		}
 
-		if reject := !c.shard.match(s.ID); reject {
-			debug.Log("result", "rejected", "reason", "service ID in different shard")
-			continue
+		var response []Service
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return fmt.Errorf("error decoding API services response: %w", err)
 		}
 
-		debug.Log("result", "accepted")
-		nextgen[s.ID] = s
+		total += len(response)
+
+		for _, s := range response {
+			debug := level.Debug(log.With(c.logger,
+				"service_id", s.ID,
+				"service_name", s.Name,
+				"service_version", s.Version,
+			))
+
+			if reject := !c.serviceIDs.empty() && !c.serviceIDs.has(s.ID); reject {
+				debug.Log("result", "rejected", "reason", "service ID not explicitly allowed")
+				continue
+			}
+
+			if reject := !c.nameFilter.Permit(s.Name); reject {
+				debug.Log("result", "rejected", "reason", "service name rejected by name filter")
+				continue
+			}
+
+			if reject := !c.shard.match(s.ID); reject {
+				debug.Log("result", "rejected", "reason", "service ID in different shard")
+				continue
+			}
+
+			debug.Log("result", "accepted")
+			nextgen[s.ID] = s
+		}
+
+		for _, l := range link.ParseResponse(resp) {
+			if l.Rel == "next" {
+				page = l.URI
+				continue outer
+			}
+		}
+		break
 	}
 
 	level.Debug(c.logger).Log(
 		"refresh_took", time.Since(begin),
-		"total_service_count", len(response),
+		"total_service_count", total,
 		"accepted_service_count", len(nextgen),
 	)
 
