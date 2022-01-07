@@ -86,6 +86,7 @@ func GetNextLink(h http.Header) (string, bool) {
 			isRelNext = true
 			break
 		}
+
 		if isRelNext && linkURI != "" { // TODO(pb): parse URI for validity?
 			return linkURI, true
 		}

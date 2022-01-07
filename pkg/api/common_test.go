@@ -24,7 +24,7 @@ func (c fixedResponseClient) Do(req *http.Request) (*http.Response, error) {
 	return rec.Result(), nil
 }
 
-func TestGetRelNext(t *testing.T) {
+func TestGetNextLink(t *testing.T) {
 	t.Parallel()
 
 	for _, testcase := range []struct {
@@ -70,6 +70,26 @@ func TestGetRelNext(t *testing.T) {
 			name:  `linkheader 3`,
 			input: "<https://api.github.com/user/58276/repos?page=9>; rel=\"last\", <https://api.github.com/user/58276/repos?page=2>; rel=\"next\" ",
 			want:  `https://api.github.com/user/58276/repos?page=2`,
+		},
+		{
+			name:  `link 1`,
+			input: `<https://example.com/?page=2>; rel="next"; title="foo"`,
+			want:  `https://example.com/?page=2`,
+		},
+		{
+			name:  `link 2`,
+			input: `<https://example.com/?page=2>; rel="next"`,
+			want:  `https://example.com/?page=2`,
+		},
+		{
+			name:  `link 3`,
+			input: `<https://example.com/?page=2>; rel="next",<https://example.com/?page=34>; rel="last"`,
+			want:  `https://example.com/?page=2`,
+		},
+		{
+			name:  `link 4`,
+			input: `<//www.w3.org/wiki/LinkHeader>; rel="original latest-version",<//www.w3.org/wiki/Special:TimeGate/LinkHeader>; rel="timegate",<//www.w3.org/wiki/Special:TimeMap/LinkHeader>; rel="timemap"; type="application/link-format"; from="Mon, 03 Sep 2007 14:52:48 GMT"; until="Tue, 16 Jun 2015 22:59:23 GMT",<//www.w3.org/wiki/index.php?title=LinkHeader&oldid=10152>; rel="next"; datetime="Mon, 03 Sep 2007 14:52:48 GMT",<//www.w3.org/wiki/index.php?title=LinkHeader&oldid=84697>; rel="last memento"; datetime="Tue, 16 Jun 2015 22:59:23 GMT"`,
+			want:  `//www.w3.org/wiki/index.php?title=LinkHeader&oldid=10152`,
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
