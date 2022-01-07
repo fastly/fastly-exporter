@@ -28,7 +28,7 @@ func NewError(resp *http.Response) *Error {
 // Error implements the error interface.
 func (e *Error) Error() string {
 	var sb strings.Builder
-	sb.WriteString("api.fastly.com responded with")
+	sb.WriteString("api.fastly.com responded with ")
 	sb.WriteString(http.StatusText(e.Code))
 	if e.Msg != "" {
 		sb.WriteString(" (" + e.Msg + ")")

@@ -254,13 +254,20 @@ func main() {
 	}
 
 	{
-		g, ctx := errgroup.WithContext(context.Background())
-		g.Go(func() error { return serviceCache.Refresh(ctx) })
-		g.Go(func() error { return datacenterCache.Refresh(ctx) })
-		if err := g.Wait(); err != nil {
-			level.Error(apiLogger).Log("during", "initial API calls", "err", err)
-			os.Exit(1)
-		}
+		var g errgroup.Group
+		g.Go(func() error {
+			if err := serviceCache.Refresh(context.Background()); err != nil {
+				level.Warn(logger).Log("during", "initial fetch of service IDs", "err", err, "msg", "service metrics unavailable, will retry")
+			}
+			return nil
+		})
+		g.Go(func() error {
+			if err := datacenterCache.Refresh(context.Background()); err != nil {
+				level.Warn(logger).Log("during", "initial fetch of datacenters", "err", err, "msg", "datacenter labels unavailable, will retry")
+			}
+			return nil
+		})
+		g.Wait()
 	}
 
 	var defaultGatherers prometheus.Gatherers
