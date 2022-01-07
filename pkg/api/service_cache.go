@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"sort"
 	"sync"
 	"time"
@@ -14,7 +13,6 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterhellberg/link"
 )
 
 // Service metadata associated with a single service.
@@ -149,15 +147,12 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 			nextgen[s.ID] = s
 		}
 
-		next := link.ParseResponse(resp)["next"]
-		if next == nil {
-			break
-		}
-		if _, err := url.Parse(next.URI); err != nil {
+		next, ok := GetNextLink(resp.Header)
+		if !ok {
 			break
 		}
 
-		uri = next.URI
+		uri = next
 	}
 
 	level.Debug(c.logger).Log(
