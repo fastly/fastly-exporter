@@ -37,8 +37,8 @@ func (e *Error) Error() string {
 }
 
 // GetNextLink returns the `rel="next"` URI from the `Link` header, if one
-// exists. See RFC 5899 for details about the Link header.
-func GetNextLink(h http.Header) (string, bool) {
+// exists. The URI is not validated. See RFC 5899.
+func GetNextLink(h http.Header) string {
 	for _, link := range h.Values("Link") {
 		var (
 			linkURI   string
@@ -87,10 +87,10 @@ func GetNextLink(h http.Header) (string, bool) {
 			break
 		}
 
-		if isRelNext && linkURI != "" { // TODO(pb): parse URI for validity?
-			return linkURI, true
+		if isRelNext && linkURI != "" {
+			return linkURI
 		}
 	}
 
-	return "", false
+	return ""
 }

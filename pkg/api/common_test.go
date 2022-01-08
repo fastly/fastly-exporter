@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -23,6 +24,44 @@ func (c fixedResponseClient) Do(req *http.Request) (*http.Response, error) {
 	}).ServeHTTP(rec, req)
 	return rec.Result(), nil
 }
+
+//
+//
+//
+
+type paginatedResponseClient struct {
+	responses []string
+}
+
+func (c paginatedResponseClient) Do(req *http.Request) (*http.Response, error) {
+	rec := httptest.NewRecorder()
+	http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		if page == 0 {
+			page = 1
+		}
+
+		pageIndex := page - 1
+		if pageIndex >= len(c.responses) {
+			http.Error(w, "page too large", 400)
+			return
+		}
+
+		if pageIndex+1 < len(c.responses) {
+			values := r.URL.Query()
+			values.Set("page", strconv.Itoa(page+1))
+			r.URL.RawQuery = values.Encode()
+			w.Header().Set("Link", fmt.Sprintf(`<%s>; rel="next"`, r.URL.String()))
+		}
+
+		fmt.Fprint(w, c.responses[pageIndex])
+	}).ServeHTTP(rec, req)
+	return rec.Result(), nil
+}
+
+//
+//
+//
 
 func TestGetNextLink(t *testing.T) {
 	t.Parallel()
@@ -94,8 +133,7 @@ func TestGetNextLink(t *testing.T) {
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
 			h := http.Header{"Link": strings.Split(testcase.input, ",")}
-			have, _ := api.GetNextLink(h)
-			if want, have := testcase.want, have; want != have {
+			if want, have := testcase.want, api.GetNextLink(h); want != have {
 				t.Fatalf("want %q, have %q", want, have)
 			}
 		})

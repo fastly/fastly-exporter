@@ -97,7 +97,7 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 		nextgen = map[string]Service{}
 	)
 
-	for {
+	for uri != "" {
 		req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
 		if err != nil {
 			return fmt.Errorf("error constructing API services request: %w", err)
@@ -147,12 +147,7 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 			nextgen[s.ID] = s
 		}
 
-		next, ok := GetNextLink(resp.Header)
-		if !ok {
-			break
-		}
-
-		uri = next
+		uri = GetNextLink(resp.Header)
 	}
 
 	level.Debug(c.logger).Log(
