@@ -13,7 +13,6 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterhellberg/link"
 )
 
 // Service metadata associated with a single service.
@@ -92,13 +91,14 @@ func WithLogger(logger log.Logger) ServiceCacheOption {
 func (c *ServiceCache) Refresh(ctx context.Context) error {
 	begin := time.Now()
 
-	page := "https://api.fastly.com/service?page=1&per_page=100"
-	total := 0
-	nextgen := map[string]Service{}
+	var (
+		uri     = "https://api.fastly.com/service?page=1&per_page=100"
+		total   = 0
+		nextgen = map[string]Service{}
+	)
 
-outer:
 	for {
-		req, err := http.NewRequestWithContext(ctx, "GET", page, nil)
+		req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
 		if err != nil {
 			return fmt.Errorf("error constructing API services request: %w", err)
 		}
@@ -119,7 +119,6 @@ outer:
 		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 			return fmt.Errorf("error decoding API services response: %w", err)
 		}
-
 		total += len(response)
 
 		for _, s := range response {
@@ -148,13 +147,12 @@ outer:
 			nextgen[s.ID] = s
 		}
 
-		for _, l := range link.ParseResponse(resp) {
-			if l.Rel == "next" {
-				page = l.URI
-				continue outer
-			}
+		next, err := GetNextLink(resp)
+		if err != nil {
+			break
 		}
-		break
+
+		uri = next.String()
 	}
 
 	level.Debug(c.logger).Log(

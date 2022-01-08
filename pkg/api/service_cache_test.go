@@ -144,6 +144,44 @@ func TestServiceCache(t *testing.T) {
 	}
 }
 
+func TestServiceCachePagination(t *testing.T) {
+	t.Parallel()
+
+	responses := []string{
+		`[
+			{ "version": 6, "name": "Service 1/1", "id": "c9407d61ae888d" },
+			{ "version": 1, "name": "Service 1/2", "id": "cb32a38adf2e00" },
+			{ "version": 6, "name": "Service 1/3", "id": "82de5396a46629" },
+			{ "version": 2, "name": "Service 1/4", "id": "4200f01763cff9" }
+		]`,
+		`[
+			{ "version": 7, "name": "Service 2/1", "id": "ce2976ac5a3e24" },
+			{ "version": 3, "name": "Service 2/2", "id": "e1c2f1aa5fc341" }
+		]`,
+		`[
+			{ "version": 7, "name": "Service 3/1", "id": "65544b504189bf" },
+			{ "version": 5, "name": "Service 3/2", "id": "686ec4e72a836a" }
+		]`,
+	}
+
+	var (
+		ctx    = context.Background()
+		client = paginatedResponseClient{responses}
+		cache  = api.NewServiceCache(client, "irrelevant_token")
+	)
+
+	if err := cache.Refresh(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if want, have := []string{
+		"4200f01763cff9", "65544b504189bf", "686ec4e72a836a", "82de5396a46629",
+		"c9407d61ae888d", "cb32a38adf2e00", "ce2976ac5a3e24", "e1c2f1aa5fc341",
+	}, cache.ServiceIDs(); !cmp.Equal(want, have) {
+		t.Fatal(cmp.Diff(want, have))
+	}
+}
+
 func filterAllowlist(a string) (f filter.Filter) {
 	f.Allow(a)
 	return f
