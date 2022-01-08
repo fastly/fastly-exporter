@@ -180,8 +180,6 @@ func TestServiceCachePagination(t *testing.T) {
 	}, cache.ServiceIDs(); !cmp.Equal(want, have) {
 		t.Fatal(cmp.Diff(want, have))
 	}
-
-	cache.Refresh(ctx)
 }
 
 func filterAllowlist(a string) (f filter.Filter) {
