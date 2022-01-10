@@ -33,6 +33,7 @@ func main() {
 		namespace         string
 		subsystem         string
 		serviceShard      string
+		userAgent         string
 		serviceIDs        stringslice
 		serviceAllowlist  stringslice
 		serviceBlocklist  stringslice
@@ -54,6 +55,7 @@ func main() {
 		fs.StringVar(&namespace, "namespace", "fastly", "Prometheus namespace")
 		fs.StringVar(&subsystem, "subsystem", "rt", "Prometheus subsystem")
 		fs.StringVar(&serviceShard, "service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
+		fs.StringVar(&userAgent, "api-user-agent", `Fastly-Exporter (`+programVersion+`)`, "if set, override the reporting user-agent HTTP header")
 		fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
 		fs.Var(&serviceAllowlist, "service-allowlist", "if set, only include services whose names match this regex (repeatable)")
 		fs.Var(&serviceBlocklist, "service-blocklist", "if set, don't include services whose names match this regex (repeatable)")
@@ -228,6 +230,8 @@ func main() {
 		}
 	}
 
+	apiClient.Transport = api.NewCustomUserAgent(apiClient.Transport, userAgent)
+
 	var serviceCache *api.ServiceCache
 	{
 		serviceCacheOptions := []api.ServiceCacheOption{
@@ -296,6 +300,7 @@ func main() {
 				rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
 			}
 		)
+		rtClient.Transport = api.NewCustomUserAgent(rtClient.Transport, userAgent)
 		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, rtLogger)
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
