@@ -297,7 +297,6 @@ func main() {
 			subscriberOptions = []rt.SubscriberOption{
 				rt.WithLogger(rtLogger),
 				rt.WithMetadataProvider(serviceCache),
-				rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
 			}
 		)
 		rtClient.Transport = api.NewCustomUserAgent(rtClient.Transport, userAgent)
