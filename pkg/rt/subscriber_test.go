@@ -79,25 +79,6 @@ func TestSubscriberNoData(t *testing.T) {
 	assertMetricOutput(t, want, have)
 }
 
-func TestUserAgent(t *testing.T) {
-	var (
-		client      = newMockRealtimeClient(`{}`)
-		userAgent   = "Some user agent string"
-		metrics     = gen.NewMetrics("ns", "ss", filter.Filter{}, prometheus.NewRegistry())
-		processed   = make(chan struct{})
-		postprocess = func() { close(processed) }
-		options     = []rt.SubscriberOption{rt.WithUserAgent(userAgent), rt.WithPostprocess(postprocess)}
-		subscriber  = rt.NewSubscriber(client, "token", "service_id", metrics, options...)
-	)
-	go subscriber.Run(context.Background())
-
-	<-processed
-
-	if want, have := userAgent, client.lastUserAgent; want != have {
-		t.Errorf("User-Agent: want %q, have %q", want, have)
-	}
-}
-
 func TestBadTokenNoSpam(t *testing.T) {
 	var (
 		client     = &countingRealtimeClient{code: 403, response: `{"Error": "unauthorized"}`}

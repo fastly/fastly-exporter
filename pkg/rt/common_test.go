@@ -109,9 +109,8 @@ func (c *mockCache) Metadata(id string) (name string, version int, found bool) {
 //
 
 type mockRealtimeClient struct {
-	responses     []string
-	next          chan struct{}
-	lastUserAgent string
+	responses []string
+	next      chan struct{}
 }
 
 func newMockRealtimeClient(responses ...string) *mockRealtimeClient {
@@ -136,8 +135,6 @@ func (c *mockRealtimeClient) Do(req *http.Request) (*http.Response, error) {
 	} else {
 		response, c.responses = c.responses[0], c.responses[1:]
 	}
-
-	c.lastUserAgent = req.Header.Get("User-Agent")
 
 	return fixedResponseClient{200, response}.Do(req)
 }
