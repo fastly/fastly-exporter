@@ -21,7 +21,7 @@ func TestCustomUserAgent(t *testing.T) {
 		{
 			name: "no UA provided",
 			ua:   "",
-			want: "",
+			want: api.DefaultUserAgent,
 		},
 		{
 			name: "UA provided",
@@ -33,7 +33,7 @@ func TestCustomUserAgent(t *testing.T) {
 	for _, testcase := range tt {
 		t.Run(testcase.name, func(t *testing.T) {
 			mockres := io.NopCloser(bytes.NewBuffer([]byte(`{}`)))
-			transporter := mockTransport(mockres)
+			transporter := newMockTransport(mockres)
 			uaTransporter := api.NewCustomUserAgent(transporter, testcase.ua)
 			c := http.Client{
 				Transport: uaTransporter,
@@ -48,7 +48,6 @@ func TestCustomUserAgent(t *testing.T) {
 			if want, have := testcase.want, res.Request.Header.Get("User-Agent"); !cmp.Equal(want, have) {
 				t.Fatal(cmp.Diff(want, have))
 			}
-
 		})
 	}
 }
@@ -59,11 +58,16 @@ type uaTransport struct {
 
 func (t *uaTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	var resp http.Response
-	resp.Body = t.body
-	resp.Request = req
+	{
+		resp = http.Response{
+			Body:    t.body,
+			Request: req,
+		}
+	}
+
 	return &resp, nil
 }
 
-func mockTransport(body io.ReadCloser) http.RoundTripper {
+func newMockTransport(body io.ReadCloser) http.RoundTripper {
 	return &uaTransport{body: body}
 }
