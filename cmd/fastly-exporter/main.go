@@ -55,7 +55,7 @@ func main() {
 		fs.StringVar(&namespace, "namespace", "fastly", "Prometheus namespace")
 		fs.StringVar(&subsystem, "subsystem", "rt", "Prometheus subsystem")
 		fs.StringVar(&serviceShard, "service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
-		fs.StringVar(&userAgent, "api-user-agent", `Fastly-Exporter (`+programVersion+`)`, "if set, override the reporting user-agent HTTP header")
+		fs.StringVar(&userAgent, "api-user-agent", "", "if set, override the reporting user-agent HTTP header")
 		fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
 		fs.Var(&serviceAllowlist, "service-allowlist", "if set, only include services whose names match this regex (repeatable)")
 		fs.Var(&serviceBlocklist, "service-blocklist", "if set, don't include services whose names match this regex (repeatable)")
@@ -79,6 +79,10 @@ func main() {
 	); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
+	}
+
+	if userAgent == "" {
+		userAgent = `Fastly-Exporter (` + programVersion + `)`
 	}
 
 	if versionFlag {
