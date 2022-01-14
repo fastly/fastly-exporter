@@ -264,7 +264,7 @@ func main() {
 
 	var manager *rt.Manager
 	{
-		manager, err := rt.NewManager(rt.ManagerConfig{
+		m, err := rt.NewManager(rt.ManagerConfig{
 			Client:   &http.Client{Transport: clientTransport, Timeout: rtTimeout},
 			Token:    token,
 			Services: serviceCache,
@@ -276,7 +276,9 @@ func main() {
 			level.Error(logger).Log("during", "create subscriber manager", "err", err)
 			os.Exit(1)
 		}
-		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
+		m.Refresh() // populate initial subscribers, based on the initial cache refresh
+
+		manager = m
 	}
 
 	var g run.Group
