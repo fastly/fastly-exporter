@@ -38,7 +38,7 @@ func TestDatacenterCache(t *testing.T) {
 			var (
 				ctx    = context.Background()
 				client = testcase.client
-				cache  = api.NewDatacenterCache(client, "irrelevant token")
+				cache  = api.NewDatacenterCache(client, "token")
 			)
 
 			if want, have := testcase.wantErr, cache.Refresh(ctx); !cmp.Equal(want, have) {

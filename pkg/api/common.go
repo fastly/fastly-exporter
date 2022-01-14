@@ -2,9 +2,13 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"strings"
+
+	"github.com/go-kit/log"
 )
+
+var nopLogger = log.NewNopLogger()
 
 // HTTPClient is a consumer contract for components in this package.
 // It models a concrete http.Client.
@@ -27,11 +31,9 @@ func NewError(resp *http.Response) *Error {
 
 // Error implements the error interface.
 func (e *Error) Error() string {
-	var sb strings.Builder
-	sb.WriteString("api.fastly.com responded with ")
-	sb.WriteString(http.StatusText(e.Code))
+	s := fmt.Sprintf("api.fastly.com responded with %d %s", e.Code, http.StatusText(e.Code))
 	if e.Msg != "" {
-		sb.WriteString(" (" + e.Msg + ")")
+		s += " (" + e.Msg + ")"
 	}
-	return sb.String()
+	return s
 }

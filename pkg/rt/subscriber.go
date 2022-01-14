@@ -16,82 +16,89 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/gen"
 )
 
-// HTTPClient is a consumer contract for the subscriber.
-// It models a concrete http.Client.
-type HTTPClient interface {
-	Do(*http.Request) (*http.Response, error)
-}
-
-// MetadataProvider is a consumer contract for the subscriber.
-// It models the service lookup method of an api.Cache.
-type MetadataProvider interface {
-	Metadata(id string) (name string, version int, found bool)
-}
-
-// Subscriber polls rt.fastly.com for a single service ID.
-// It emits the received real-time stats data to Prometheus.
+// Subscriber continuously polls rt.fastly.com for a single service ID. Response
+// data is processed and used to update a set of Prometheus metrics.
 type Subscriber struct {
-	client      HTTPClient
-	userAgent   string
-	token       string
-	serviceID   string
-	provider    MetadataProvider
-	metrics     *gen.Metrics
-	postprocess func()
-	logger      log.Logger
+	SubscriberConfig
 }
 
-// SubscriberOption provides some additional behavior to a subscriber.
-type SubscriberOption func(*Subscriber)
+// SubscriberConfig collects the parameters required to construct a subscriber.
+type SubscriberConfig struct {
+	// Client used to query rt.fastly.com. If not provided, http.DefaultClient
+	// is used, which may not include the desired User-Agent, among other
+	// things.
+	Client HTTPClient
 
-// WithUserAgent sets the User-Agent supplied to rt.fastly.com.
-// By default, the DefaultUserAgent is used.
-func WithUserAgent(ua string) SubscriberOption {
-	return func(s *Subscriber) { s.userAgent = ua }
+	// Token provided as the Fastly-Key when querying rt.fastly.com.
+	Token string
+
+	// ServiceID managed by the subscriber. Required.
+	ServiceID string
+
+	// Metrics that will be updated by the subscriber. Required.
+	Metrics *gen.Metrics
+
+	// Metadata yields per-service metadata like service name, which ends up in
+	// Prometheus labels. If not provided, relevant labels will have "unknown"
+	// or zero values.
+	Metadata MetadataProvider
+
+	// Delay is called within Run when there needs to be a delay between calls
+	// to the real-time stats API. If not provided, a suitable default based on
+	// time.After is used. Only meant for tests.
+	Delay func(context.Context, time.Duration)
+
+	// Postprocess is called within Run immediately after gen.Metrics.Process is
+	// called. If not provided, a no-op default is used. Only meant for tests.
+	Postprocess func()
+
+	// Logger is used for runtime diagnostic information.
+	// If not provided, a no-op logger is used.
+	Logger log.Logger
 }
 
-// WithMetadataProvider sets the resolver used to look up service names and
-// versions. By default, a no-op metadata resolver is used, which causes each
-// service to have its name set to its service ID, and its version set to
-// "unknown".
-func WithMetadataProvider(p MetadataProvider) SubscriberOption {
-	return func(s *Subscriber) { s.provider = p }
-}
+func (c *SubscriberConfig) validate() error {
+	if c.Client == nil {
+		c.Client = http.DefaultClient
+	}
 
-// WithLogger sets the logger used by the subscriber while running.
-// By default, no log events are emitted.
-func WithLogger(logger log.Logger) SubscriberOption {
-	return func(s *Subscriber) { s.logger = log.With(logger, "service_id", s.serviceID) }
-}
+	if c.ServiceID == "" {
+		return fmt.Errorf("subscriber: service ID is required")
+	}
 
-// WithPostprocess sets the postprocess function for the subscriber, which is
-// invoked after each successful call to the real-time stats API. By default, a
-// no-op postprocess function is invoked. This option is only useful for tests.
-func WithPostprocess(f func()) SubscriberOption {
-	return func(s *Subscriber) { s.postprocess = f }
-}
+	if c.Metrics == nil {
+		return fmt.Errorf("subscriber: metrics are required")
+	}
 
-// DefaultUserAgent passed to rt.fastly.com.
-// To change, use the WithUserAgent option.
-const DefaultUserAgent = "Fastly-Exporter (unknown version)"
+	if c.Metadata == nil {
+		c.Metadata = nopMetadataProvider{}
+	}
+
+	if c.Delay == nil {
+		c.Delay = func(ctx context.Context, d time.Duration) {
+			select {
+			case <-ctx.Done():
+			case <-time.After(d):
+			}
+		}
+	}
+
+	if c.Postprocess == nil {
+		c.Postprocess = func() {}
+	}
+
+	if c.Logger == nil {
+		c.Logger = nopLogger
+	}
+
+	return nil
+}
 
 // NewSubscriber returns a ready-to-use subscriber.
 // Run must be called to update the metrics.
-func NewSubscriber(client HTTPClient, token, serviceID string, metrics *gen.Metrics, options ...SubscriberOption) *Subscriber {
-	s := &Subscriber{
-		client:      client,
-		userAgent:   DefaultUserAgent,
-		token:       token,
-		serviceID:   serviceID,
-		metrics:     metrics,
-		provider:    nopMetadataProvider{},
-		postprocess: func() {},
-		logger:      log.NewNopLogger(),
-	}
-	for _, option := range options {
-		option(s)
-	}
-	return s
+func NewSubscriber(c SubscriberConfig) (*Subscriber, error) {
+	err := c.validate()
+	return &Subscriber{SubscriberConfig: c}, err
 }
 
 // Run polls rt.fastly.com in a hot loop, collecting real-time stats information
@@ -107,24 +114,27 @@ func (s *Subscriber) Run(ctx context.Context) error {
 
 		default:
 			name, result, delay, newts, fatal := s.query(ctx, ts)
-			s.metrics.RealtimeAPIRequestsTotal.WithLabelValues(s.serviceID, name, string(result)).Inc()
+			s.Metrics.RealtimeAPIRequestsTotal.WithLabelValues(s.ServiceID, name, string(result)).Inc()
 			if fatal != nil {
 				return fatal
 			}
-			s.metrics.LastSuccessfulResponse.WithLabelValues(s.serviceID, name).Set(float64(time.Now().Unix()))
+			s.Metrics.LastSuccessfulResponse.WithLabelValues(s.ServiceID, name).Set(float64(time.Now().Unix()))
 			if delay > 0 {
-				contextSleep(ctx, delay)
+				s.Delay(ctx, delay)
 			}
 			ts = newts
 		}
 	}
 }
 
-// query rt.fastly.com for the service ID represented by the subscriber, and
-// with the provided starting timestamp. The function may block for several
-// seconds; cancel the context to provoke early termination. On success, the
-// received real-time data is processed, and the Prometheus metrics related to
-// the Fastly service are updated.
+// query rt.fastly.com to get a batch of real-time stats for the service
+// represented by the subscriber, and at the given timestamp. The first call to
+// query for a subscriber should pass a timestamp value of zero. Subsequent
+// calls should pass the newts value received from the previous call.
+//
+// The method may block for several seconds; cancel the context to provoke early
+// termination. On success, the received real-time data is processed, and the
+// Prometheus metrics related to the Fastly service are updated.
 //
 // Returns the current name of the service, the broad class of result of the API
 // request, any delay that should pass before query is invoked again, the new
@@ -132,34 +142,33 @@ func (s *Subscriber) Run(ctx context.Context) error {
 // Recoverable errors are logged internally and not returned, so any non-nil
 // error returned by this method should be considered fatal to the subscriber.
 func (s *Subscriber) query(ctx context.Context, ts uint64) (currentName string, result apiResult, delay time.Duration, newts uint64, fatal error) {
-	name, ver, found := s.provider.Metadata(s.serviceID)
+	name, ver, found := s.Metadata.Metadata(s.ServiceID)
 	version := strconv.Itoa(ver)
 	if !found {
-		name, version = s.serviceID, "unknown"
+		name, version = s.ServiceID, "unknown"
 	}
-	s.metrics.ServiceInfo.WithLabelValues(s.serviceID, name, version).Set(1)
+	s.Metrics.ServiceInfo.WithLabelValues(s.ServiceID, name, version).Set(1)
 
 	// rt.fastly.com blocks until it has data to return.
 	// It's safe to call in a (single-threaded!) hot loop.
-	u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
+	u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", url.QueryEscape(s.ServiceID), ts)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return name, apiResultError, 0, ts, fmt.Errorf("error constructing real-time stats API request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", s.userAgent)
-	req.Header.Set("Fastly-Key", s.token)
+	req.Header.Set("Fastly-Key", s.Token)
 	req.Header.Set("Accept", "application/json")
-	resp, err := s.client.Do(req.WithContext(ctx))
+	resp, err := s.Client.Do(req.WithContext(ctx))
 	if err != nil {
-		levelForError(s.logger, err).Log("during", "execute request", "err", err)
+		levelForError(s.Logger, err).Log("during", "execute request", "err", err)
 		return name, apiResultError, time.Second, ts, nil
 	}
 
 	var response gen.APIResponse
 	if err := jsoniterAPI.NewDecoder(resp.Body).Decode(&response); err != nil {
 		resp.Body.Close()
-		level.Error(s.logger).Log("during", "decode response", "err", err)
+		level.Error(s.Logger).Log("during", "decode response", "err", err)
 		return name, apiResultError, time.Second, ts, nil
 	}
 	resp.Body.Close()
@@ -171,23 +180,23 @@ func (s *Subscriber) query(ctx context.Context, ts uint64) (currentName string, 
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		level.Debug(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
+		level.Debug(s.Logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
 		if strings.Contains(apiErr, "No data available") {
 			result = apiResultNoData
 		} else {
 			result = apiResultSuccess
 		}
-		gen.Process(&response, s.serviceID, name, version, s.metrics)
-		s.postprocess()
+		gen.Process(&response, s.ServiceID, name, version, s.Metrics)
+		s.Postprocess()
 
 	case http.StatusUnauthorized, http.StatusForbidden:
 		result = apiResultError
-		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr, "msg", "token may be invalid")
+		level.Error(s.Logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr, "msg", "token may be invalid")
 		delay = 15 * time.Second
 
 	default:
 		result = apiResultUnknown
-		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
+		level.Error(s.Logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
 		delay = 5 * time.Second
 	}
 
@@ -212,13 +221,6 @@ const (
 type nopMetadataProvider struct{}
 
 func (nopMetadataProvider) Metadata(string) (string, int, bool) { return "", 0, false }
-
-func contextSleep(ctx context.Context, d time.Duration) {
-	select {
-	case <-time.After(d):
-	case <-ctx.Done():
-	}
-}
 
 //
 //

@@ -16,49 +16,49 @@ import (
 
 func TestManager(t *testing.T) {
 	var (
-		cache    = &mockCache{}
+		services = &mockCache{}
 		s1       = api.Service{ID: "101010", Name: "service 1", Version: 1}
 		s2       = api.Service{ID: "2f2f2f", Name: "service 2", Version: 2}
 		s3       = api.Service{ID: "3a3b3c", Name: "service 3", Version: 3}
 		client   = newMockRealtimeClient(`{}`)
-		token    = "irrelevant-token"
 		registry = prom.NewRegistry("v0.0.0-DEV", "namespace", "subsystem", filter.Filter{})
 		logbuf   = &bytes.Buffer{}
-		logger   = log.NewLogfmtLogger(logbuf)
-		options  = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}
-		manager  = rt.NewManager(cache, client, token, registry, options, level.NewFilter(logger, level.AllowInfo()))
+		logger   = level.NewFilter(log.NewLogfmtLogger(logbuf), level.AllowInfo())
+		config   = rt.ManagerConfig{Client: client, Services: services, Metrics: registry, Metadata: services, Logger: logger}
 	)
 
+	manager, err := rt.NewManager(config)
+	assertNoErr(t, err)
 	assertStringSliceEqual(t, []string{}, manager.Active())
 
-	cache.update([]api.Service{s1, s2})
+	services.update([]api.Service{s1, s2})
 	manager.Refresh() // create s1, create s2
 	assertStringSliceEqual(t, []string{s1.ID, s2.ID}, manager.Active())
 
-	cache.update([]api.Service{s3, s1, s2})
+	services.update([]api.Service{s3, s1, s2})
 	manager.Refresh() // create s3
 	assertStringSliceEqual(t, []string{s1.ID, s2.ID, s3.ID}, manager.Active())
 
 	manager.Refresh() // no effect
 	assertStringSliceEqual(t, []string{s1.ID, s2.ID, s3.ID}, manager.Active())
 
-	cache.update([]api.Service{s3, s2})
+	services.update([]api.Service{s3, s2})
 	manager.Refresh() // stop s1
 	assertStringSliceEqual(t, []string{s2.ID, s3.ID}, manager.Active())
 
-	cache.update([]api.Service{s2})
+	services.update([]api.Service{s2})
 	manager.Refresh() // stop s3
 	assertStringSliceEqual(t, []string{s2.ID}, manager.Active())
 
-	cache.update([]api.Service{})
+	services.update([]api.Service{})
 	manager.Refresh() // stop s2
 	assertStringSliceEqual(t, []string{}, manager.Active())
 
-	cache.update([]api.Service{s2, s3})
+	services.update([]api.Service{s2, s3})
 	manager.Refresh() // create s2, create s3
 	assertStringSliceEqual(t, []string{s2.ID, s3.ID}, manager.Active())
 
-	manager.StopAll() // stop s2, stop s3
+	manager.Close() // stop s2, stop s3
 	assertStringSliceEqual(t, []string{}, manager.Active())
 
 	if want, have := []string{

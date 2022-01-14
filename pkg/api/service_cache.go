@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -26,65 +28,51 @@ type Service struct {
 // ServiceCache polls api.fastly.com/service to keep metadata about
 // one or more service IDs up-to-date.
 type ServiceCache struct {
-	client HTTPClient
-	token  string
-
-	serviceIDs stringSet
-	nameFilter filter.Filter
-	shard      shardSlice
-	logger     log.Logger
-
-	mtx      sync.RWMutex
-	services map[string]Service
+	ServiceCacheConfig
+	cache serviceCache
 }
 
-// NewServiceCache returns an empty cache of service metadata. By default, it
-// will fetch metadata about all services available to the provided token. Use
-// options to restrict which services the cache should manage.
-func NewServiceCache(client HTTPClient, token string, options ...ServiceCacheOption) *ServiceCache {
-	c := &ServiceCache{
-		client: client,
-		token:  token,
-		logger: log.NewNopLogger(),
+// ServiceCacheConfig collects the parameters required for a service cache.
+type ServiceCacheConfig struct {
+	// Client used by managed subscribers to query rt.fastly.com. If not
+	// provided, http.DefaultClient is used, which may not include the desired
+	// User-Agent, among other things.
+	Client HTTPClient
+
+	// Token provided as the Fastly-Key when querying rt.fastly.com.
+	Token string
+
+	// IDFilter is a set of specific service IDs that are permitted. If nil or
+	// empty, all service IDs will be considered.
+	IDFilter StringSet
+
+	// NameFilter filters services based on their name. The zero value for a
+	// filter is valid and permits all names.
+	NameFilter filter.Filter
+
+	// ShardFilter filters services based on the sharding rules described in the
+	// README. The zero value is valid and permits all services.
+	ShardFilter Shard
+
+	// Logger is used for runtime diagnostic information.
+	// If not provided, a no-op logger is used.
+	Logger log.Logger
+}
+
+func (c *ServiceCacheConfig) validate() {
+	if c.Client == nil {
+		c.Client = http.DefaultClient
 	}
-	for _, option := range options {
-		option(c)
+
+	if c.Logger == nil {
+		c.Logger = nopLogger
 	}
-	return c
 }
 
-// ServiceCacheOption provides some additional behavior to a service cache.
-// Options that restrict which services are cached combine with AND semantics.
-type ServiceCacheOption func(*ServiceCache)
-
-// WithExplicitServiceIDs restricts the cache to fetch metadata only for the
-// provided service IDs. By default, all service IDs available to the provided
-// token are allowed.
-func WithExplicitServiceIDs(ids ...string) ServiceCacheOption {
-	return func(c *ServiceCache) { c.serviceIDs = newStringSet(ids) }
-}
-
-// WithNameFilter restricts the cache to fetch metadata only for the services
-// whose names pass the provided filter. By default, no name filtering occurs.
-func WithNameFilter(f filter.Filter) ServiceCacheOption {
-	return func(c *ServiceCache) { c.nameFilter = f }
-}
-
-// WithShard restricts the cache to fetch metadata only for those services whose
-// IDs, when hashed and taken modulo m, equal (n-1). By default, no sharding
-// occurs.
-//
-// This option is designed to allow users to split accounts (tokens) that have a
-// large number of services across multiple exporter processes. For example, to
-// split across 3 processes, each process would set n={1,2,3} and m=3.
-func WithShard(n, m uint64) ServiceCacheOption {
-	return func(c *ServiceCache) { c.shard = shardSlice{n, m} }
-}
-
-// WithLogger sets the logger used by the cache during refresh.
-// By default, no log events are emitted.
-func WithLogger(logger log.Logger) ServiceCacheOption {
-	return func(c *ServiceCache) { c.logger = logger }
+// NewServiceCache returns a new, empty cache of services.
+func NewServiceCache(c ServiceCacheConfig) *ServiceCache {
+	c.validate()
+	return &ServiceCache{ServiceCacheConfig: c}
 }
 
 // Refresh services and their metadata.
@@ -103,9 +91,9 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 			return fmt.Errorf("error constructing API services request: %w", err)
 		}
 
-		req.Header.Set("Fastly-Key", c.token)
+		req.Header.Set("Fastly-Key", c.Token)
 		req.Header.Set("Accept", "application/json")
-		resp, err := c.client.Do(req)
+		resp, err := c.Client.Do(req)
 		if err != nil {
 			return fmt.Errorf("error executing API services request: %w", err)
 		}
@@ -122,23 +110,23 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 		total += len(response)
 
 		for _, s := range response {
-			debug := level.Debug(log.With(c.logger,
+			debug := level.Debug(log.With(c.Logger,
 				"service_id", s.ID,
 				"service_name", s.Name,
 				"service_version", s.Version,
 			))
 
-			if reject := !c.serviceIDs.empty() && !c.serviceIDs.has(s.ID); reject {
+			if reject := !c.IDFilter.Empty() && !c.IDFilter.Has(s.ID); reject {
 				debug.Log("result", "rejected", "reason", "service ID not explicitly allowed")
 				continue
 			}
 
-			if reject := !c.nameFilter.Permit(s.Name); reject {
+			if reject := !c.NameFilter.Permit(s.Name); reject {
 				debug.Log("result", "rejected", "reason", "service name rejected by name filter")
 				continue
 			}
 
-			if reject := !c.shard.match(s.ID); reject {
+			if reject := !c.ShardFilter.match(s.ID); reject {
 				debug.Log("result", "rejected", "reason", "service ID in different shard")
 				continue
 			}
@@ -155,33 +143,13 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 		uri = next.String()
 	}
 
-	level.Debug(c.logger).Log(
+	level.Debug(c.Logger).Log(
 		"refresh_took", time.Since(begin),
 		"total_service_count", total,
 		"accepted_service_count", len(nextgen),
 	)
 
-	c.mtx.Lock()
-	for id, next := range nextgen {
-		_, ok := c.services[id]
-		if created := !ok; created {
-			level.Info(c.logger).Log("service", "found", "service_id", id, "name", next.Name, "version", next.Version)
-		}
-	}
-	for id, prev := range c.services {
-		next, ok := nextgen[id]
-		if removed := !ok; removed {
-			level.Info(c.logger).Log("service", "removed", "service_id", id, "name", prev.Name, "version", prev.Version)
-		}
-		if renamed := ok && prev.Name != next.Name; renamed {
-			level.Info(c.logger).Log("service", "renamed", "service_id", id, "from", prev.Name, "to", next.Name)
-		}
-		if updated := ok && prev.Version != next.Version; updated {
-			level.Info(c.logger).Log("service", "updated", "service_id", id, "from", prev.Version, "to", next.Version)
-		}
-	}
-	c.services = nextgen
-	c.mtx.Unlock()
+	c.cache.update(nextgen, c.Logger)
 
 	return nil
 }
@@ -189,6 +157,52 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 // ServiceIDs currently being monitored by the cache.
 // The set can change over time.
 func (c *ServiceCache) ServiceIDs() (ids []string) {
+	return c.cache.getAll()
+}
+
+// Metadata returns selected metadata associated with a given service ID.
+// If the cache doesn't contain that service ID, found will be false.
+func (c *ServiceCache) Metadata(id string) (name string, version int, found bool) {
+	return c.cache.getOne(id)
+}
+
+//
+//
+//
+
+type serviceCache struct {
+	mtx      sync.RWMutex
+	services map[string]Service
+}
+
+func (c *serviceCache) update(nextgen map[string]Service, logger log.Logger) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	for id, next := range nextgen {
+		_, ok := c.services[id]
+		if created := !ok; created {
+			level.Info(logger).Log("service", "found", "service_id", id, "name", next.Name, "version", next.Version)
+		}
+	}
+
+	for id, prev := range c.services {
+		next, ok := nextgen[id]
+		if removed := !ok; removed {
+			level.Info(logger).Log("service", "removed", "service_id", id, "name", prev.Name, "version", prev.Version)
+		}
+		if renamed := ok && prev.Name != next.Name; renamed {
+			level.Info(logger).Log("service", "renamed", "service_id", id, "from", prev.Name, "to", next.Name)
+		}
+		if updated := ok && prev.Version != next.Version; updated {
+			level.Info(logger).Log("service", "updated", "service_id", id, "from", prev.Version, "to", next.Version)
+		}
+	}
+
+	c.services = nextgen
+}
+
+func (c *serviceCache) getAll() (ids []string) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -200,9 +214,7 @@ func (c *ServiceCache) ServiceIDs() (ids []string) {
 	return ids
 }
 
-// Metadata returns selected metadata associated with a given service ID.
-// If the cache doesn't contain that service ID, found will be false.
-func (c *ServiceCache) Metadata(id string) (name string, version int, found bool) {
+func (c *serviceCache) getOne(id string) (name string, version int, found bool) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -216,37 +228,69 @@ func (c *ServiceCache) Metadata(id string) (name string, version int, found bool
 //
 //
 
-type stringSet map[string]struct{}
+// StringSet is an add-only set of strings.
+type StringSet struct{ m map[string]struct{} }
 
-func newStringSet(initial []string) stringSet {
-	ss := stringSet{}
-	for _, s := range initial {
-		ss[s] = struct{}{}
-	}
+// StringSetWith constructs a string set with an initial set of strings.
+func StringSetWith(strs ...string) StringSet {
+	var ss StringSet
+	ss.Add(strs...)
 	return ss
 }
 
-func (ss stringSet) empty() bool {
-	return len(ss) == 0
+// Set adds the value to the set. It's meant to implement flag.Value.
+func (ss *StringSet) Set(value string) error {
+	ss.Add(value)
+	return nil
 }
 
-func (ss stringSet) has(s string) bool {
-	_, ok := ss[s]
+// Add the strs to the set.
+func (ss *StringSet) Add(strs ...string) {
+	if ss.m == nil {
+		ss.m = map[string]struct{}{}
+	}
+	for _, s := range strs {
+		ss.m[s] = struct{}{}
+	}
+}
+
+// Empty returns true if the set is empty.
+func (ss StringSet) Empty() bool {
+	return len(ss.m) == 0
+}
+
+// Has returns true if `s` is in the set.
+func (ss StringSet) Has(s string) bool {
+	_, ok := ss.m[s]
 	return ok
 }
 
-type shardSlice struct{ n, m uint64 }
+//
+//
+//
 
-func (ss shardSlice) match(serviceID string) bool {
-	if ss.m == 0 {
+// Shard identifies one exporter instance among many.
+type Shard struct{ N, M uint64 }
+
+// ParseShard parses a string of the form "N/M" where N > 0, M > 0, and N < M.
+func ParseShard(str string) (s Shard, err error) {
+	if i := strings.Index(str, "/"); i >= 0 {
+		s.N, _ = strconv.ParseUint(strings.TrimSpace(str[:i]), 10, 64)
+		s.M, _ = strconv.ParseUint(strings.TrimSpace(str[i+1:]), 10, 64)
+	}
+	if s.M <= 0 || s.N <= 0 && s.N > s.M {
+		err = fmt.Errorf("%q: invalid format", str)
+	}
+	return s, err
+}
+
+func (s Shard) match(serviceID string) bool {
+	switch {
+	case s.M == 0:
 		return true // the zero value of the type matches all IDs
+	case s.M > 0 && s.N > 0 && s.N <= s.M:
+		return xxhash.Sum64String(serviceID)%s.M == (s.N - 1)
+	default:
+		panic(fmt.Errorf("programmer error: invalid shard %v", s))
 	}
-
-	if ss.n == 0 {
-		panic("programmer error: shard with n = 0, m != 0")
-	}
-
-	h := xxhash.New()
-	fmt.Fprint(h, serviceID)
-	return h.Sum64()%uint64(ss.m) == uint64(ss.n-1)
 }

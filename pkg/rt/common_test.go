@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -109,9 +108,8 @@ func (c *mockCache) Metadata(id string) (name string, version int, found bool) {
 //
 
 type mockRealtimeClient struct {
-	responses     []string
-	next          chan struct{}
-	lastUserAgent string
+	responses []string
+	next      chan struct{}
 }
 
 func newMockRealtimeClient(responses ...string) *mockRealtimeClient {
@@ -137,8 +135,6 @@ func (c *mockRealtimeClient) Do(req *http.Request) (*http.Response, error) {
 		response, c.responses = c.responses[0], c.responses[1:]
 	}
 
-	c.lastUserAgent = req.Header.Get("User-Agent")
-
 	return fixedResponseClient{200, response}.Do(req)
 }
 
@@ -150,14 +146,14 @@ func (c *mockRealtimeClient) advance() {
 //
 //
 
-type countingRealtimeClient struct {
+type forwardingClient struct {
 	code     int
 	response string
-	served   uint64
+	done     chan struct{}
 }
 
-func (c *countingRealtimeClient) Do(req *http.Request) (*http.Response, error) {
-	atomic.AddUint64(&(c.served), 1)
+func (c *forwardingClient) Do(req *http.Request) (*http.Response, error) {
+	close(c.done)
 	return fixedResponseClient{c.code, c.response}.Do(req)
 }
 

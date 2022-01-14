@@ -31,14 +31,15 @@ type Coördinates struct {
 type DatacenterCache struct {
 	client HTTPClient
 	token  string
-
-	mtx sync.Mutex
-	dcs []Datacenter
+	cache  datacenterCache
 }
 
 // NewDatacenterCache returns an empty cache of datacenter metadata. Use the
 // Refresh method to update the cache.
 func NewDatacenterCache(client HTTPClient, token string) *DatacenterCache {
+	if client == nil {
+		client = http.DefaultClient
+	}
 	return &DatacenterCache{
 		client: client,
 		token:  token,
@@ -73,20 +74,14 @@ func (c *DatacenterCache) Refresh(ctx context.Context) error {
 		return response[i].Code < response[j].Code
 	})
 
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-	c.dcs = response
+	c.cache.set(response)
 
 	return nil
 }
 
 // Datacenters returns a copy of the currently cached datacenters.
 func (c *DatacenterCache) Datacenters() []Datacenter {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-	dcs := make([]Datacenter, len(c.dcs))
-	copy(dcs, c.dcs)
-	return dcs
+	return c.cache.get()
 }
 
 // Gatherer returns a Prometheus gatherer which will yield current metadata
@@ -109,6 +104,10 @@ func (c *DatacenterCache) Gatherer(namespace, subsystem string) (prometheus.Gath
 	return registry, nil
 }
 
+//
+//
+//
+
 type datacenterCollector struct {
 	desc  *prometheus.Desc
 	cache *DatacenterCache
@@ -130,4 +129,29 @@ func (c *datacenterCollector) Collect(ch chan<- prometheus.Metric) {
 		)
 		ch <- prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
 	}
+}
+
+//
+//
+//
+
+type datacenterCache struct {
+	mtx sync.Mutex
+	dcs []Datacenter
+}
+
+func (c *datacenterCache) set(latest []Datacenter) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	c.dcs = latest
+}
+
+func (c *datacenterCache) get() []Datacenter {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	dcs := make([]Datacenter, len(c.dcs))
+	copy(dcs, c.dcs)
+	return dcs
 }

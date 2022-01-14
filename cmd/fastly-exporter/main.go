@@ -7,7 +7,6 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -184,35 +183,30 @@ func main() {
 		}
 	}
 
-	var shardN, shardM uint64
+	var shard api.Shard
 	{
 		if serviceShard != "" {
-			toks := strings.SplitN(serviceShard, "/", 2)
-			if len(toks) != 2 {
-				level.Error(logger).Log("err", "-service-shard must be of the format 'n/m'")
-				os.Exit(1)
-			}
-			var err error
-			shardN, err = strconv.ParseUint(toks[0], 10, 64)
+			s, err := api.ParseShard(serviceShard)
 			if err != nil {
-				level.Error(logger).Log("err", "-service-shard must be of the format 'n/m'")
+				level.Error(logger).Log("err", "invalid -service-shard", "msg", err)
 				os.Exit(1)
 			}
-			if shardN <= 0 {
-				level.Error(logger).Log("err", "first part of -service-shard flag should be greater than zero")
-				os.Exit(1)
-			}
-			shardM, err = strconv.ParseUint(toks[1], 10, 64)
-			if err != nil {
-				level.Error(logger).Log("err", "-service-shard must be of the format 'n/m'")
-				os.Exit(1)
-			}
-			if shardN > shardM {
-				level.Error(logger).Log("err", fmt.Sprintf("-service-shard with n=%d m=%d is invalid: n must be less than or equal to m", shardN, shardM))
-				os.Exit(1)
-			}
-			level.Info(logger).Log("filter", "services", "type", "by shard", "n", shardN, "m", shardM)
+			shard = s
+			level.Info(logger).Log("filter", "services", "type", "by shard", "n", shard.N, "m", shard.M)
+		}
+	}
 
+	var clientTransport http.RoundTripper
+	{
+		userAgent := fmt.Sprintf("Fastly-Exporter (%s)", programVersion)
+		clientTransport = userAgentTransport(http.DefaultTransport, userAgent)
+	}
+
+	var apiClient *http.Client
+	{
+		apiClient = &http.Client{
+			Transport: clientTransport,
+			Timeout:   apiTimeout,
 		}
 	}
 
@@ -221,31 +215,16 @@ func main() {
 		apiLogger = log.With(logger, "component", "api.fastly.com")
 	}
 
-	var apiClient *http.Client
-	{
-		apiClient = &http.Client{
-			Timeout: apiTimeout,
-		}
-	}
-
 	var serviceCache *api.ServiceCache
 	{
-		serviceCacheOptions := []api.ServiceCacheOption{
-			api.WithLogger(apiLogger),
-			api.WithNameFilter(serviceNameFilter),
-		}
-
-		if len(serviceIDs) > 0 {
-			level.Info(logger).Log("filter", "services", "type", "explicit service IDs", "count", len(serviceIDs))
-			serviceCacheOptions = append(serviceCacheOptions, api.WithExplicitServiceIDs(serviceIDs...))
-		}
-
-		if shardM > 0 {
-			level.Info(logger).Log("filter", "services", "type", "shard", "shard", fmt.Sprintf("%d/%d", shardN, shardM))
-			serviceCacheOptions = append(serviceCacheOptions, api.WithShard(shardN, shardM))
-		}
-
-		serviceCache = api.NewServiceCache(apiClient, token, serviceCacheOptions...)
+		serviceCache = api.NewServiceCache(api.ServiceCacheConfig{
+			Client:      apiClient,
+			Token:       token,
+			NameFilter:  serviceNameFilter,
+			IDFilter:    api.StringSetWith(serviceIDs...),
+			ShardFilter: shard,
+			Logger:      apiLogger,
+		})
 	}
 
 	var datacenterCache *api.DatacenterCache
@@ -254,18 +233,16 @@ func main() {
 	}
 
 	{
-		var g errgroup.Group
-		g.Go(func() error {
+		var g noErrGroup
+		g.Go(func() {
 			if err := serviceCache.Refresh(context.Background()); err != nil {
-				level.Warn(logger).Log("during", "initial fetch of service IDs", "err", err, "msg", "service metrics unavailable, will retry")
+				level.Warn(logger).Log("during", "populate service cache", "err", err, "msg", "service metrics unavailable, will retry")
 			}
-			return nil
 		})
-		g.Go(func() error {
+		g.Go(func() {
 			if err := datacenterCache.Refresh(context.Background()); err != nil {
-				level.Warn(logger).Log("during", "initial fetch of datacenters", "err", err, "msg", "datacenter labels unavailable, will retry")
+				level.Warn(logger).Log("during", "populate datacenter cache", "err", err, "msg", "datacenter labels unavailable, will retry")
 			}
-			return nil
 		})
 		g.Wait()
 	}
@@ -287,16 +264,18 @@ func main() {
 
 	var manager *rt.Manager
 	{
-		var (
-			rtLogger          = log.With(logger, "component", "rt.fastly.com")
-			rtClient          = &http.Client{Timeout: rtTimeout}
-			subscriberOptions = []rt.SubscriberOption{
-				rt.WithLogger(rtLogger),
-				rt.WithMetadataProvider(serviceCache),
-				rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
-			}
-		)
-		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, rtLogger)
+		manager, err := rt.NewManager(rt.ManagerConfig{
+			Client:   &http.Client{Transport: clientTransport, Timeout: rtTimeout},
+			Token:    token,
+			Services: serviceCache,
+			Metrics:  registry,
+			Metadata: serviceCache,
+			Logger:   log.With(logger, "component", "rt.fastly.com"),
+		})
+		if err != nil {
+			level.Error(logger).Log("during", "create subscriber manager", "err", err)
+			os.Exit(1)
+		}
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
 
@@ -355,7 +334,7 @@ func main() {
 		ctx, cancel := context.WithCancel(context.Background())
 		g.Add(func() error {
 			<-ctx.Done()
-			manager.StopAll()
+			manager.Close()
 			return ctx.Err()
 		}, func(error) {
 			cancel()
@@ -389,6 +368,10 @@ func main() {
 	level.Info(logger).Log("exit", g.Run())
 }
 
+//
+//
+//
+
 type stringslice []string
 
 func (ss *stringslice) Set(s string) error {
@@ -402,6 +385,24 @@ func (ss *stringslice) String() string {
 	}
 	return strings.Join(*ss, ", ")
 }
+
+//
+//
+//
+
+type noErrGroup errgroup.Group
+
+func (g *noErrGroup) Go(fn func()) {
+	(*errgroup.Group)(g).Go(func() error { fn(); return nil })
+}
+
+func (g *noErrGroup) Wait() {
+	(*errgroup.Group)(g).Wait()
+}
+
+//
+//
+//
 
 func usageFor(fs *flag.FlagSet) func() {
 	return func() {
