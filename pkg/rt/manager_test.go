@@ -58,9 +58,6 @@ func TestManager(t *testing.T) {
 	manager.Refresh() // create s2, create s3
 	assertStringSliceEqual(t, []string{s2.ID, s3.ID}, manager.Active())
 
-	manager.Close() // stop s2, stop s3
-	assertStringSliceEqual(t, []string{}, manager.Active())
-
 	if want, have := []string{
 		`level=info service_id=101010 subscriber=create`,
 		`level=info service_id=2f2f2f subscriber=create`,
@@ -70,9 +67,10 @@ func TestManager(t *testing.T) {
 		`level=info service_id=2f2f2f subscriber=stop`,
 		`level=info service_id=2f2f2f subscriber=create`,
 		`level=info service_id=3a3b3c subscriber=create`,
-		`level=info service_id=2f2f2f subscriber=stop`,
-		`level=info service_id=3a3b3c subscriber=stop`,
 	}, strings.Split(strings.TrimSpace(logbuf.String()), "\n"); !cmp.Equal(want, have) {
 		t.Error(cmp.Diff(want, have))
 	}
+
+	manager.Close() // stop s2, stop s3
+	assertStringSliceEqual(t, []string{}, manager.Active())
 }
