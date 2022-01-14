@@ -41,6 +41,7 @@ func main() {
 		serviceRefresh    time.Duration
 		apiTimeout        time.Duration
 		rtTimeout         time.Duration
+		profiling         bool
 		debug             bool
 		versionFlag       bool
 		configFileExample bool
@@ -63,6 +64,7 @@ func main() {
 		fs.DurationVar(&serviceRefresh, "api-refresh", 1*time.Minute, "DEPRECATED -- use service-refresh instead")
 		fs.DurationVar(&apiTimeout, "api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
 		fs.DurationVar(&rtTimeout, "rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
+		fs.BoolVar(&profiling, "profiling", false, "enable /debug/pprof HTTP endpoints")
 		fs.BoolVar(&debug, "debug", false, "log debug information")
 		fs.BoolVar(&versionFlag, "version", false, "print version information and exit")
 		fs.String("config-file", "", "config file (optional)")
@@ -233,6 +235,7 @@ func main() {
 	}
 
 	{
+		level.Info(logger).Log("msg", "fetching initial metadata from api.fastly.com")
 		var g noErrGroup
 		g.Go(func() {
 			if err := serviceCache.Refresh(context.Background()); err != nil {
@@ -260,6 +263,17 @@ func main() {
 	var registry *prom.Registry
 	{
 		registry = prom.NewRegistry(programVersion, namespace, subsystem, metricNameFilter, defaultGatherers)
+	}
+
+	var handler http.Handler
+	{
+		mux := http.NewServeMux()
+		mux.Handle("/", registry)
+		if profiling {
+			level.Info(logger).Log("msg", "profiling endpoints enabled")
+			mux.Handle("/debug/pprof/", http.DefaultServeMux)
+		}
+		handler = mux
 	}
 
 	var manager *rt.Manager
@@ -347,7 +361,7 @@ func main() {
 		serverLogger := log.With(logger, "component", "server")
 		server := http.Server{
 			Addr:    listen,
-			Handler: registry,
+			Handler: handler,
 		}
 		g.Add(func() error {
 			level.Info(serverLogger).Log("listen", listen)
