@@ -179,6 +179,56 @@ func TestServiceCachePagination(t *testing.T) {
 	}
 }
 
+func TestParseShard(t *testing.T) {
+	t.Parallel()
+
+	for _, testcase := range []struct {
+		input string
+		err   bool
+		want  api.Shard
+	}{
+		{
+			input: "",
+			err:   true,
+		},
+		{
+			input: "123",
+			err:   true,
+		},
+		{
+			input: "0/2",
+			err:   true,
+		},
+		{
+			input: "1/2",
+			want:  api.Shard{N: 1, M: 2},
+		},
+		{
+			input: "2/2",
+			want:  api.Shard{N: 2, M: 2},
+		},
+		{
+			input: " 2 / 2 ",
+			want:  api.Shard{N: 2, M: 2},
+		},
+		{
+			input: "3/2",
+			err:   true,
+		},
+	} {
+		t.Run(testcase.input, func(t *testing.T) {
+			want := testcase.want
+			have, err := api.ParseShard(testcase.input)
+			switch {
+			case testcase.err && err == nil:
+				t.Errorf("want error, have none")
+			case !testcase.err && want != have:
+				t.Errorf("want %+v, have %+v", want, have)
+			}
+		})
+	}
+}
+
 func filterAllowlist(a string) (f filter.Filter) {
 	f.Allow(a)
 	return f

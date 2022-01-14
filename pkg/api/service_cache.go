@@ -238,12 +238,6 @@ func StringSetWith(strs ...string) StringSet {
 	return ss
 }
 
-// Set adds the value to the set. It's meant to implement flag.Value.
-func (ss *StringSet) Set(value string) error {
-	ss.Add(value)
-	return nil
-}
-
 // Add the strs to the set.
 func (ss *StringSet) Add(strs ...string) {
 	if ss.m == nil {
@@ -278,7 +272,7 @@ func ParseShard(str string) (s Shard, err error) {
 		s.N, _ = strconv.ParseUint(strings.TrimSpace(str[:i]), 10, 64)
 		s.M, _ = strconv.ParseUint(strings.TrimSpace(str[i+1:]), 10, 64)
 	}
-	if s.M <= 0 || s.N <= 0 && s.N > s.M {
+	if s.M <= 0 || s.N <= 0 || s.N > s.M {
 		err = fmt.Errorf("%q: invalid format", str)
 	}
 	return s, err
