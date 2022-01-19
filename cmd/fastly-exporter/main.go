@@ -221,10 +221,16 @@ func main() {
 		apiLogger = log.With(logger, "component", "api.fastly.com")
 	}
 
+	var userAgent string
+	{
+		userAgent = `Fastly-Exporter (` + programVersion + `)`
+	}
+
 	var apiClient *http.Client
 	{
 		apiClient = &http.Client{
-			Timeout: apiTimeout,
+			Timeout:   apiTimeout,
+			Transport: userAgentTransport(http.DefaultTransport, userAgent),
 		}
 	}
 
@@ -289,11 +295,10 @@ func main() {
 	{
 		var (
 			rtLogger          = log.With(logger, "component", "rt.fastly.com")
-			rtClient          = &http.Client{Timeout: rtTimeout}
+			rtClient          = &http.Client{Timeout: rtTimeout, Transport: userAgentTransport(http.DefaultTransport, userAgent)}
 			subscriberOptions = []rt.SubscriberOption{
 				rt.WithLogger(rtLogger),
 				rt.WithMetadataProvider(serviceCache),
-				rt.WithUserAgent(`Fastly-Exporter (` + programVersion + `)`),
 			}
 		)
 		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, rtLogger)
