@@ -32,7 +32,6 @@ type MetadataProvider interface {
 // It emits the received real-time stats data to Prometheus.
 type Subscriber struct {
 	client      HTTPClient
-	userAgent   string
 	token       string
 	serviceID   string
 	provider    MetadataProvider
@@ -43,12 +42,6 @@ type Subscriber struct {
 
 // SubscriberOption provides some additional behavior to a subscriber.
 type SubscriberOption func(*Subscriber)
-
-// WithUserAgent sets the User-Agent supplied to rt.fastly.com.
-// By default, the DefaultUserAgent is used.
-func WithUserAgent(ua string) SubscriberOption {
-	return func(s *Subscriber) { s.userAgent = ua }
-}
 
 // WithMetadataProvider sets the resolver used to look up service names and
 // versions. By default, a no-op metadata resolver is used, which causes each
@@ -71,16 +64,11 @@ func WithPostprocess(f func()) SubscriberOption {
 	return func(s *Subscriber) { s.postprocess = f }
 }
 
-// DefaultUserAgent passed to rt.fastly.com.
-// To change, use the WithUserAgent option.
-const DefaultUserAgent = "Fastly-Exporter (unknown version)"
-
 // NewSubscriber returns a ready-to-use subscriber.
 // Run must be called to update the metrics.
 func NewSubscriber(client HTTPClient, token, serviceID string, metrics *gen.Metrics, options ...SubscriberOption) *Subscriber {
 	s := &Subscriber{
 		client:      client,
-		userAgent:   DefaultUserAgent,
 		token:       token,
 		serviceID:   serviceID,
 		metrics:     metrics,
@@ -147,7 +135,6 @@ func (s *Subscriber) query(ctx context.Context, ts uint64) (currentName string, 
 		return name, apiResultError, 0, ts, fmt.Errorf("error constructing real-time stats API request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", s.userAgent)
 	req.Header.Set("Fastly-Key", s.token)
 	req.Header.Set("Accept", "application/json")
 	resp, err := s.client.Do(req.WithContext(ctx))
