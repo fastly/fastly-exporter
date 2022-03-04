@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/fastly/fastly-exporter/pkg/filter"
-	"github.com/fastly/fastly-exporter/pkg/gen"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -26,26 +25,29 @@ import (
 //
 // https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
 type Registry struct {
-	mtx              sync.Mutex
-	version          string
-	namespace        string
-	subsystem        string
-	metricNameFilter filter.Filter
-	byServiceID      map[string]*metricsRegistry
-	defaultGatherers []prometheus.Gatherer
+	mtx                 sync.Mutex
+	version             string
+	namespace           string
+	deprecatedSubsystem string
+	metricNameFilter    filter.Filter
+	byServiceID         map[string]*metricsRegistry
+	defaultGatherers    []prometheus.Gatherer
 
 	http.Handler
 }
 
 // NewRegistry returns a new and empty registry for Prometheus metrics.
+//
+// Subsystem is used for default and real-time metrics only, and may be removed
+// in a future version.
 func NewRegistry(version, namespace, subsystem string, metricNameFilter filter.Filter, defaultGatherers ...prometheus.Gatherer) *Registry {
 	r := &Registry{
-		version:          version,
-		namespace:        namespace,
-		subsystem:        subsystem,
-		metricNameFilter: metricNameFilter,
-		byServiceID:      map[string]*metricsRegistry{},
-		defaultGatherers: defaultGatherers,
+		version:             version,
+		namespace:           namespace,
+		deprecatedSubsystem: subsystem,
+		metricNameFilter:    metricNameFilter,
+		byServiceID:         map[string]*metricsRegistry{},
+		defaultGatherers:    defaultGatherers,
 	}
 
 	router := mux.NewRouter()
@@ -63,21 +65,21 @@ func NewRegistry(version, namespace, subsystem string, metricNameFilter filter.F
 // with other registries and served as a single set of metrics via the
 // prometheus.Gatherers helper type.
 type metricsRegistry struct {
-	metrics  *gen.Metrics
+	metrics  *Metrics
 	registry *prometheus.Registry
 }
 
 // MetricsFor returns a set of Prometheus metrics for a specific service, with
 // the expectation that callers will update those metrics with data retrieved
 // from the Fastly real-time stats API.
-func (r *Registry) MetricsFor(serviceID string) *gen.Metrics {
+func (r *Registry) MetricsFor(serviceID string) *Metrics {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	mr, ok := r.byServiceID[serviceID]
 	if !ok {
 		registry := prometheus.NewRegistry()
-		metrics := gen.NewMetrics(r.namespace, r.subsystem, r.metricNameFilter, registry)
+		metrics := NewMetrics(r.namespace, r.deprecatedSubsystem, r.metricNameFilter, registry)
 		mr = &metricsRegistry{metrics, registry}
 		r.byServiceID[serviceID] = mr // TODO(pb): at some point, expire and remove?
 	}
