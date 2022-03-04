@@ -73,6 +73,11 @@ func TestGetNextLink(t *testing.T) {
 			want:  `https://api.github.com/user/58276/repos?page=2`,
 		},
 		{
+			name:  `linkheader 4`,
+			links: []string{"<https://api.github.com/user/58276/repos?page=9>; rel=\"last\", <https://api.github.com/user/58276/repos?page=2>; rel=\"next\""},
+			want:  `https://api.github.com/user/58276/repos?page=2`,
+		},
+		{
 			name:  `link 1`,
 			links: []string{`<https://example.com/?page=2>; rel="next"; title="foo"`},
 			want:  `https://example.com/?page=2`,
