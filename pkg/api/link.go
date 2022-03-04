@@ -34,38 +34,40 @@ func uriFromLinks(links []string, k, v string) (string, bool) {
 
 func uriFromLink(link, k, v string) (string, bool) {
 	var rawuri string
-	for _, param := range strings.Split(link, ";") {
-		param = strings.TrimSpace(param)
-		if param == "" {
-			continue
-		}
+	for _, link := range strings.Split(link, ",") {
+		for _, param := range strings.Split(link, ";") {
+			param = strings.TrimSpace(param)
+			if param == "" {
+				continue
+			}
 
-		if rawuri == "" && param[0] == '<' && param[len(param)-1] == '>' {
-			rawuri = strings.Trim(param, "<>")
-			continue
-		}
+			if param[0] == '<' && param[len(param)-1] == '>' {
+				rawuri = strings.Trim(param, "<>")
+				continue
+			}
 
-		keyval := strings.SplitN(param, "=", 2)
-		if len(keyval) != 2 {
-			continue
-		}
+			keyval := strings.SplitN(param, "=", 2)
+			if len(keyval) != 2 {
+				continue
+			}
 
-		key := strings.TrimSpace(keyval[0])
-		if !strings.EqualFold(key, k) {
-			continue
-		}
+			key := strings.TrimSpace(keyval[0])
+			if !strings.EqualFold(key, k) {
+				continue
+			}
 
-		var val string
-		val = keyval[1]
-		val = strings.TrimSpace(val)
-		val = strings.Trim(val, `"`)
-		val = strings.TrimSpace(val)
-		if !strings.EqualFold(val, v) {
-			continue
-		}
+			var val string
+			val = keyval[1]
+			val = strings.TrimSpace(val)
+			val = strings.Trim(val, `"`)
+			val = strings.TrimSpace(val)
+			if !strings.EqualFold(val, v) {
+				continue
+			}
 
-		if rawuri != "" {
-			return rawuri, true
+			if rawuri != "" {
+				return rawuri, true
+			}
 		}
 	}
 	return "", false
