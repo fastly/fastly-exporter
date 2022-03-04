@@ -8,7 +8,7 @@ import (
 
 	"github.com/peterbourgon/fastly-exporter/pkg/api"
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/gen"
+	"github.com/peterbourgon/fastly-exporter/pkg/prom"
 	"github.com/peterbourgon/fastly-exporter/pkg/rt"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -19,7 +19,7 @@ func TestSubscriberFixture(t *testing.T) {
 		subsystem  = "testsystem"
 		registry   = prometheus.NewRegistry()
 		nameFilter = filter.Filter{}
-		metrics    = gen.NewMetrics(namespace, subsystem, nameFilter, registry)
+		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, registry)
 	)
 
 	var (
@@ -40,7 +40,7 @@ func TestSubscriberFixture(t *testing.T) {
 		done        = make(chan struct{})
 	)
 	go func() {
-		subscriber.Run(ctx)
+		subscriber.RunRealtime(ctx)
 		close(done)
 	}()
 
@@ -57,13 +57,13 @@ func TestSubscriberNoData(t *testing.T) {
 	var (
 		client      = newMockRealtimeClient(`{"Error": "No data available, please retry"}`, `{}`)
 		registry    = prometheus.NewRegistry()
-		metrics     = gen.NewMetrics("ns", "ss", filter.Filter{}, registry)
+		metrics     = prom.NewMetrics("ns", "ss", filter.Filter{}, registry)
 		processed   = make(chan struct{}, 100)
 		postprocess = func() { processed <- struct{}{} }
 		options     = []rt.SubscriberOption{rt.WithPostprocess(postprocess)}
 		subscriber  = rt.NewSubscriber(client, "token", "service_id", metrics, options...)
 	)
-	go subscriber.Run(context.Background())
+	go subscriber.RunRealtime(context.Background())
 
 	<-processed // No data
 	client.advance()
@@ -82,10 +82,10 @@ func TestSubscriberNoData(t *testing.T) {
 func TestBadTokenNoSpam(t *testing.T) {
 	var (
 		client     = &countingRealtimeClient{code: 403, response: `{"Error": "unauthorized"}`}
-		metrics    = gen.NewMetrics("namespace", "subsystem", filter.Filter{}, prometheus.NewRegistry())
+		metrics    = prom.NewMetrics("namespace", "subsystem", filter.Filter{}, prometheus.NewRegistry())
 		subscriber = rt.NewSubscriber(client, "presumably bad token", "service ID", metrics)
 	)
-	go subscriber.Run(context.Background())
+	go subscriber.RunRealtime(context.Background())
 
 	time.Sleep(time.Second)
 

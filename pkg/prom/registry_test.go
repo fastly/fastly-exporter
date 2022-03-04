@@ -23,11 +23,11 @@ func TestRegistryEndpoints(t *testing.T) {
 		registry         = prom.NewRegistry(version, namespace, subsystem, metricNameFilter)
 	)
 
-	registry.MetricsFor("AAA").RequestsTotal.With(prometheus.Labels{
+	registry.MetricsFor("AAA").Realtime.RequestsTotal.With(prometheus.Labels{
 		"service_id": "AAA", "service_name": "Service One", "datacenter": "NYC",
 	}).Add(1)
 
-	registry.MetricsFor("BBB").RequestsTotal.With(prometheus.Labels{
+	registry.MetricsFor("BBB").Realtime.RequestsTotal.With(prometheus.Labels{
 		"service_id": "BBB", "service_name": "Service Two", "datacenter": "NYC",
 	}).Add(2)
 
