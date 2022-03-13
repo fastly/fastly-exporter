@@ -52,7 +52,7 @@ func main() {
 		fs.StringVar(&token, "token", "", "Fastly API token (required)")
 		fs.StringVar(&listen, "listen", "127.0.0.1:8080", "listen address for Prometheus metrics")
 		fs.StringVar(&namespace, "namespace", "fastly", "Prometheus namespace")
-		fs.StringVar(&deprecatedSubsystem, "subsystem", "rt", "DEPRECATED -- applied only to realtime and exporter metrics, will be ignored in future version")
+		fs.StringVar(&deprecatedSubsystem, "subsystem", "rt", "DEPRECATED -- will be fixed to 'rt' in a future version")
 		fs.StringVar(&serviceShard, "service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
 		fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
 		fs.Var(&serviceAllowlist, "service-allowlist", "if set, only include services whose names match this regex (repeatable)")
