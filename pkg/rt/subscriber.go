@@ -252,7 +252,7 @@ func (s *Subscriber) queryOrigins(ctx context.Context, ts uint64) (currentName s
 			result = apiResultSuccess
 		}
 		origin.Process(&response, s.serviceID, name, version, s.metrics.Origin)
-		//s.postprocess()
+		s.postprocess()
 
 	case http.StatusUnauthorized, http.StatusForbidden:
 		result = apiResultError
