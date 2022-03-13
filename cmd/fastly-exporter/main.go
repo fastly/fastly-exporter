@@ -102,9 +102,14 @@ func main() {
 		}
 	}
 
-	if deprecatedSubsystem == "origin" {
+	switch deprecatedSubsystem {
+	case "rt":
+		// good
+	case "origin":
 		level.Error(logger).Log("err", "-subsystem cannot be 'origin'")
 		os.Exit(1)
+	default:
+		level.Warn(logger).Log("msg", "-subsystem is DEPRECATED and will be fixed to 'rt' in a future version")
 	}
 
 	fs.Visit(func(f *flag.Flag) {
