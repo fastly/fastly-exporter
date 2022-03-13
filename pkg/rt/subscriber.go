@@ -132,17 +132,18 @@ func (s *Subscriber) RunOrigins(ctx context.Context) error {
 	}
 }
 
-// queryRealtime rt.fastly.com for the service ID represented by the subscriber, and
-// with the provided starting timestamp. The function may block for several
-// seconds; cancel the context to provoke early termination. On success, the
-// received real-time data is processed, and the Prometheus metrics related to
-// the Fastly service are updated.
+// queryRealtime fetches real-time stats from rt.fastly.com for the service ID
+// represented by the subscriber, and with the provided starting timestamp. The
+// function may block for several seconds; cancel the context to provoke early
+// termination. On success, the received real-time data is processed, and the
+// Prometheus metrics related to the Fastly service are updated.
 //
 // Returns the current name of the service, the broad class of result of the API
-// request, any delay that should pass before queryRealtime is invoked again, the new
-// timestamp that should be provided to the next call to queryRealtime, and an error.
-// Recoverable errors are logged internally and not returned, so any non-nil
-// error returned by this method should be considered fatal to the subscriber.
+// request, any delay that should pass before queryRealtime is invoked again,
+// the new timestamp that should be provided to the next call to queryRealtime,
+// and an error. Recoverable errors are logged internally and not returned, so
+// any non-nil error returned by this method should be considered fatal to the
+// subscriber.
 func (s *Subscriber) queryRealtime(ctx context.Context, ts uint64) (currentName string, result apiResult, delay time.Duration, newts uint64, fatal error) {
 	name, ver, found := s.provider.Metadata(s.serviceID)
 	version := strconv.Itoa(ver)
@@ -251,7 +252,7 @@ func (s *Subscriber) queryOrigins(ctx context.Context, ts uint64) (currentName s
 			result = apiResultSuccess
 		}
 		origin.Process(&response, s.serviceID, name, version, s.metrics.Origin)
-		s.postprocess()
+		//s.postprocess()
 
 	case http.StatusUnauthorized, http.StatusForbidden:
 		result = apiResultError
