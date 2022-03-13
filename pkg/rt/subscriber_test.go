@@ -23,6 +23,7 @@ func TestSubscriberFixture(t *testing.T) {
 		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, registry)
 	)
 
+	// Set up a subscriber.
 	var (
 		client         = newMockRealtimeClient(rtResponseFixture, `{}`)
 		serviceID      = "my-service-id"
@@ -35,24 +36,23 @@ func TestSubscriberFixture(t *testing.T) {
 		subscriber     = rt.NewSubscriber(client, "irrelevant token", serviceID, metrics, options...)
 	)
 
+	// Prep the mock cache.
 	cache.update([]api.Service{{ID: serviceID, Name: serviceName, Version: serviceVersion}})
 
-	// Spawn a goroutine to pull down real-time stats.
+	// Tell the subscriber to fetch real-time stats.
 	ctx, cancel := context.WithCancel(context.Background())
 	errc := make(chan error, 1)
 	go func() { errc <- subscriber.RunRealtime(ctx) }()
 
-	// Block until it updates the metrics.
+	// Block until the subscriber does finishes one fetch
 	<-processed
 
-	// Check the data returned by the Prometheus endpoint.
+	// Assert the Prometheus metrics.
 	output := prometheusOutput(t, registry, namespace+"_"+subsystem+"_")
 	assertMetricOutput(t, expetedMetricsOutputMap, output)
 
-	// Kill the goroutine.
+	// Kill the subscriber's goroutine, and wait for it to finish.
 	cancel()
-
-	// Wait for it to return.
 	err := <-errc
 	switch {
 	case err == nil:
