@@ -16,6 +16,7 @@ type Metrics struct {
 	ResponsesTotal       *prometheus.CounterVec
 	StatusCodeTotal      *prometheus.CounterVec
 	StatusGroupTotal     *prometheus.CounterVec
+	LatencySeconds       *prometheus.HistogramVec
 }
 
 // NewMetrics returns a new set of metrics registered to the registerer.
@@ -27,6 +28,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		ResponsesTotal:       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "responses_total", Help: `Number of responses from origin.`}, []string{"service_id", "service_name", "datacenter", "origin"}),
 		StatusCodeTotal:      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "status_code_total", Help: `Number of responses from origin, by status code e.g. 200, 419.`}, []string{"service_id", "service_name", "datacenter", "origin", "status_code"}),
 		StatusGroupTotal:     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "status_group_total", Help: `Number of responses from origin, by status group e.g. 1xx, 2xx.`}, []string{"service_id", "service_name", "datacenter", "origin", "status_group"}),
+		LatencySeconds:       prometheus.NewHistogramVec(prometheus.HistogramOpts{Namespace: namespace, Subsystem: subsystem, Name: "latency_seconds", Help: `Response time from origin in seconds.`, Buckets: []float64{0.001, 0.005, 0.010, 0.050, 0.100, 0.250, 0.500, 1.000, 5.000, 10.000, 60.000}}, []string{"service_id", "service_name", "datacenter", "origin"}),
 	}
 
 	for i, v := 0, reflect.ValueOf(m); i < v.NumField(); i++ {
