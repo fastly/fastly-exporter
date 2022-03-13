@@ -29,6 +29,33 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 				m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, "504").Add(float64(stats.Status504))
 				m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, "505").Add(float64(stats.Status505))
 				m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, "5xx").Add(float64(stats.Status5xx))
+
+				// Latency stats are clearly from xxx_bucket{le="v"} metrics,
+				// but I don't see a good way to re-populate a histogram from
+				// those numbers. (If I'm missing something, file an issue!)
+				//
+				// Our clue is the final bucket, which says it's observations
+				// "of 60s and above". Based on that we use the lower bound of
+				// each stat as the observed value, except for the first bucket
+				// which we yolo as 500us because 0 doesn't really make sense??
+				for v, n := range map[float64]int{
+					60.00:  stats.Latency60000_inf,
+					10.00:  stats.Latency10000_60000,
+					5.000:  stats.Latency5000_10000,
+					1.000:  stats.Latency1000_5000,
+					0.500:  stats.Latency500_1000,
+					0.250:  stats.Latency250_500,
+					0.100:  stats.Latency100_250,
+					0.050:  stats.Latency50_100,
+					0.010:  stats.Latency10_50,
+					0.005:  stats.Latency5_10,
+					0.001:  stats.Latency1_5,
+					0.0005: stats.Latency0_1, // yolo
+				} {
+					for i := 0; i < n; i++ {
+						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin).Observe(v)
+					}
+				}
 			}
 		}
 	}
