@@ -2,6 +2,7 @@ package rt_test
 
 import (
 	"context"
+	"errors"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -33,24 +34,32 @@ func TestSubscriberFixture(t *testing.T) {
 		options        = []rt.SubscriberOption{rt.WithMetadataProvider(cache), rt.WithPostprocess(postprocess)}
 		subscriber     = rt.NewSubscriber(client, "irrelevant token", serviceID, metrics, options...)
 	)
+
 	cache.update([]api.Service{{ID: serviceID, Name: serviceName, Version: serviceVersion}})
 
-	var (
-		ctx, cancel = context.WithCancel(context.Background())
-		done        = make(chan struct{})
-	)
-	go func() {
-		subscriber.RunRealtime(ctx)
-		close(done)
-	}()
+	// Spawn a goroutine to pull down real-time stats.
+	ctx, cancel := context.WithCancel(context.Background())
+	errc := make(chan error, 1)
+	go func() { errc <- subscriber.RunRealtime(ctx) }()
 
+	// Block until it updates the metrics.
 	<-processed
 
+	// Check the data returned by the Prometheus endpoint.
 	output := prometheusOutput(t, registry, namespace+"_"+subsystem+"_")
 	assertMetricOutput(t, expetedMetricsOutputMap, output)
 
+	// Kill the goroutine.
 	cancel()
-	<-done
+
+	// Wait for it to return.
+	err := <-errc
+	switch {
+	case err == nil:
+	case errors.Is(err, context.Canceled):
+	case err != nil:
+		t.Fatal(err)
+	}
 }
 
 func TestSubscriberNoData(t *testing.T) {
