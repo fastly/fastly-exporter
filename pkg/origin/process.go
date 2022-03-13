@@ -39,18 +39,18 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 				// each stat as the observed value, except for the first bucket
 				// which we yolo as 500us because 0 doesn't really make sense??
 				for v, n := range map[float64]int{
-					60.00:  stats.Latency60000_inf,
-					10.00:  stats.Latency10000_60000,
-					5.000:  stats.Latency5000_10000,
-					1.000:  stats.Latency1000_5000,
-					0.500:  stats.Latency500_1000,
-					0.250:  stats.Latency250_500,
-					0.100:  stats.Latency100_250,
-					0.050:  stats.Latency50_100,
-					0.010:  stats.Latency10_50,
-					0.005:  stats.Latency5_10,
-					0.001:  stats.Latency1_5,
-					0.0005: stats.Latency0_1, // yolo
+					60.00:  stats.Latency60000plus,
+					10.00:  stats.Latency10000to60000,
+					5.000:  stats.Latency5000to10000,
+					1.000:  stats.Latency1000to5000,
+					0.500:  stats.Latency500to1000,
+					0.250:  stats.Latency250to500,
+					0.100:  stats.Latency100to250,
+					0.050:  stats.Latency50to100,
+					0.010:  stats.Latency10to50,
+					0.005:  stats.Latency5to10,
+					0.001:  stats.Latency1to5,
+					0.0005: stats.Latency0to1, // yolo
 				} {
 					for i := 0; i < n; i++ {
 						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin).Observe(v)
