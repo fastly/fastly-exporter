@@ -92,11 +92,7 @@ func main() {
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
-		loglevel := level.AllowInfo()
-		if debug {
-			loglevel = level.AllowDebug()
-		}
-		logger = level.NewFilter(logger, loglevel)
+		logger = level.NewFilter(logger, getLogLevel(debug))
 	}
 
 	if token == "" {
@@ -463,3 +459,12 @@ service-blocklist Dev
 
 metric-blocklist imgopto
 `)
+
+func getLogLevel(debug bool) level.Option {
+	switch {
+	case debug:
+		return level.AllowDebug()
+	default:
+		return level.AllowInfo()
+	}
+}
