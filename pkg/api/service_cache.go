@@ -15,6 +15,10 @@ import (
 	"github.com/peterbourgon/fastly-exporter/pkg/filter"
 )
 
+// maxServicePageSize is the maximum amount of results that can be requested
+// from the api.fastly.com/service endpoint.
+const maxServicePageSize = 1000
+
 // Service metadata associated with a single service.
 // Also serves as a DTO for api.fastly.com/service.
 type Service struct {
@@ -92,7 +96,7 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 	begin := time.Now()
 
 	var (
-		uri     = "https://api.fastly.com/service?page=1&per_page=100"
+		uri     = fmt.Sprintf("https://api.fastly.com/service?page=1&per_page=%d", maxServicePageSize)
 		total   = 0
 		nextgen = map[string]Service{}
 	)
