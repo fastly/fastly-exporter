@@ -111,6 +111,7 @@ func (s *Subscriber) RunRealtime(ctx context.Context) error {
 	}
 }
 
+// TODO(pb)
 func (s *Subscriber) RunOrigins(ctx context.Context) error {
 	var ts uint64
 	for {

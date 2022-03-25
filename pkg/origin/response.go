@@ -1,5 +1,6 @@
 package origin
 
+// Response models the origin inspector real-time data from rt.fastly.com.
 type Response struct {
 	Data           []Data `json:"Data"`
 	Timestamp      uint64 `json:"Timestamp"`
@@ -7,15 +8,19 @@ type Response struct {
 	Error          string `json:"Error"`
 }
 
+// Data is the top-level grouping of real-time origin inspector stats.
 type Data struct {
 	Datacenter ByDatacenter `json:"datacenter"`
 	Aggregated ByOrigin     `json:"aggregated"`
 }
 
+// ByDatacenter groups origin inspector stats by datacenter.
 type ByDatacenter map[string]ByOrigin
 
+// ByOrigin groups origin inspector stats by origin.
 type ByOrigin map[string]Stats
 
+// Stats for a specific datacenter and origin.
 type Stats struct {
 	RespBodyBytes       int `json:"resp_body_bytes"`          // Number of body bytes from origin.
 	RespHeaderBytes     int `json:"resp_header_bytes"`        // Number of header bytes from origin.
