@@ -75,7 +75,7 @@ jobs:
       - uses: docker/metadata-action@v3
         id: meta
         with:
-          images: ghcr.io/peterbourgon/fastly-exporter
+          images: ghcr.io/fastly/fastly-exporter
           tags: |
             type=ref,event=branch
             type=ref,event=pr
