@@ -8,10 +8,10 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/google/go-cmp/cmp"
-	"github.com/peterbourgon/fastly-exporter/pkg/api"
-	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/prom"
-	"github.com/peterbourgon/fastly-exporter/pkg/rt"
+	"github.com/fastly/fastly-exporter/pkg/api"
+	"github.com/fastly/fastly-exporter/pkg/filter"
+	"github.com/fastly/fastly-exporter/pkg/prom"
+	"github.com/fastly/fastly-exporter/pkg/rt"
 )
 
 func TestManager(t *testing.T) {

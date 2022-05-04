@@ -1,4 +1,4 @@
-module github.com/peterbourgon/fastly-exporter
+module github.com/fastly/fastly-exporter
 
 go 1.12
 

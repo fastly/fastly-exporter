@@ -1,4 +1,4 @@
-# fastly-exporter [![Latest Release](https://img.shields.io/github/release/peterbourgon/fastly-exporter.svg?style=flat-square)](https://github.com/peterbourgon/fastly-exporter/releases/latest) [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fpeterbourgon%2Ffastly-exporter%2Fbadge%3Fref%3Dmain&style=flat-square)](https://actions-badge.atrox.dev/peterbourgon/fastly-exporter/goto?ref=main)
+# fastly-exporter [![Latest Release](https://img.shields.io/github/release/fastly/fastly-exporter.svg?style=flat-square)](https://github.com/fastly/fastly-exporter/releases/latest) [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ffastly%2Ffastly-exporter%2Fbadge%3Fref%3Dmain&style=flat-square)](https://actions-badge.atrox.dev/fastly/fastly-exporter/goto?ref=main)
 
 This program consumes from the [Fastly Real-time Analytics API][rt] and makes
 the data available to [Prometheus][prom]. It should behave like you expect:
@@ -14,17 +14,17 @@ to service metadata like name and version.
 
 Go to the [releases page][releases].
 
-[releases]: https://github.com/peterbourgon/fastly-exporter/releases
+[releases]: https://github.com/fastly/fastly-exporter/releases
 
 ### Docker
 
-Available on the [packages page][pkg] as [peterbourgon/fastly-exporter][img].
+Available on the [packages page][pkg] as [fastly/fastly-exporter][img].
 
-[pkg]: https://github.com/peterbourgon/fastly-exporter/packages
-[img]: https://github.com/peterbourgon/fastly-exporter/pkgs/container/fastly-exporter
+[pkg]: https://github.com/fastly/fastly-exporter/packages
+[img]: https://github.com/fastly/fastly-exporter/pkgs/container/fastly-exporter
 
 ```sh
-docker pull ghcr.io/peterbourgon/fastly-exporter:latest
+docker pull ghcr.io/fastly/fastly-exporter:latest
 ```
 
 Note that version `latest` will track RCs, alphas, etc. -- always use an
@@ -36,7 +36,7 @@ If you have a working Go installation, you can clone the repo and install the
 binary from any revision, including HEAD.
 
 ```sh
-git clone git@github.com:peterbourgon/fastly-exporter
+git clone git@github.com:fastly/fastly-exporter
 cd fastly-exporter
 go build ./cmd/fastly-exporter
 ./fastly-exporter -h

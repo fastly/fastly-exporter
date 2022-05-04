@@ -3,7 +3,7 @@ package filter_test
 import (
 	"testing"
 
-	"github.com/peterbourgon/fastly-exporter/pkg/filter"
+	"github.com/fastly/fastly-exporter/pkg/filter"
 )
 
 func TestFilter(t *testing.T) {
