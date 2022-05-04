@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/peterbourgon/fastly-exporter/pkg/api"
+	"github.com/fastly/fastly-exporter/pkg/api"
 )
 
 func TestGetNextLink(t *testing.T) {

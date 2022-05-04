@@ -237,7 +237,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/peterbourgon/fastly-exporter/pkg/filter"
+	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/prometheus/client_golang/prometheus"
 )
 `

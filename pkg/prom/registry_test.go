@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/prom"
+	"github.com/fastly/fastly-exporter/pkg/filter"
+	"github.com/fastly/fastly-exporter/pkg/prom"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

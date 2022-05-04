@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/peterbourgon/fastly-exporter/pkg/api"
+	"github.com/fastly/fastly-exporter/pkg/api"
 )
 
 func TestDatacenterCache(t *testing.T) {

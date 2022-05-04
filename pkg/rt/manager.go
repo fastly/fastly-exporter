@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/peterbourgon/fastly-exporter/pkg/gen"
+	"github.com/fastly/fastly-exporter/pkg/gen"
 )
 
 // ServiceIdentifier is a consumer contract for a subscriber manager.

@@ -13,7 +13,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/peterbourgon/fastly-exporter/pkg/gen"
+	"github.com/fastly/fastly-exporter/pkg/gen"
 )
 
 // HTTPClient is a consumer contract for the subscriber.

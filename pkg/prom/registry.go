@@ -11,8 +11,8 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
-	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/gen"
+	"github.com/fastly/fastly-exporter/pkg/filter"
+	"github.com/fastly/fastly-exporter/pkg/gen"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
