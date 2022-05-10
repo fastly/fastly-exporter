@@ -1,8 +1,5 @@
 // Package gen contains generated code that defines the rt.fastly.com API
 // response, the Prometheus metrics we export, and the mapping between them.
-//
-//     cd cmd/fieldgen
-//     go run main.go > ../../pkg/gen/gen.go
-//     gofmt -w ../../pkg/gen/gen.go
-//
 package gen
+
+//go:generate go run ../../cmd/fieldgen/main.go -metrics ../../cmd/fieldgen/exporter_metrics.json -fields ../../cmd/fieldgen/api_fields.json -mappings ../../cmd/fieldgen/mappings.json
