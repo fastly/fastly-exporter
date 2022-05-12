@@ -1,9 +1,10 @@
 package prom
 
 import (
-	"github.com/peterbourgon/fastly-exporter/pkg/filter"
-	"github.com/peterbourgon/fastly-exporter/pkg/origin"
-	"github.com/peterbourgon/fastly-exporter/pkg/realtime"
+	"github.com/fastly/fastly-exporter/pkg/filter"
+	"github.com/fastly/fastly-exporter/pkg/origin"
+	"github.com/fastly/fastly-exporter/pkg/realtime"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 

@@ -10,6 +10,7 @@ import (
 	"github.com/fastly/fastly-exporter/pkg/api"
 	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/fastly/fastly-exporter/pkg/prom"
+	"github.com/fastly/fastly-exporter/pkg/rt"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
