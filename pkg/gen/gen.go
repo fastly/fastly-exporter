@@ -74,6 +74,12 @@ type Datacenter struct {
 	Edge                               uint64            `json:"edge_requests"`
 	EdgeRespBodyBytes                  uint64            `json:"edge_resp_body_bytes"`
 	EdgeRespHeaderBytes                uint64            `json:"edge_resp_header_bytes"`
+	EdgeHit                            uint64            `json:"edge_hit_requests"`
+	EdgeHitRespBodyBytes               uint64            `json:"edge_hit_resp_body_bytes"`
+	EdgeHitRespHeaderBytes             uint64            `json:"edge_hit_resp_header_bytes"`
+	EdgeMiss                           uint64            `json:"edge_miss_requests"`
+	EdgeMissRespBodyBytes              uint64            `json:"edge_miss_resp_body_bytes"`
+	EdgeMissRespHeaderBytes            uint64            `json:"edge_miss_resp_header_bytes"`
 	Errors                             uint64            `json:"errors"`
 	ErrorSubCount                      uint64            `json:"error_sub_count"`
 	ErrorSubTime                       uint64            `json:"error_sub_time"`
@@ -170,6 +176,12 @@ type Datacenter struct {
 	ShieldFetchHeaderBytes             uint64            `json:"shield_fetch_header_bytes"`
 	ShieldFetchRespBodyBytes           uint64            `json:"shield_fetch_resp_body_bytes"`
 	ShieldFetchRespHeaderBytes         uint64            `json:"shield_fetch_resp_header_bytes"`
+	ShieldHit                          uint64            `json:"shield_hit_requests"`
+	ShieldHitRespBodyBytes             uint64            `json:"shield_hit_resp_body_bytes"`
+	ShieldHitRespHeaderBytes           uint64            `json:"shield_hit_resp_header_bytes"`
+	ShieldMiss                         uint64            `json:"shield_miss_requests"`
+	ShieldMissRespBodyBytes            uint64            `json:"shield_miss_resp_body_bytes"`
+	ShieldMissRespHeaderBytes          uint64            `json:"shield_miss_resp_header_bytes"`
 	ShieldRespBodyBytes                uint64            `json:"shield_resp_body_bytes"`
 	ShieldRespHeaderBytes              uint64            `json:"shield_resp_header_bytes"`
 	ShieldRevalidations                uint64            `json:"shield_revalidations"`
@@ -253,6 +265,12 @@ type Metrics struct {
 	ComputeStackLimitExceededTotal       *prometheus.CounterVec
 	DeliverSubCountTotal                 *prometheus.CounterVec
 	DeliverSubTimeTotal                  *prometheus.CounterVec
+	EdgeHitRespBodyBytesTotal            *prometheus.CounterVec
+	EdgeHitRespHeaderBytesTotal          *prometheus.CounterVec
+	EdgeHitsTotal                        *prometheus.CounterVec
+	EdgeMissRespBodyBytesTotal           *prometheus.CounterVec
+	EdgeMissRespHeaderBytesTotal         *prometheus.CounterVec
+	EdgeMissesTotal                      *prometheus.CounterVec
 	EdgeRespBodyBytesTotal               *prometheus.CounterVec
 	EdgeRespHeaderBytesTotal             *prometheus.CounterVec
 	EdgeTotal                            *prometheus.CounterVec
@@ -344,6 +362,12 @@ type Metrics struct {
 	ShieldFetchHeaderBytesTotal          *prometheus.CounterVec
 	ShieldFetchRespBodyBytesTotal        *prometheus.CounterVec
 	ShieldFetchRespHeaderBytesTotal      *prometheus.CounterVec
+	ShieldHitRespBodyBytesTotal          *prometheus.CounterVec
+	ShieldHitRespHeaderBytesTotal        *prometheus.CounterVec
+	ShieldHitsTotal                      *prometheus.CounterVec
+	ShieldMissRespBodyBytesTotal         *prometheus.CounterVec
+	ShieldMissRespHeaderBytesTotal       *prometheus.CounterVec
+	ShieldMissesTotal                    *prometheus.CounterVec
 	ShieldRespBodyBytesTotal             *prometheus.CounterVec
 	ShieldRespHeaderBytesTotal           *prometheus.CounterVec
 	ShieldRevalidationsTotal             *prometheus.CounterVec
@@ -405,6 +429,12 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		ComputeStackLimitExceededTotal:       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_stack_limit_exceeded_total", Help: "Number of times a guest exceeded its stack limit."}, []string{"service_id", "service_name", "datacenter"}),
 		DeliverSubCountTotal:                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "deliver_sub_count_total", Help: "Number of executions of the 'deliver' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		DeliverSubTimeTotal:                  prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "deliver_sub_time_total", Help: "Time spent inside the 'deliver' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
+		EdgeHitRespBodyBytesTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_hit_resp_body_bytes_total", Help: "Body bytes delivered for edge hits."}, []string{"service_id", "service_name", "datacenter"}),
+		EdgeHitRespHeaderBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_hit_resp_header_bytes_total", Help: "Header bytes delivered for edge hits."}, []string{"service_id", "service_name", "datacenter"}),
+		EdgeHitsTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_hit_requests", Help: "Number of requests that resulted in a hit at the edge."}, []string{"service_id", "service_name", "datacenter"}),
+		EdgeMissRespBodyBytesTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_miss_resp_body_bytes_total", Help: "Body bytes delivered for edge misses."}, []string{"service_id", "service_name", "datacenter"}),
+		EdgeMissRespHeaderBytesTotal:         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_miss_resp_header_bytes_total", Help: "Header bytes delivered for edge misses."}, []string{"service_id", "service_name", "datacenter"}),
+		EdgeMissesTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_miss_requests", Help: "Number of requests that resulted in a miss at the edge."}, []string{"service_id", "service_name", "datacenter"}),
 		EdgeRespBodyBytesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_resp_body_bytes_total", Help: "Total body bytes delivered from Fastly to the end user."}, []string{"service_id", "service_name", "datacenter"}),
 		EdgeRespHeaderBytesTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_resp_header_bytes_total", Help: "Total header bytes delivered from Fastly to the end user."}, []string{"service_id", "service_name", "datacenter"}),
 		EdgeTotal:                            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_total", Help: "Number of requests sent by end users to Fastly."}, []string{"service_id", "service_name", "datacenter"}),
@@ -496,6 +526,12 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		ShieldFetchHeaderBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetch_header_bytes_total", Help: "Total request header bytes sent to a shield."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldFetchRespBodyBytesTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetch_resp_body_bytes_total", Help: "Total response body bytes sent from a shield to the edge."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldFetchRespHeaderBytesTotal:      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_fetch_resp_header_bytes_total", Help: "Total response header bytes sent from a shield to the edge."}, []string{"service_id", "service_name", "datacenter"}),
+		ShieldHitRespBodyBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_hit_resp_body_bytes_total", Help: "Body bytes delivered for shield hits."}, []string{"service_id", "service_name", "datacenter"}),
+		ShieldHitRespHeaderBytesTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_hit_resp_header_bytes_total", Help: "Header bytes delivered for shield hits."}, []string{"service_id", "service_name", "datacenter"}),
+		ShieldHitsTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_hit_requests", Help: "Number of requests that resulted in a hit at a shield."}, []string{"service_id", "service_name", "datacenter"}),
+		ShieldMissRespBodyBytesTotal:         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_miss_resp_body_bytes_total", Help: "Body bytes delivered for shield misses."}, []string{"service_id", "service_name", "datacenter"}),
+		ShieldMissRespHeaderBytesTotal:       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_miss_resp_header_bytes_total", Help: "Header bytes delivered for shield misses."}, []string{"service_id", "service_name", "datacenter"}),
+		ShieldMissesTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_miss_requests", Help: "Number of requests that resulted in a miss at a shield."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldRespBodyBytesTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_resp_body_bytes_total", Help: "Total body bytes delivered via a shield."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldRespHeaderBytesTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_resp_header_bytes_total", Help: "Total header bytes delivered via a shield."}, []string{"service_id", "service_name", "datacenter"}),
 		ShieldRevalidationsTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "shield_revalidations_total", Help: "Number of responses received from origin with a 304 status code, in response to an If-Modified-Since or If-None-Match request to a shield. Under regular scenarios, a revalidation will imply a cache hit. However, if using segmented caching this may result in a cache miss."}, []string{"service_id", "service_name", "datacenter"}),
@@ -587,6 +623,12 @@ func Process(response *APIResponse, serviceID, serviceName, serviceVersion strin
 			m.ComputeStackLimitExceededTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeStackLimitExceededTotal))
 			m.DeliverSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DeliverSubCount))
 			m.DeliverSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DeliverSubTime))
+			m.EdgeHitsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeHit))
+			m.EdgeHitRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeHitRespBodyBytes))
+			m.EdgeHitRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeHitRespHeaderBytes))
+			m.EdgeMissesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeMiss))
+			m.EdgeRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeMissRespBodyBytes))
+			m.EdgeRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeMissRespHeaderBytes))
 			m.EdgeRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeRespBodyBytes))
 			m.EdgeRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.EdgeRespHeaderBytes))
 			m.EdgeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Edge))
@@ -678,6 +720,12 @@ func Process(response *APIResponse, serviceID, serviceName, serviceVersion strin
 			m.ShieldFetchHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetchHeaderBytes))
 			m.ShieldFetchRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetchRespBodyBytes))
 			m.ShieldFetchRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldFetchRespHeaderBytes))
+			m.ShieldHitsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldHit))
+			m.ShieldHitRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldHitRespBodyBytes))
+			m.ShieldHitRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldHitRespHeaderBytes))
+			m.ShieldMissesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldMiss))
+			m.ShieldRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldMissRespBodyBytes))
+			m.ShieldRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldMissRespHeaderBytes))
 			m.ShieldRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldRespBodyBytes))
 			m.ShieldRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldRespHeaderBytes))
 			m.ShieldRevalidationsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ShieldRevalidations))
