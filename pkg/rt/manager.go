@@ -5,9 +5,9 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/fastly/fastly-exporter/pkg/gen"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/fastly/fastly-exporter/pkg/gen"
 )
 
 // ServiceIdentifier is a consumer contract for a subscriber manager.

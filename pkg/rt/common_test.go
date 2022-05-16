@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/fastly/fastly-exporter/pkg/api"
+	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
