@@ -1,6 +1,8 @@
 package prom_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -34,10 +36,24 @@ func TestRegistryEndpoints(t *testing.T) {
 	server := httptest.NewServer(registry)
 	defer server.Close()
 
-	get := func(path string) (body string) {
+	type testRequest struct {
+		path   string
+		accept string
+	}
+
+	get := func(tr testRequest) (body string) {
 		t.Helper()
 
-		resp, err := http.Get(server.URL + path)
+		client := &http.Client{}
+
+		req, err := http.NewRequest("GET", server.URL+tr.path, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Add("Accept", tr.accept)
+
+		resp, err := client.Do(req)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -91,19 +107,19 @@ func TestRegistryEndpoints(t *testing.T) {
 	}
 
 	t.Run("index", func(t *testing.T) {
-		body := get("/")
+		body := get(testRequest{path: "/"})
 		expect(strings.Contains(body, "AAA"), "AAA missing")
 		expect(strings.Contains(body, "BBB"), "BBB missing")
 	})
 
 	t.Run("sd", func(t *testing.T) {
-		body := get("/sd")
+		body := get(testRequest{path: "/sd"})
 		expect(strings.Contains(body, "AAA"), "AAA missing")
 		expect(strings.Contains(body, "BBB"), "BBB missing")
 	})
 
 	t.Run("metrics", func(t *testing.T) {
-		body := get("/metrics")
+		body := get(testRequest{path: "/metrics"})
 		want, dont := []string{
 			`fastly_rt_requests_total{datacenter="NYC",service_id="AAA",service_name="Service One"} 1`,
 			`fastly_rt_requests_total{datacenter="NYC",service_id="BBB",service_name="Service Two"} 2`,
@@ -112,7 +128,7 @@ func TestRegistryEndpoints(t *testing.T) {
 	})
 
 	t.Run("metrics?target=AAA", func(t *testing.T) {
-		body := get("/metrics?target=AAA")
+		body := get(testRequest{path: "/metrics?target=AAA"})
 		want, dont := []string{
 			`fastly_rt_requests_total{datacenter="NYC",service_id="AAA",service_name="Service One"} 1`,
 		}, []string{
@@ -122,7 +138,7 @@ func TestRegistryEndpoints(t *testing.T) {
 	})
 
 	t.Run("metrics?target=BBB", func(t *testing.T) {
-		body := get("/metrics?target=BBB")
+		body := get(testRequest{path: "/metrics?target=BBB"})
 		want, dont := []string{
 			`fastly_rt_requests_total{datacenter="NYC",service_id="BBB",service_name="Service Two"} 2`,
 		}, []string{
@@ -132,11 +148,31 @@ func TestRegistryEndpoints(t *testing.T) {
 	})
 
 	t.Run("metrics?target=CCC", func(t *testing.T) {
-		body := get("/metrics?target=CCC")
+		body := get(testRequest{path: "/metrics?target=CCC"})
 		want, dont := []string{}, []string{
 			`fastly_rt_requests_total{datacenter="NYC",service_id="AAA",service_name="Service One"} 1`,
 			`fastly_rt_requests_total{datacenter="NYC",service_id="BBB",service_name="Service Two"} 2`,
 		}
 		checkMetrics(body, want, dont)
 	})
+
+	t.Run("index; accept:text/html", func(t *testing.T) {
+		body := get(testRequest{path: "/", accept: "text/html"})
+		expect(strings.Contains(body, "AAA"), "AAA missing")
+		expect(strings.Contains(body, "BBB"), "BBB missing")
+	})
+
+	t.Run("index; accept:application/json", func(t *testing.T) {
+		body := get(testRequest{path: "/", accept: "application/json"})
+		expect(strings.Contains(body, "AAA"), "AAA missing")
+		expect(strings.Contains(body, "BBB"), "BBB missing")
+		expect(isValidJSON(body), fmt.Sprintf("invalid JSON: %s", body))
+	})
+}
+
+// https://stackoverflow.com/a/36922225
+func isValidJSON(s string) bool {
+	var js json.RawMessage
+
+	return json.Unmarshal([]byte(s), &js) == nil
 }
