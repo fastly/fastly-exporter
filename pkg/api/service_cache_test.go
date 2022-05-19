@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/fastly/fastly-exporter/pkg/api"
 	"github.com/fastly/fastly-exporter/pkg/filter"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestServiceCache(t *testing.T) {

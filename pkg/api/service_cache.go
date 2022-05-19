@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/cespare/xxhash"
+	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/fastly/fastly-exporter/pkg/filter"
 )
 
 // maxServicePageSize is the maximum amount of results that can be requested

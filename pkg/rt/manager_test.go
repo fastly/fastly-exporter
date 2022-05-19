@@ -5,13 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
-	"github.com/google/go-cmp/cmp"
 	"github.com/fastly/fastly-exporter/pkg/api"
 	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/fastly/fastly-exporter/pkg/prom"
 	"github.com/fastly/fastly-exporter/pkg/rt"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestManager(t *testing.T) {
