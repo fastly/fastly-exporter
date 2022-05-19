@@ -111,14 +111,16 @@ func (s *Subscriber) RunRealtime(ctx context.Context) error {
 	}
 }
 
-// TODO(pb)
+// RunOrigins polls rt.fastly.com, collecting real-time origin stats and
+// emitting them to the Prometheus metrics provided to the constructor. The
+// method returns when the context is canceled, or a non-recoverable error
+// occurs.
 func (s *Subscriber) RunOrigins(ctx context.Context) error {
 	var ts uint64
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-
 		default:
 			name, _, delay, newts, fatal := s.queryOrigins(ctx, ts)
 			if fatal != nil {
