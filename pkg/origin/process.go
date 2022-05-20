@@ -38,7 +38,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 				// "of 60s and above". Based on that we use the lower bound of
 				// each stat as the observed value, except for the first bucket
 				// which we yolo as 500us because 0 doesn't really make sense??
-				for v, n := range map[float64]int{
+				for v, n := range map[float64]uint64{
 					60.00:  stats.Latency60000plus,
 					10.00:  stats.Latency10000to60000,
 					5.000:  stats.Latency5000to10000,
@@ -52,7 +52,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 					0.001:  stats.Latency1to5,
 					0.0005: stats.Latency0to1, // yolo
 				} {
-					for i := 0; i < n; i++ {
+					for i := 0; uint64(i) < n; i++ {
 						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin).Observe(v)
 					}
 				}
