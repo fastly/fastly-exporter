@@ -18,9 +18,10 @@ func TestServiceCache(t *testing.T) {
 	)
 
 	for _, testcase := range []struct {
-		name    string
-		options []api.ServiceCacheOption
-		want    []api.Service
+		name     string
+		options  []api.ServiceCacheOption
+		response string
+		want     []api.Service
 	}{
 		{
 			name:    "no options",
@@ -33,14 +34,16 @@ func TestServiceCache(t *testing.T) {
 			want:    []api.Service{s1, s2},
 		},
 		{
-			name:    "allowlist one",
-			options: []api.ServiceCacheOption{api.WithExplicitServiceIDs(s1.ID)},
-			want:    []api.Service{s1},
+			name:     "allowlist one",
+			options:  []api.ServiceCacheOption{api.WithExplicitServiceIDs(s1.ID)},
+			response: serviceResponseSingleService,
+			want:     []api.Service{s1},
 		},
 		{
-			name:    "allowlist none",
-			options: []api.ServiceCacheOption{api.WithExplicitServiceIDs("nonexistant service ID")},
-			want:    []api.Service{},
+			name:     "allowlist none",
+			options:  []api.ServiceCacheOption{api.WithExplicitServiceIDs("nonexistant service ID")},
+			response: serviceResponseSingleService,
+			want:     []api.Service{},
 		},
 		{
 			name:    "exact name include match",
@@ -108,22 +111,30 @@ func TestServiceCache(t *testing.T) {
 			want:    []api.Service{}, // verified experimentally
 		},
 		{
-			name:    "shard and service ID passing",
-			options: []api.ServiceCacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
-			want:    []api.Service{s1},
+			name:     "shard and service ID passing",
+			options:  []api.ServiceCacheOption{api.WithShard(1, 3), api.WithExplicitServiceIDs(s1.ID)},
+			response: serviceResponseSingleService,
+			want:     []api.Service{s1},
 		},
 		{
-			name:    "shard and service ID failing",
-			options: []api.ServiceCacheOption{api.WithShard(2, 3), api.WithExplicitServiceIDs(s1.ID)},
-			want:    []api.Service{},
+			name:     "shard and service ID failing",
+			options:  []api.ServiceCacheOption{api.WithShard(2, 3), api.WithExplicitServiceIDs(s1.ID)},
+			response: serviceResponseSingleService,
+			want:     []api.Service{},
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
+			var response = serviceResponseLarge
+			if testcase.response != "" {
+				response = testcase.response
+			}
+
 			var (
 				ctx    = context.Background()
-				client = fixedResponseClient{code: 200, response: serviceResponseLarge}
+				client = fixedResponseClient{code: 200, response: response}
 				cache  = api.NewServiceCache(client, "irrelevant_token", testcase.options...)
 			)
+
 			if err := cache.Refresh(ctx); err != nil {
 				t.Fatal(err)
 			}
@@ -313,3 +324,93 @@ const serviceResponseLarge = `[
 		"id": "XXXXXXXXXXXXXXXXXXXXXX"
 	}
 ]`
+
+const serviceResponseSingleService = `{
+	"version": 5,
+	"name": "My first service",
+	"created_at": "2018-07-26T06:13:51Z",
+	"versions": [
+		{
+			"testing": false,
+			"locked": true,
+			"number": 1,
+			"active": false,
+			"service_id": "AbcDef123ghiJKlmnOPsq",
+			"staging": false,
+			"created_at": "2018-07-26T06:13:51Z",
+			"deleted_at": null,
+			"comment": "",
+			"updated_at": "2018-07-26T06:17:27Z",
+			"deployed": false
+		},
+		{
+			"testing": false,
+			"locked": true,
+			"number": 2,
+			"active": false,
+			"service_id": "AbcDef123ghiJKlmnOPsq",
+			"staging": false,
+			"created_at": "2018-07-26T06:15:47Z",
+			"deleted_at": null,
+			"comment": "",
+			"updated_at": "2018-07-26T20:30:44Z",
+			"deployed": false
+		},
+		{
+			"testing": false,
+			"locked": true,
+			"number": 3,
+			"active": false,
+			"service_id": "AbcDef123ghiJKlmnOPsq",
+			"staging": false,
+			"created_at": "2018-07-26T20:28:26Z",
+			"deleted_at": null,
+			"comment": "",
+			"updated_at": "2018-07-26T20:48:40Z",
+			"deployed": false
+		},
+		{
+			"testing": false,
+			"locked": true,
+			"number": 4,
+			"active": false,
+			"service_id": "AbcDef123ghiJKlmnOPsq",
+			"staging": false,
+			"created_at": "2018-07-26T20:47:58Z",
+			"deleted_at": null,
+			"comment": "",
+			"updated_at": "2018-07-26T21:35:32Z",
+			"deployed": false
+		},
+		{
+			"testing": false,
+			"locked": true,
+			"number": 5,
+			"active": true,
+			"service_id": "AbcDef123ghiJKlmnOPsq",
+			"staging": false,
+			"created_at": "2018-07-26T21:35:23Z",
+			"deleted_at": null,
+			"comment": "",
+			"updated_at": "2018-07-26T21:35:33Z",
+			"deployed": false
+		},
+		{
+			"testing": false,
+			"locked": false,
+			"number": 6,
+			"active": false,
+			"service_id": "AbcDef123ghiJKlmnOPsq",
+			"staging": false,
+			"created_at": "2018-09-28T04:02:22Z",
+			"deleted_at": null,
+			"comment": "",
+			"updated_at": "2018-09-28T04:05:33Z",
+			"deployed": false
+		}
+	],
+	"comment": "",
+	"customer_id": "1a2a3a4azzzzzzzzzzzzzz",
+	"updated_at": "2018-10-24T06:31:41Z",
+	"id": "AbcDef123ghiJKlmnOPsq"
+}`

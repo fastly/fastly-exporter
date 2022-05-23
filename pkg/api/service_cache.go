@@ -101,6 +101,15 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 		nextgen = map[string]Service{}
 	)
 
+	var serviceID string
+	if len(c.serviceIDs) == 1 {
+		for k := range c.serviceIDs {
+			serviceID = k
+		}
+
+		uri = fmt.Sprintf("https://api.fastly.com/service/%s", serviceID)
+	}
+
 	for {
 		req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
 		if err != nil {
@@ -120,9 +129,19 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 		}
 
 		var response []Service
-		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-			return fmt.Errorf("error decoding API services response: %w", err)
+		if serviceID != "" {
+			var svc Service
+			if err := json.NewDecoder(resp.Body).Decode(&svc); err != nil {
+				return fmt.Errorf("error decoding API service response: %w", err)
+			}
+
+			response = []Service{svc}
+		} else {
+			if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+				return fmt.Errorf("error decoding API services response: %w", err)
+			}
 		}
+
 		total += len(response)
 
 		for _, s := range response {
