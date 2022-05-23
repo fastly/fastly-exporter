@@ -28,23 +28,23 @@ var programVersion = "dev"
 
 func main() {
 	var (
-		token             string
-		listen            string
-		namespace         string
-		subsystem         string
-		serviceShard      string
-		serviceIDs        stringslice
-		serviceAllowlist  stringslice
-		serviceBlocklist  stringslice
-		metricAllowlist   stringslice
-		metricBlocklist   stringslice
-		datacenterRefresh time.Duration
-		serviceRefresh    time.Duration
-		apiTimeout        time.Duration
-		rtTimeout         time.Duration
-		debug             bool
-		versionFlag       bool
-		configFileExample bool
+		token               string
+		listen              string
+		namespace           string
+		deprecatedSubsystem string
+		serviceShard        string
+		serviceIDs          stringslice
+		serviceAllowlist    stringslice
+		serviceBlocklist    stringslice
+		metricAllowlist     stringslice
+		metricBlocklist     stringslice
+		datacenterRefresh   time.Duration
+		serviceRefresh      time.Duration
+		apiTimeout          time.Duration
+		rtTimeout           time.Duration
+		debug               bool
+		versionFlag         bool
+		configFileExample   bool
 	)
 
 	fs := flag.NewFlagSet("fastly-exporter", flag.ContinueOnError)
@@ -52,7 +52,7 @@ func main() {
 		fs.StringVar(&token, "token", "", "Fastly API token (required)")
 		fs.StringVar(&listen, "listen", "127.0.0.1:8080", "listen address for Prometheus metrics")
 		fs.StringVar(&namespace, "namespace", "fastly", "Prometheus namespace")
-		fs.StringVar(&subsystem, "subsystem", "rt", "Prometheus subsystem")
+		fs.StringVar(&deprecatedSubsystem, "subsystem", "rt", "DEPRECATED -- will be fixed to 'rt' in a future version")
 		fs.StringVar(&serviceShard, "service-shard", "", "if set, only include services whose hashed IDs modulo m equal n-1 (format 'n/m')")
 		fs.Var(&serviceIDs, "service", "if set, only include this service ID (repeatable)")
 		fs.Var(&serviceAllowlist, "service-allowlist", "if set, only include services whose names match this regex (repeatable)")
@@ -92,11 +92,7 @@ func main() {
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
-		loglevel := level.AllowInfo()
-		if debug {
-			loglevel = level.AllowDebug()
-		}
-		logger = level.NewFilter(logger, loglevel)
+		logger = level.NewFilter(logger, getLogLevel(debug))
 	}
 
 	if token == "" {
@@ -104,6 +100,16 @@ func main() {
 			level.Error(logger).Log("err", "-token or FASTLY_API_TOKEN is required")
 			os.Exit(1)
 		}
+	}
+
+	switch deprecatedSubsystem {
+	case "rt":
+		// good
+	case "origin":
+		level.Error(logger).Log("err", "-subsystem cannot be 'origin'")
+		os.Exit(1)
+	default:
+		level.Warn(logger).Log("msg", "-subsystem is DEPRECATED and will be fixed to 'rt' in a future version")
 	}
 
 	fs.Visit(func(f *flag.Flag) {
@@ -278,7 +284,7 @@ func main() {
 
 	var defaultGatherers prometheus.Gatherers
 	{
-		dcs, err := datacenterCache.Gatherer(namespace, subsystem)
+		dcs, err := datacenterCache.Gatherer(namespace, deprecatedSubsystem)
 		if err != nil {
 			level.Error(apiLogger).Log("during", "create datacenter gatherer", "err", err)
 			os.Exit(1)
@@ -288,7 +294,7 @@ func main() {
 
 	var registry *prom.Registry
 	{
-		registry = prom.NewRegistry(programVersion, namespace, subsystem, metricNameFilter, defaultGatherers)
+		registry = prom.NewRegistry(programVersion, namespace, deprecatedSubsystem, metricNameFilter, defaultGatherers)
 	}
 
 	var manager *rt.Manager
@@ -458,3 +464,12 @@ service-blocklist Dev
 
 metric-blocklist imgopto
 `)
+
+func getLogLevel(debug bool) level.Option {
+	switch {
+	case debug:
+		return level.AllowDebug()
+	default:
+		return level.AllowInfo()
+	}
+}

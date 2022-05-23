@@ -2,10 +2,11 @@ package rt
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"sync"
 
-	"github.com/fastly/fastly-exporter/pkg/gen"
+	"github.com/fastly/fastly-exporter/pkg/prom"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 )
@@ -20,12 +21,12 @@ type ServiceIdentifier interface {
 // the method of the prom.Registry which yields a set of Prometheus metrics for
 // a specific service ID.
 type MetricsProvider interface {
-	MetricsFor(serviceID string) *gen.Metrics
+	MetricsFor(serviceID string) *prom.Metrics
 }
 
-// Manager owns a set of subscribers. When refreshed, it will ask a
-// ServiceIdentifier for a set of service IDs that should be active, and manage
-// the lifecycles of the corresponding subscribers.
+// Manager owns a set of subscribers. On refresh, it asks the ServiceIdentifier
+// for a set of service IDs that should be active, and manages the lifecycles of
+// the corresponding subscribers.
 type Manager struct {
 	ids               ServiceIdentifier
 	client            HTTPClient
@@ -116,9 +117,11 @@ func (m *Manager) StopAll() {
 		level.Info(m.logger).Log("service_id", id, "subscriber", "stop")
 		irq := m.managed[id]
 		irq.cancel()
-		err := <-irq.done
+		for i := 0; i < cap(irq.done); i++ {
+			err := <-irq.done
+			level.Debug(m.logger).Log("service_id", id, "goroutine", i+1, "of", cap(irq.done), "interrupt", err)
+		}
 		delete(m.managed, id)
-		level.Debug(m.logger).Log("service_id", id, "interrupt", err)
 	}
 }
 
@@ -126,11 +129,10 @@ func (m *Manager) spawn(serviceID string) interrupt {
 	var (
 		subscriber  = NewSubscriber(m.client, m.token, serviceID, m.metrics.MetricsFor(serviceID), m.subscriberOptions...)
 		ctx, cancel = context.WithCancel(context.Background())
-		done        = make(chan error, 1)
+		done        = make(chan error, 2)
 	)
-	go func() {
-		done <- subscriber.Run(ctx)
-	}()
+	go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()
+	go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
 	return interrupt{cancel, done}
 }
 

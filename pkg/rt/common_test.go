@@ -59,10 +59,9 @@ func assertMetricOutput(t *testing.T, want, have map[string]float64) {
 		}
 	}
 
-	t.Log(cmp.Diff(want, have))
-
 	if !cmp.Equal(want, have) {
 		t.Error(cmp.Diff(want, have))
+		t.Logf("metric output was different")
 	}
 }
 
