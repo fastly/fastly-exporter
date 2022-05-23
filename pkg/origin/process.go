@@ -52,7 +52,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 					0.001:  stats.Latency1to5,
 					0.0005: stats.Latency0to1, // yolo
 				} {
-					for i := 0; uint64(i) < n; i++ {
+					for i := uint64(0); i < n; i++ {
 						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin).Observe(v)
 					}
 				}
