@@ -20,7 +20,7 @@ type Metrics struct {
 	LatencySeconds       *prometheus.HistogramVec
 }
 
-// NewMetrics returns a new set of metrics registered to the registrar.
+// NewMetrics returns a new set of metrics registered to the Registerer.
 // Only metrics whose names pass the name filter are registered.
 func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometheus.Registerer) *Metrics {
 	m := Metrics{
