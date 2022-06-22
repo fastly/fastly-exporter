@@ -76,6 +76,7 @@ type Datacenter struct {
 	HitSubCount                        uint64            `json:"hit_sub_count"`
 	HitSubTime                         uint64            `json:"hit_sub_time"`
 	HTTP2                              uint64            `json:"http2"`
+	HTTP3                              uint64            `json:"http3"`
 	ImgOpto                            uint64            `json:"imgopto"`
 	ImgOptoRespBodyBytes               uint64            `json:"imgopto_resp_body_bytes"`
 	ImgOptoRespHeaderBytes             uint64            `json:"imgopto_resp_header_bytes"`
