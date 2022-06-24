@@ -70,6 +70,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 			m.HitSubCountTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitSubCount))
 			m.HitSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitSubTime))
 			m.HTTP2Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HTTP2))
+			m.HTTP3Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HTTP3))
 			m.ImgOptoRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgOptoRespBodyBytes))
 			m.ImgOptoRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgOptoRespHeaderBytes))
 			m.ImgOptoShieldRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgOptoShieldRespBodyBytes))

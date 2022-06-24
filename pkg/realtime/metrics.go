@@ -68,6 +68,7 @@ type Metrics struct {
 	HitSubCountTotal                     *prometheus.CounterVec
 	HitSubTimeTotal                      *prometheus.CounterVec
 	HTTP2Total                           *prometheus.CounterVec
+	HTTP3Total                           *prometheus.CounterVec
 	ImgOptoRespBodyBytesTotal            *prometheus.CounterVec
 	ImgOptoRespHeaderBytesTotal          *prometheus.CounterVec
 	ImgOptoShieldRespBodyBytesTotal      *prometheus.CounterVec
@@ -218,6 +219,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		HitSubCountTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hit_sub_count_total", Help: "Number of executions of the 'hit' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		HitSubTimeTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hit_sub_time_total", Help: "Time spent inside the 'hit' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		HTTP2Total:                           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http2_total", Help: "Number of requests received over HTTP2."}, []string{"service_id", "service_name", "datacenter"}),
+		HTTP3Total:                           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http3_total", Help: "Number of requests received over HTTP3."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoRespBodyBytesTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_resp_body_bytes_total", Help: "Total body bytes delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoRespHeaderBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_resp_header_bytes_total", Help: "Total header bytes delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoShieldRespBodyBytesTotal:      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_shield_resp_body_bytes_total", Help: "Total body bytes delivered via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
