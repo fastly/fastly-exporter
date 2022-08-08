@@ -37,11 +37,13 @@ Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 
 Once Helm is set up properly, add the repo as follows:
 
-```console
+```sh
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 ```
 
-```console
+And install:
+
+```sh
 helm upgrade --install fastly-exporter prometheus-fastly-exporter --namespace monitoring --set token="fastly_api_token"
 ```
 
