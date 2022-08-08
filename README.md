@@ -61,6 +61,21 @@ and make them available as Prometheus metrics on [127.0.0.1:8080/metrics][local]
 
 [local]: http://127.0.0.1:8080/metrics
 
+### Helm chart
+
+[Helm](https://helm.sh) must be installed to use the [prometheus-community/fastly-exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prom-label-proxy) chart.
+Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
+
+Once Helm is set up properly, add the repo as follows:
+
+```console
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+```
+
+```console
+helm upgrade --install fastly-exporter prometheus-fastly-exporter --namespace monitoring --set token="fastly_api_token"
+```
+
 ### Filtering services
 
 By default, all services available to your token will be exported. You can
