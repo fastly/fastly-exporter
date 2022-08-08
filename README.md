@@ -30,6 +30,23 @@ docker pull ghcr.io/fastly/fastly-exporter:latest
 Note that version `latest` will track RCs, alphas, etc. -- always use an
 explicit version in production.
 
+### Helm chart
+
+[Helm](https://helm.sh) must be installed to use the [prometheus-community/fastly-exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-fastly-exporter) chart.
+Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
+
+Once Helm is set up properly, add the repo as follows:
+
+```sh
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+```
+
+And install:
+
+```sh
+helm upgrade --install fastly-exporter prometheus-fastly-exporter --namespace monitoring --set token="fastly_api_token"
+```
+
 ### Source
 
 If you have a working Go installation, you can clone the repo and install the
