@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.12
 	github.com/oklog/run v1.1.0
-	github.com/peterbourgon/ff/v3 v3.1.2
+	github.com/peterbourgon/ff/v3 v3.3.0
 	github.com/prometheus/client_golang v1.12.2
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
 )
