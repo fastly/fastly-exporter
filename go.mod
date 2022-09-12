@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/go-kit/log v0.2.1
-	github.com/google/go-cmp v0.5.8
+	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.12
 	github.com/oklog/run v1.1.0
