@@ -131,10 +131,6 @@ func main() {
 			level.Warn(logger).Log("msg", "-service-refresh cannot be shorter than 15s; setting it to 15s")
 			serviceRefresh = 15 * time.Second
 		}
-		if serviceRefresh > 10*time.Minute {
-			level.Warn(logger).Log("msg", "-service-refresh cannot be longer than 10m; setting it to 10m")
-			serviceRefresh = 10 * time.Minute
-		}
 		if apiTimeout < 5*time.Second {
 			level.Warn(logger).Log("msg", "-api-timeout cannot be shorter than 5s; setting it to 5s")
 			apiTimeout = 5 * time.Second
