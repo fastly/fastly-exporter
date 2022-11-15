@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -40,6 +41,7 @@ type Subscriber struct {
 	metrics     *prom.Metrics
 	postprocess func()
 	logger      log.Logger
+	delayCount  int
 }
 
 // SubscriberOption provides some additional behavior to a subscriber.
@@ -188,8 +190,10 @@ func (s *Subscriber) queryRealtime(ctx context.Context, ts uint64) (currentName 
 	case http.StatusOK:
 		level.Debug(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
 		if strings.Contains(apiErr, "No data available") {
+			delay = s.delay()
 			result = apiResultNoData
 		} else {
+			s.delayCount = 0
 			result = apiResultSuccess
 		}
 		realtime.Process(&response, s.serviceID, name, version, s.metrics.Realtime)
@@ -250,8 +254,10 @@ func (s *Subscriber) queryOrigins(ctx context.Context, ts uint64) (currentName s
 	case http.StatusOK:
 		level.Debug(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
 		if strings.Contains(apiErr, "No data available") {
+			delay = s.delay()
 			result = apiResultNoData
 		} else {
+			s.delayCount = 0
 			result = apiResultSuccess
 		}
 		origin.Process(&response, s.serviceID, name, version, s.metrics.Origin)
@@ -312,4 +318,19 @@ func levelForError(base log.Logger, err error) log.Logger {
 	default:
 		return nopLogger
 	}
+}
+
+const maxDelayCount = 5
+
+func (s *Subscriber) delay() time.Duration {
+	s.delayCount++
+	if s.delayCount > maxDelayCount {
+		s.delayCount = maxDelayCount
+	}
+
+	return time.Duration(cube(s.delayCount)+((rand.Intn(10)+1)*(s.delayCount))) * time.Second
+}
+
+func cube(i int) int {
+	return i * i * i
 }
