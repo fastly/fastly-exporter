@@ -261,6 +261,11 @@ func main() {
 		datacenterCache = api.NewDatacenterCache(apiClient, token)
 	}
 
+	var productCache *api.ProductCache
+	{
+		productCache = api.NewProductCache(apiClient, token, apiLogger)
+	}
+
 	{
 		var g errgroup.Group
 		g.Go(func() error {
@@ -275,6 +280,13 @@ func main() {
 			}
 			return nil
 		})
+		g.Go(func() error {
+			if err := productCache.Fetch(context.Background()); err != nil {
+				level.Warn(logger).Log("during", "initial fetch of products", "err", err, "msg", "products API unavailable")
+			}
+			return nil
+		})
+
 		g.Wait()
 	}
 
@@ -303,7 +315,7 @@ func main() {
 				rt.WithMetadataProvider(serviceCache),
 			}
 		)
-		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, rtLogger)
+		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, productCache.Products(), rtLogger)
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
 

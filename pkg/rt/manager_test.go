@@ -26,7 +26,8 @@ func TestManager(t *testing.T) {
 		logbuf   = &bytes.Buffer{}
 		logger   = log.NewLogfmtLogger(logbuf)
 		options  = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}
-		manager  = rt.NewManager(cache, client, token, registry, options, level.NewFilter(logger, level.AllowInfo()))
+		products = map[string]bool{}
+		manager  = rt.NewManager(cache, client, token, registry, options, products, level.NewFilter(logger, level.AllowInfo()))
 	)
 
 	assertStringSliceEqual(t, []string{}, manager.Active())

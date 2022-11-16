@@ -33,6 +33,7 @@ type Manager struct {
 	token             string
 	metrics           MetricsProvider
 	subscriberOptions []SubscriberOption
+	products          map[string]bool
 	logger            log.Logger
 
 	mtx     sync.RWMutex
@@ -43,13 +44,14 @@ type Manager struct {
 // regular schedule to keep the set of managed subscribers up-to-date. The HTTP
 // client, token, metrics, and subscriber options parameters are passed thru to
 // constructed subscribers.
-func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, logger log.Logger) *Manager {
+func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, products map[string]bool, logger log.Logger) *Manager {
 	return &Manager{
 		ids:               ids,
 		client:            client,
 		token:             token,
 		metrics:           metrics,
 		subscriberOptions: subscriberOptions,
+		products:          products,
 		logger:            logger,
 
 		managed: map[string]interrupt{},
@@ -126,13 +128,22 @@ func (m *Manager) StopAll() {
 }
 
 func (m *Manager) spawn(serviceID string) interrupt {
+	subCount := 1
+	if m.runOrigins() {
+		subCount++
+	}
+
 	var (
 		subscriber  = NewSubscriber(m.client, m.token, serviceID, m.metrics.MetricsFor(serviceID), m.subscriberOptions...)
 		ctx, cancel = context.WithCancel(context.Background())
-		done        = make(chan error, 2)
+		done        = make(chan error, subCount)
 	)
 	go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()
-	go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
+
+	if m.runOrigins() {
+		go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
+	}
+
 	return interrupt{cancel, done}
 }
 
@@ -143,6 +154,18 @@ func (m *Manager) managedIDsWithLock() []string {
 	}
 	sort.Strings(ids)
 	return ids
+}
+
+func (m *Manager) runOrigins() bool {
+	if v, ok := m.products["origin_inspector"]; ok {
+		if v {
+			return true
+		}
+	} else {
+		// fail open -- if the product API call failed we can still run origin queries.
+		return true
+	}
+	return false
 }
 
 type interrupt struct {
