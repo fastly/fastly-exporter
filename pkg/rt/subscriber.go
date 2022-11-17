@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -33,13 +34,15 @@ type MetadataProvider interface {
 // Subscriber polls rt.fastly.com endpoints for a single service ID. It emits
 // the received stats data to Prometheus metrics.
 type Subscriber struct {
-	client      HTTPClient
-	token       string
-	serviceID   string
-	provider    MetadataProvider
-	metrics     *prom.Metrics
-	postprocess func()
-	logger      log.Logger
+	client       HTTPClient
+	token        string
+	serviceID    string
+	provider     MetadataProvider
+	metrics      *prom.Metrics
+	postprocess  func()
+	logger       log.Logger
+	rtDelayCount int
+	oiDelayCount int
 }
 
 // SubscriberOption provides some additional behavior to a subscriber.
@@ -188,8 +191,10 @@ func (s *Subscriber) queryRealtime(ctx context.Context, ts uint64) (currentName 
 	case http.StatusOK:
 		level.Debug(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
 		if strings.Contains(apiErr, "No data available") {
+			delay = s.rtDelay()
 			result = apiResultNoData
 		} else {
+			s.rtDelayCount = 0
 			result = apiResultSuccess
 		}
 		realtime.Process(&response, s.serviceID, name, version, s.metrics.Realtime)
@@ -250,8 +255,10 @@ func (s *Subscriber) queryOrigins(ctx context.Context, ts uint64) (currentName s
 	case http.StatusOK:
 		level.Debug(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
 		if strings.Contains(apiErr, "No data available") {
+			delay = s.oiDelay()
 			result = apiResultNoData
 		} else {
+			s.oiDelayCount = 0
 			result = apiResultSuccess
 		}
 		origin.Process(&response, s.serviceID, name, version, s.metrics.Origin)
@@ -312,4 +319,28 @@ func levelForError(base log.Logger, err error) log.Logger {
 	default:
 		return nopLogger
 	}
+}
+
+const maxDelayCount = 5
+
+func (s *Subscriber) rtDelay() time.Duration {
+	s.rtDelayCount++
+	if s.rtDelayCount > maxDelayCount {
+		s.rtDelayCount = maxDelayCount
+	}
+
+	return time.Duration(cube(s.rtDelayCount)+((rand.Intn(10)+1)*(s.rtDelayCount))) * time.Second
+}
+
+func (s *Subscriber) oiDelay() time.Duration {
+	s.oiDelayCount++
+	if s.oiDelayCount > maxDelayCount {
+		s.oiDelayCount = maxDelayCount
+	}
+
+	return time.Duration(cube(s.oiDelayCount)+((rand.Intn(10)+1)*(s.oiDelayCount))) * time.Second
+}
+
+func cube(i int) int {
+	return i * i * i
 }
