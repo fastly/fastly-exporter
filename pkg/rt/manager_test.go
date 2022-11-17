@@ -26,7 +26,7 @@ func TestManager(t *testing.T) {
 		logbuf   = &bytes.Buffer{}
 		logger   = log.NewLogfmtLogger(logbuf)
 		options  = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}
-		products = map[string]bool{}
+		products = &api.ProductCache{}
 		manager  = rt.NewManager(cache, client, token, registry, options, products, level.NewFilter(logger, level.AllowInfo()))
 	)
 

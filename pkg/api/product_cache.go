@@ -28,7 +28,7 @@ type ProductCache struct {
 	token  string
 	logger log.Logger
 
-	products map[string]bool
+	products map[string]struct{}
 }
 
 // NewProductCache returns an empty cache of Product information. Use the Fetch method
@@ -38,7 +38,7 @@ func NewProductCache(client HTTPClient, token string, logger log.Logger) *Produc
 		client:   client,
 		token:    token,
 		logger:   logger,
-		products: make(map[string]bool),
+		products: make(map[string]struct{}),
 	}
 }
 
@@ -76,12 +76,16 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 
 		level.Debug(p.logger).Log("product", response.Name, "hasAccess", response.HasAccess)
 
-		p.products[response.Name] = response.HasAccess
+		if response.HasAccess {
+			p.products[response.Name] = struct{}{}
+		}
+
 	}
 	return nil
 }
 
 // Products returns the list of products
-func (p *ProductCache) Products() map[string]bool {
-	return p.products
+func (p *ProductCache) HasAccess(product string) bool {
+	_, ok := p.products[product]
+	return ok
 }

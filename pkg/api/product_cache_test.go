@@ -47,8 +47,10 @@ func TestProductCache(t *testing.T) {
 				t.Fatal(cmp.Diff(want, have))
 			}
 
-			if want, have := testcase.wantProds, cache.Products(); !cmp.Equal(want, have) {
-				t.Fatal(cmp.Diff(want, have))
+			for k, v := range testcase.wantProds {
+				if v != cache.HasAccess(k) {
+					t.Fatalf("expected %v, got %v for %v", v, cache.HasAccess(k), k)
+				}
 			}
 		})
 	}

@@ -315,7 +315,7 @@ func main() {
 				rt.WithMetadataProvider(serviceCache),
 			}
 		)
-		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, productCache.Products(), rtLogger)
+		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, productCache, rtLogger)
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
 

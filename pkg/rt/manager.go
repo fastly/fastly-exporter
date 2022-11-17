@@ -6,6 +6,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/fastly/fastly-exporter/pkg/api"
 	"github.com/fastly/fastly-exporter/pkg/prom"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -33,7 +34,7 @@ type Manager struct {
 	token             string
 	metrics           MetricsProvider
 	subscriberOptions []SubscriberOption
-	products          map[string]bool
+	productCache      *api.ProductCache
 	logger            log.Logger
 
 	mtx     sync.RWMutex
@@ -44,14 +45,14 @@ type Manager struct {
 // regular schedule to keep the set of managed subscribers up-to-date. The HTTP
 // client, token, metrics, and subscriber options parameters are passed thru to
 // constructed subscribers.
-func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, products map[string]bool, logger log.Logger) *Manager {
+func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, productCache *api.ProductCache, logger log.Logger) *Manager {
 	return &Manager{
 		ids:               ids,
 		client:            client,
 		token:             token,
 		metrics:           metrics,
 		subscriberOptions: subscriberOptions,
-		products:          products,
+		productCache:      productCache,
 		logger:            logger,
 
 		managed: map[string]interrupt{},
@@ -129,7 +130,7 @@ func (m *Manager) StopAll() {
 
 func (m *Manager) spawn(serviceID string) interrupt {
 	subCount := 1
-	if m.runOrigins() {
+	if m.productCache.HasAccess("origin_inspector") {
 		subCount++
 	}
 
@@ -140,7 +141,7 @@ func (m *Manager) spawn(serviceID string) interrupt {
 	)
 	go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()
 
-	if m.runOrigins() {
+	if m.productCache.HasAccess("origin_inspector") {
 		go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
 	}
 
@@ -154,18 +155,6 @@ func (m *Manager) managedIDsWithLock() []string {
 	}
 	sort.Strings(ids)
 	return ids
-}
-
-func (m *Manager) runOrigins() bool {
-	if v, ok := m.products["origin_inspector"]; ok {
-		if v {
-			return true
-		}
-	} else {
-		// fail open -- if the product API call failed we can still run origin queries.
-		return true
-	}
-	return false
 }
 
 type interrupt struct {
