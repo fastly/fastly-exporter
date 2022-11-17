@@ -10,15 +10,13 @@ import (
 	"github.com/go-kit/log/level"
 )
 
-// ProductAccess models the response from the Fastly Product Entitlement API
-type ProductAccess struct {
-	Product   `json:"product"`
-	HasAccess bool `json:"has_access"`
-}
 
-// Product models product metadata return from the Fastly Product Entitlement API
+// Product models the response from the Fastly Product Entitlement API
 type Product struct {
-	Name string `json:"id"`
+	HasAccess bool `json:"has_access"`
+	Meta      struct {
+		Name string `json:"id"`
+	} `json:"product"`
 }
 
 // ProductCache fetches product information from the Fastly Product Entitlement API
@@ -47,7 +45,7 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 	var products = []string{"origin_inspector", "domain_inspector"}
 
 	for _, product := range products {
-		uri := fmt.Sprintf("https://api.fastly.com/entitled-products/flonk/%s", product)
+		uri := fmt.Sprintf("https://api.fastly.com/entitled-products/%s", product)
 
 		req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
 
@@ -68,16 +66,16 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 			return NewError(resp)
 		}
 
-		var response ProductAccess
+		var response Product
 
 		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 			return fmt.Errorf("error decoding API product response: %w", err)
 		}
 
-		level.Debug(p.logger).Log("product", response.Name, "hasAccess", response.HasAccess)
+		level.Debug(p.logger).Log("product", response.Meta.Name, "hasAccess", response.HasAccess)
 
 		if response.HasAccess {
-			p.products[response.Name] = struct{}{}
+			p.products[response.Meta.Name] = struct{}{}
 		}
 
 	}
