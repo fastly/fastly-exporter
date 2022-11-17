@@ -43,7 +43,7 @@ func TestProductCache(t *testing.T) {
 			)
 
 			//err
-			if want, have := testcase.wantErr, cache.Fetch(ctx); !cmp.Equal(want, have) {
+			if want, have := testcase.wantErr, cache.Refresh(ctx); !cmp.Equal(want, have) {
 				t.Fatal(cmp.Diff(want, have))
 			}
 

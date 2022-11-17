@@ -42,8 +42,8 @@ func NewProductCache(client HTTPClient, token string, logger log.Logger) *Produc
 	}
 }
 
-// Fetch requests data from the Fastly API and stores data in the cache.
-func (p *ProductCache) Fetch(ctx context.Context) error {
+// Refresh requests data from the Fastly API and stores data in the cache.
+func (p *ProductCache) Refresh(ctx context.Context) error {
 	var products = []string{"origin_inspector", "domain_inspector"}
 
 	for _, product := range products {

@@ -281,7 +281,7 @@ func main() {
 			return nil
 		})
 		g.Go(func() error {
-			if err := productCache.Fetch(context.Background()); err != nil {
+			if err := productCache.Refresh(context.Background()); err != nil {
 				level.Warn(logger).Log("during", "initial fetch of products", "err", err, "msg", "products API unavailable")
 			}
 			return nil
