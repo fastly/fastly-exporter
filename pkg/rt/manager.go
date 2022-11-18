@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/fastly/fastly-exporter/pkg/api"
@@ -71,32 +72,48 @@ func (m *Manager) Refresh() {
 	defer m.mtx.Unlock()
 
 	nextgen := map[string]interrupt{}
-	for _, id := range m.ids.ServiceIDs() {
-		if irq, ok := m.managed[id]; ok {
-			level.Debug(m.logger).Log("service_id", id, "subscriber", "maintain")
-			nextgen[id] = irq // move
-			delete(m.managed, id)
-		} else {
-			level.Info(m.logger).Log("service_id", id, "subscriber", "create")
-			nextgen[id] = m.spawn(id)
+	for _, product := range api.Products {
+		if m.productCache.HasAccess(product) {
+			for _, id := range m.ids.ServiceIDs() {
+				key := id + sep + product
+
+				if irq, ok := m.managed[key]; ok {
+					level.Debug(m.logger).Log("service_id", id, "type", product, "subscriber", "maintain")
+					nextgen[key] = irq // move
+					delete(m.managed, key)
+				} else {
+					level.Info(m.logger).Log("service_id", id, "type", product, "subscriber", "create")
+					nextgen[key] = m.spawn(id, product)
+				}
+			}
 		}
-	}
 
-	for _, id := range m.managedIDsWithLock() {
-		level.Info(m.logger).Log("service_id", id, "subscriber", "stop")
-		irq := m.managed[id]
-		irq.cancel()
-		err := <-irq.done
-		delete(m.managed, id)
-		level.Debug(m.logger).Log("service_id", id, "interrupt", err)
-	}
+		for _, key := range m.managedIDsWithLock() {
+			id, managedProduct := parseKey(key)
+			if managedProduct != product {
+				continue
+			}
 
-	for id, irq := range nextgen {
-		select {
-		default: // still running (good)
-		case err := <-irq.done: // exited (bad)
-			level.Error(m.logger).Log("service_id", id, "interrupt", err, "err", "premature termination", "msg", "will attempt to reconnect on next refresh")
-			delete(nextgen, id)
+			level.Info(m.logger).Log("service_id", id, "type", product, "subscriber", "stop")
+			irq := m.managed[key]
+			irq.cancel()
+			err := <-irq.done
+			delete(m.managed, key)
+			level.Debug(m.logger).Log("service_id", id, "type", product, "interrupt", err)
+		}
+
+		for key, irq := range nextgen {
+			id, managedProduct := parseKey(key)
+			if managedProduct != product {
+				continue
+			}
+
+			select {
+			default: // still running (good)
+			case err := <-irq.done: // exited (bad)
+				level.Error(m.logger).Log("service_id", id, "type", product, "interrupt", err, "err", "premature termination", "msg", "will attempt to reconnect on next refresh")
+				delete(nextgen, key)
+			}
 		}
 	}
 
@@ -116,33 +133,30 @@ func (m *Manager) StopAll() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	for _, id := range m.managedIDsWithLock() {
-		level.Info(m.logger).Log("service_id", id, "subscriber", "stop")
-		irq := m.managed[id]
+	for _, key := range m.managedIDsWithLock() {
+		id, product := parseKey(key)
+		level.Info(m.logger).Log("service_id", id, "type", product, "subscriber", "stop")
+		irq := m.managed[key]
 		irq.cancel()
 		for i := 0; i < cap(irq.done); i++ {
 			err := <-irq.done
 			level.Debug(m.logger).Log("service_id", id, "goroutine", i+1, "of", cap(irq.done), "interrupt", err)
 		}
-		delete(m.managed, id)
+		delete(m.managed, key)
 	}
 }
 
-func (m *Manager) spawn(serviceID string) interrupt {
-	subCount := 1
-	if m.productCache.HasAccess("origin_inspector") {
-		subCount++
-	}
-
+func (m *Manager) spawn(serviceID string, product string) interrupt {
 	var (
 		subscriber  = NewSubscriber(m.client, m.token, serviceID, m.metrics.MetricsFor(serviceID), m.subscriberOptions...)
 		ctx, cancel = context.WithCancel(context.Background())
-		done        = make(chan error, subCount)
+		done        = make(chan error, 1)
 	)
-	go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()
-
-	if m.productCache.HasAccess("origin_inspector") {
+	switch product {
+	case api.OriginInspector:
 		go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
+	default:
+		go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()
 	}
 
 	return interrupt{cancel, done}
@@ -161,3 +175,10 @@ type interrupt struct {
 	cancel func()
 	done   <-chan error
 }
+
+func parseKey(key string) (string, string) {
+	ks := strings.Split(key, sep)
+	return ks[0], ks[1]
+}
+
+const sep = "|"

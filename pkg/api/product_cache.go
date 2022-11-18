@@ -5,11 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 )
 
+const (
+	Default         = "default"
+	OriginInspector = "origin_inspector"
+)
+
+var Products = []string{Default, OriginInspector}
 
 // Product models the response from the Fastly Product Entitlement API
 type Product struct {
@@ -26,6 +33,7 @@ type ProductCache struct {
 	token  string
 	logger log.Logger
 
+	mtx      sync.Mutex
 	products map[string]struct{}
 }
 
@@ -42,9 +50,10 @@ func NewProductCache(client HTTPClient, token string, logger log.Logger) *Produc
 
 // Refresh requests data from the Fastly API and stores data in the cache.
 func (p *ProductCache) Refresh(ctx context.Context) error {
-	var products = []string{"origin_inspector", "domain_inspector"}
-
-	for _, product := range products {
+	for _, product := range Products {
+		if product == Default {
+			continue
+		}
 		uri := fmt.Sprintf("https://api.fastly.com/entitled-products/%s", product)
 
 		req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
@@ -75,15 +84,23 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 		level.Debug(p.logger).Log("product", response.Meta.Name, "hasAccess", response.HasAccess)
 
 		if response.HasAccess {
+			p.mtx.Lock()
 			p.products[response.Meta.Name] = struct{}{}
+			p.mtx.Unlock()
 		}
 
 	}
 	return nil
 }
 
-// Products returns the list of products
+// HassAcces takes a product as a string and returns a boolean
+// based on the reponse from the Product API.
 func (p *ProductCache) HasAccess(product string) bool {
+	if product == Default {
+		return true
+	}
+	p.mtx.Lock()
+	defer p.mtx.Unlock()
 	_, ok := p.products[product]
 	return ok
 }
