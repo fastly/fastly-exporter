@@ -37,7 +37,7 @@ type ProductCache struct {
 	products map[string]struct{}
 }
 
-// NewProductCache returns an empty cache of Product information. Use the Fetch method
+// NewProductCache returns an empty cache of Product information. Use the Refresh method
 // to populate with data.
 func NewProductCache(client HTTPClient, token string, logger log.Logger) *ProductCache {
 	return &ProductCache{
@@ -93,8 +93,8 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 	return nil
 }
 
-// HassAcces takes a product as a string and returns a boolean
-// based on the reponse from the Product API.
+// HasAccess takes a product as a string and returns a boolean
+// based on the response from the Product API.
 func (p *ProductCache) HasAccess(product string) bool {
 	if product == Default {
 		return true
