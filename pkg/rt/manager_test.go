@@ -63,16 +63,16 @@ func TestManager(t *testing.T) {
 	assertStringSliceEqual(t, []string{}, manager.Active())
 
 	if want, have := []string{
-		`level=info service_id=101010 subscriber=create`,
-		`level=info service_id=2f2f2f subscriber=create`,
-		`level=info service_id=3a3b3c subscriber=create`,
-		`level=info service_id=101010 subscriber=stop`,
-		`level=info service_id=3a3b3c subscriber=stop`,
-		`level=info service_id=2f2f2f subscriber=stop`,
-		`level=info service_id=2f2f2f subscriber=create`,
-		`level=info service_id=3a3b3c subscriber=create`,
-		`level=info service_id=2f2f2f subscriber=stop`,
-		`level=info service_id=3a3b3c subscriber=stop`,
+		`level=info service_id=101010 type=default subscriber=create`,
+		`level=info service_id=2f2f2f type=default subscriber=create`,
+		`level=info service_id=3a3b3c type=default subscriber=create`,
+		`level=info service_id=101010 type=default subscriber=stop`,
+		`level=info service_id=3a3b3c type=default subscriber=stop`,
+		`level=info service_id=2f2f2f type=default subscriber=stop`,
+		`level=info service_id=2f2f2f type=default subscriber=create`,
+		`level=info service_id=3a3b3c type=default subscriber=create`,
+		`level=info service_id=2f2f2f type=default subscriber=stop`,
+		`level=info service_id=3a3b3c type=default subscriber=stop`,
 	}, strings.Split(strings.TrimSpace(logbuf.String()), "\n"); !cmp.Equal(want, have) {
 		t.Error(cmp.Diff(want, have))
 	}

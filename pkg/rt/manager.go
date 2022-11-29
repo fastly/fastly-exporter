@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 
 	"github.com/fastly/fastly-exporter/pkg/api"
@@ -26,6 +25,11 @@ type MetricsProvider interface {
 	MetricsFor(serviceID string) *prom.Metrics
 }
 
+type subscriberKey struct {
+	serviceID string
+	product   string
+}
+
 // Manager owns a set of subscribers. On refresh, it asks the ServiceIdentifier
 // for a set of service IDs that should be active, and manages the lifecycles of
 // the corresponding subscribers.
@@ -39,7 +43,7 @@ type Manager struct {
 	logger            log.Logger
 
 	mtx     sync.RWMutex
-	managed map[string]interrupt
+	managed map[subscriberKey]interrupt
 }
 
 // NewManager returns a usable manager. Callers should invoke Refresh on a
@@ -56,7 +60,7 @@ func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics 
 		productCache:      productCache,
 		logger:            logger,
 
-		managed: map[string]interrupt{},
+		managed: map[subscriberKey]interrupt{},
 	}
 }
 
@@ -71,11 +75,11 @@ func (m *Manager) Refresh() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	nextgen := map[string]interrupt{}
+	nextgen := map[subscriberKey]interrupt{}
 	for _, product := range api.Products {
 		if m.productCache.HasAccess(product) {
 			for _, id := range m.ids.ServiceIDs() {
-				key := id + sep + product
+				key := subscriberKey{serviceID: id, product: product}
 
 				if irq, ok := m.managed[key]; ok {
 					level.Debug(m.logger).Log("service_id", id, "type", product, "subscriber", "maintain")
@@ -88,30 +92,28 @@ func (m *Manager) Refresh() {
 			}
 		}
 
-		for _, key := range m.managedIDsWithLock() {
-			id, managedProduct := parseKey(key)
-			if managedProduct != product {
+		for _, key := range m.managedKeysWithLock() {
+			if key.product != product {
 				continue
 			}
 
-			level.Info(m.logger).Log("service_id", id, "type", product, "subscriber", "stop")
+			level.Info(m.logger).Log("service_id", key.serviceID, "type", key.product, "subscriber", "stop")
 			irq := m.managed[key]
 			irq.cancel()
 			err := <-irq.done
 			delete(m.managed, key)
-			level.Debug(m.logger).Log("service_id", id, "type", product, "interrupt", err)
+			level.Debug(m.logger).Log("service_id", key.serviceID, "type", key.product, "interrupt", err)
 		}
 
 		for key, irq := range nextgen {
-			id, managedProduct := parseKey(key)
-			if managedProduct != product {
+			if key.product != product {
 				continue
 			}
 
 			select {
 			default: // still running (good)
 			case err := <-irq.done: // exited (bad)
-				level.Error(m.logger).Log("service_id", id, "type", product, "interrupt", err, "err", "premature termination", "msg", "will attempt to reconnect on next refresh")
+				level.Error(m.logger).Log("service_id", key.serviceID, "type", key.product, "interrupt", err, "err", "premature termination", "msg", "will attempt to reconnect on next refresh")
 				delete(nextgen, key)
 			}
 		}
@@ -122,10 +124,14 @@ func (m *Manager) Refresh() {
 
 // Active returns the set of service IDs currently being managed.
 // Mostly useful for tests.
-func (m *Manager) Active() (serviceIDs []string) {
+func (m *Manager) Active() []string {
+	serviceIDs := []string{}
 	m.mtx.RLock()
 	defer m.mtx.RUnlock()
-	return m.managedIDsWithLock()
+	for _, key := range m.managedKeysWithLock() {
+		serviceIDs = append(serviceIDs, key.serviceID)
+	}
+	return serviceIDs
 }
 
 // StopAll terminates and cleans up all active subscribers.
@@ -133,14 +139,13 @@ func (m *Manager) StopAll() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	for _, key := range m.managedIDsWithLock() {
-		id, product := parseKey(key)
-		level.Info(m.logger).Log("service_id", id, "type", product, "subscriber", "stop")
+	for _, key := range m.managedKeysWithLock() {
+		level.Info(m.logger).Log("service_id", key.serviceID, "type", key.product, "subscriber", "stop")
 		irq := m.managed[key]
 		irq.cancel()
 		for i := 0; i < cap(irq.done); i++ {
 			err := <-irq.done
-			level.Debug(m.logger).Log("service_id", id, "goroutine", i+1, "of", cap(irq.done), "interrupt", err)
+			level.Debug(m.logger).Log("service_id", key.serviceID, "goroutine", i+1, "of", cap(irq.done), "interrupt", err)
 		}
 		delete(m.managed, key)
 	}
@@ -162,23 +167,19 @@ func (m *Manager) spawn(serviceID string, product string) interrupt {
 	return interrupt{cancel, done}
 }
 
-func (m *Manager) managedIDsWithLock() []string {
-	ids := make([]string, 0, len(m.managed))
-	for id := range m.managed {
-		ids = append(ids, id)
+func (m *Manager) managedKeysWithLock() []subscriberKey {
+	keys := make([]subscriberKey, 0, len(m.managed))
+	for key := range m.managed {
+		keys = append(keys, key)
 	}
-	sort.Strings(ids)
-	return ids
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].serviceID < keys[j].serviceID
+	})
+
+	return keys
 }
 
 type interrupt struct {
 	cancel func()
 	done   <-chan error
 }
-
-func parseKey(key string) (string, string) {
-	ks := strings.Split(key, sep)
-	return ks[0], ks[1]
-}
-
-const sep = "|"
