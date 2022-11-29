@@ -34,7 +34,7 @@ type ProductCache struct {
 	logger log.Logger
 
 	mtx      sync.Mutex
-	products map[string]struct{}
+	products map[string]bool
 }
 
 // NewProductCache returns an empty cache of Product information. Use the Refresh method
@@ -44,7 +44,7 @@ func NewProductCache(client HTTPClient, token string, logger log.Logger) *Produc
 		client:   client,
 		token:    token,
 		logger:   logger,
-		products: make(map[string]struct{}),
+		products: make(map[string]bool),
 	}
 }
 
@@ -83,13 +83,12 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 
 		level.Debug(p.logger).Log("product", response.Meta.Name, "hasAccess", response.HasAccess)
 
-		if response.HasAccess {
-			p.mtx.Lock()
-			p.products[response.Meta.Name] = struct{}{}
-			p.mtx.Unlock()
-		}
+		p.mtx.Lock()
+		p.products[response.Meta.Name] = response.HasAccess
+		p.mtx.Unlock()
 
 	}
+
 	return nil
 }
 
@@ -101,6 +100,9 @@ func (p *ProductCache) HasAccess(product string) bool {
 	}
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
-	_, ok := p.products[product]
-	return ok
+	if v, ok := p.products[product]; ok {
+		return v
+	} else {
+		return false
+	}
 }
