@@ -96,7 +96,7 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 	begin := time.Now()
 
 	var (
-		uri     = fmt.Sprintf("https://api.fastly.com/service?page=1&per_page=%d", maxServicePageSize)
+		uri     = fmt.Sprintf("https://api.fastly.com/service?page=1&per_page=%d&filter%%5Binclude_versions%%5D=false", maxServicePageSize)
 		total   = 0
 		nextgen = map[string]Service{}
 	)
