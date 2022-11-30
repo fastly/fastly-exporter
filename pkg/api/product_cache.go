@@ -12,13 +12,16 @@ import (
 )
 
 const (
-	Default         = "default"
+	// Default is the standard real-time stats available to all services
+	Default = "default"
+	// OriginInspector is the product name used to determine access to Origin Inspector via the entitlement API
 	OriginInspector = "origin_inspector"
 )
 
+// Products is the slice of available products supported by real-time stats.
 var Products = []string{Default, OriginInspector}
 
-// Product models the response from the Fastly Product Entitlement API
+// Product models the response from the Fastly Product Entitlement API.
 type Product struct {
 	HasAccess bool `json:"has_access"`
 	Meta      struct {
@@ -57,7 +60,6 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 		uri := fmt.Sprintf("https://api.fastly.com/entitled-products/%s", product)
 
 		req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
-
 		if err != nil {
 			return fmt.Errorf("error constructing API product request: %w", err)
 		}
@@ -65,7 +67,6 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 		req.Header.Set("Fastly-Key", p.token)
 		req.Header.Set("Accept", "application/json")
 		resp, err := p.client.Do(req)
-
 		if err != nil {
 			return fmt.Errorf("error executing API product request: %w", err)
 		}
@@ -102,7 +103,6 @@ func (p *ProductCache) HasAccess(product string) bool {
 	defer p.mtx.Unlock()
 	if v, ok := p.products[product]; ok {
 		return v
-	} else {
-		return true
 	}
+	return true
 }

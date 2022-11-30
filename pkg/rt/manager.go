@@ -17,6 +17,11 @@ type ServiceIdentifier interface {
 	ServiceIDs() []string
 }
 
+// ProductCache represents the api.ProductCache behavior.
+type ProductCache interface {
+	HasAccess(string) bool
+}
+
 // MetricsProvider is a consumer contract for a subscriber manager. It models
 // the method of the prom.Registry which yields a set of Prometheus metrics for
 // a specific service ID.
@@ -38,7 +43,7 @@ type Manager struct {
 	token             string
 	metrics           MetricsProvider
 	subscriberOptions []SubscriberOption
-	productCache      *api.ProductCache
+	productCache      ProductCache
 	logger            log.Logger
 
 	mtx     sync.RWMutex
@@ -49,7 +54,7 @@ type Manager struct {
 // regular schedule to keep the set of managed subscribers up-to-date. The HTTP
 // client, token, metrics, and subscriber options parameters are passed thru to
 // constructed subscribers.
-func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, productCache *api.ProductCache, logger log.Logger) *Manager {
+func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, productCache ProductCache, logger log.Logger) *Manager {
 	return &Manager{
 		ids:               ids,
 		client:            client,

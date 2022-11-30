@@ -30,9 +30,9 @@ func TestGetNextLink(t *testing.T) {
 		},
 
 		{
-			name: `RFC 5988 1`,
+			name:  `RFC 5988 1`,
 			links: []string{` <http://example.com/TheBook/chapter2>; rel="previous";			title="previous chapter"`},
-			want: ``,
+			want:  ``,
 		},
 		{
 			name:  `RFC 5988 2`,

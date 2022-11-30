@@ -25,7 +25,6 @@ func TestProductCache(t *testing.T) {
 			wantErr: nil,
 			wantProds: map[string]bool{
 				"origin_inspector": true,
-				"domain_inspector": false,
 			},
 		},
 		{
@@ -42,7 +41,7 @@ func TestProductCache(t *testing.T) {
 				cache  = api.NewProductCache(client, "irrelevant token", log.NewNopLogger())
 			)
 
-			//err
+			// err
 			if want, have := testcase.wantErr, cache.Refresh(ctx); !cmp.Equal(want, have) {
 				t.Fatal(cmp.Diff(want, have))
 			}
