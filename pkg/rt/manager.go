@@ -3,7 +3,6 @@ package rt
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 
 	"github.com/fastly/fastly-exporter/pkg/api"
@@ -92,7 +91,7 @@ func (m *Manager) Refresh() {
 			}
 		}
 
-		for _, key := range m.managedKeysWithLock() {
+		for key := range m.managed {
 			if key.product != product {
 				continue
 			}
@@ -125,10 +124,10 @@ func (m *Manager) Refresh() {
 // Active returns the set of service IDs currently being managed.
 // Mostly useful for tests.
 func (m *Manager) Active() []string {
-	serviceIDs := []string{}
-	m.mtx.RLock()
-	defer m.mtx.RUnlock()
-	for _, key := range m.managedKeysWithLock() {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+	serviceIDs := make([]string, 0, len(m.managed))
+	for key := range m.managed {
 		serviceIDs = append(serviceIDs, key.serviceID)
 	}
 	return serviceIDs
@@ -139,7 +138,7 @@ func (m *Manager) StopAll() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	for _, key := range m.managedKeysWithLock() {
+	for key := range m.managed {
 		level.Info(m.logger).Log("service_id", key.serviceID, "type", key.product, "subscriber", "stop")
 		irq := m.managed[key]
 		irq.cancel()
@@ -165,18 +164,6 @@ func (m *Manager) spawn(serviceID string, product string) interrupt {
 	}
 
 	return interrupt{cancel, done}
-}
-
-func (m *Manager) managedKeysWithLock() []subscriberKey {
-	keys := make([]subscriberKey, 0, len(m.managed))
-	for key := range m.managed {
-		keys = append(keys, key)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].serviceID < keys[j].serviceID
-	})
-
-	return keys
 }
 
 type interrupt struct {
