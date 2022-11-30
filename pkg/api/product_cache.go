@@ -103,6 +103,6 @@ func (p *ProductCache) HasAccess(product string) bool {
 	if v, ok := p.products[product]; ok {
 		return v
 	} else {
-		return false
+		return true
 	}
 }
