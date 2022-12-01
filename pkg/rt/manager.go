@@ -96,13 +96,12 @@ func (m *Manager) Refresh() {
 			}
 		}
 
-		for key := range m.managed {
+		for key, irq := range m.managed {
 			if key.product != product {
 				continue
 			}
 
 			level.Info(m.logger).Log("service_id", key.serviceID, "type", key.product, "subscriber", "stop")
-			irq := m.managed[key]
 			irq.cancel()
 			err := <-irq.done
 			delete(m.managed, key)
@@ -143,9 +142,8 @@ func (m *Manager) StopAll() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	for key := range m.managed {
+	for key, irq := range m.managed {
 		level.Info(m.logger).Log("service_id", key.serviceID, "type", key.product, "subscriber", "stop")
-		irq := m.managed[key]
 		irq.cancel()
 		for i := 0; i < cap(irq.done); i++ {
 			err := <-irq.done
