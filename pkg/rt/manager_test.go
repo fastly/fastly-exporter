@@ -74,7 +74,7 @@ func TestManager(t *testing.T) {
 	manager.StopAll() // stop s1
 	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
 
-	if want, have := []string{
+	want := []string{
 		`level=info service_id=101010 type=default subscriber=create`,
 		`level=info service_id=2f2f2f type=default subscriber=create`,
 		`level=info service_id=3a3b3c type=default subscriber=create`,
@@ -89,7 +89,12 @@ func TestManager(t *testing.T) {
 		`level=info service_id=101010 type=origin_inspector subscriber=create`,
 		`level=info service_id=101010 type=default subscriber=stop`,
 		`level=info service_id=101010 type=origin_inspector subscriber=stop`,
-	}, strings.Split(strings.TrimSpace(logbuf.String()), "\n"); !cmp.Equal(want, have) {
+	}
+	have := strings.Split(strings.TrimSpace(logbuf.String()), "\n")
+	sort.Strings(want)
+	sort.Strings(have)
+
+	if !cmp.Equal(want, have) {
 		t.Error(cmp.Diff(want, have))
 	}
 }

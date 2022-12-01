@@ -135,6 +135,12 @@ func TestGetNextLink(t *testing.T) {
 			links: []string{`<abc/def?page=2>; rel="next"; datetime="Mon, 03 Sep 2007 14:52:48 GMT"`},
 			want:  `https://zombo.com/retained/path/including_last_element/abc/def?page=2`,
 		},
+		{
+			name:  `rel 5 with []`,
+			req:   `https://zombo.com/with_brackets?filter[foo]=bar`,
+			links: []string{`</with_brackets?filter%5Bfoo%5D=bar&page=2>; rel="next"; datetime="Mon, 03 Sep 2007 14:52:48 GMT"`},
+			want:  `https://zombo.com/with_brackets?filter[foo]=bar&page=2`,
+		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
 			var (

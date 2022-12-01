@@ -16,11 +16,17 @@ func GetNextLink(resp *http.Response) (*url.URL, error) {
 		return nil, fmt.Errorf(`rel="next": no match`)
 	}
 
-	if resp.Request != nil && resp.Request.URL != nil {
-		return resp.Request.URL.Parse(rawuri)
+	unescapedURI, err := url.QueryUnescape(rawuri)
+	// if QueryUnescape() returns an error, just use the rawuri
+	if err != nil {
+		unescapedURI = rawuri
 	}
 
-	return url.Parse(rawuri)
+	if resp.Request != nil && resp.Request.URL != nil {
+		return resp.Request.URL.Parse(unescapedURI)
+	}
+
+	return url.Parse(unescapedURI)
 }
 
 func uriFromLinks(links []string, k, v string) (string, bool) {
