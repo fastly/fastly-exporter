@@ -3,9 +3,9 @@ package rt
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 
+	"github.com/fastly/fastly-exporter/pkg/api"
 	"github.com/fastly/fastly-exporter/pkg/prom"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -17,11 +17,21 @@ type ServiceIdentifier interface {
 	ServiceIDs() []string
 }
 
+// ProductCache represents the api.ProductCache behavior.
+type ProductCache interface {
+	HasAccess(string) bool
+}
+
 // MetricsProvider is a consumer contract for a subscriber manager. It models
 // the method of the prom.Registry which yields a set of Prometheus metrics for
 // a specific service ID.
 type MetricsProvider interface {
 	MetricsFor(serviceID string) *prom.Metrics
+}
+
+type subscriberKey struct {
+	serviceID string
+	product   string
 }
 
 // Manager owns a set of subscribers. On refresh, it asks the ServiceIdentifier
@@ -33,26 +43,28 @@ type Manager struct {
 	token             string
 	metrics           MetricsProvider
 	subscriberOptions []SubscriberOption
+	productCache      ProductCache
 	logger            log.Logger
 
 	mtx     sync.RWMutex
-	managed map[string]interrupt
+	managed map[subscriberKey]interrupt
 }
 
 // NewManager returns a usable manager. Callers should invoke Refresh on a
 // regular schedule to keep the set of managed subscribers up-to-date. The HTTP
 // client, token, metrics, and subscriber options parameters are passed thru to
 // constructed subscribers.
-func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, logger log.Logger) *Manager {
+func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, productCache ProductCache, logger log.Logger) *Manager {
 	return &Manager{
 		ids:               ids,
 		client:            client,
 		token:             token,
 		metrics:           metrics,
 		subscriberOptions: subscriberOptions,
+		productCache:      productCache,
 		logger:            logger,
 
-		managed: map[string]interrupt{},
+		managed: map[subscriberKey]interrupt{},
 	}
 }
 
@@ -67,33 +79,46 @@ func (m *Manager) Refresh() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	nextgen := map[string]interrupt{}
-	for _, id := range m.ids.ServiceIDs() {
-		if irq, ok := m.managed[id]; ok {
-			level.Debug(m.logger).Log("service_id", id, "subscriber", "maintain")
-			nextgen[id] = irq // move
-			delete(m.managed, id)
-		} else {
-			level.Info(m.logger).Log("service_id", id, "subscriber", "create")
-			nextgen[id] = m.spawn(id)
+	nextgen := map[subscriberKey]interrupt{}
+	for _, product := range api.Products {
+		if m.productCache.HasAccess(product) {
+			for _, id := range m.ids.ServiceIDs() {
+				key := subscriberKey{serviceID: id, product: product}
+
+				if irq, ok := m.managed[key]; ok {
+					level.Debug(m.logger).Log("service_id", id, "type", product, "subscriber", "maintain")
+					nextgen[key] = irq // move
+					delete(m.managed, key)
+				} else {
+					level.Info(m.logger).Log("service_id", id, "type", product, "subscriber", "create")
+					nextgen[key] = m.spawn(id, product)
+				}
+			}
 		}
-	}
 
-	for _, id := range m.managedIDsWithLock() {
-		level.Info(m.logger).Log("service_id", id, "subscriber", "stop")
-		irq := m.managed[id]
-		irq.cancel()
-		err := <-irq.done
-		delete(m.managed, id)
-		level.Debug(m.logger).Log("service_id", id, "interrupt", err)
-	}
+		for key, irq := range m.managed {
+			if key.product != product {
+				continue
+			}
 
-	for id, irq := range nextgen {
-		select {
-		default: // still running (good)
-		case err := <-irq.done: // exited (bad)
-			level.Error(m.logger).Log("service_id", id, "interrupt", err, "err", "premature termination", "msg", "will attempt to reconnect on next refresh")
-			delete(nextgen, id)
+			level.Info(m.logger).Log("service_id", key.serviceID, "type", key.product, "subscriber", "stop")
+			irq.cancel()
+			err := <-irq.done
+			delete(m.managed, key)
+			level.Debug(m.logger).Log("service_id", key.serviceID, "type", key.product, "interrupt", err)
+		}
+
+		for key, irq := range nextgen {
+			if key.product != product {
+				continue
+			}
+
+			select {
+			default: // still running (good)
+			case err := <-irq.done: // exited (bad)
+				level.Error(m.logger).Log("service_id", key.serviceID, "type", key.product, "interrupt", err, "err", "premature termination", "msg", "will attempt to reconnect on next refresh")
+				delete(nextgen, key)
+			}
 		}
 	}
 
@@ -102,10 +127,14 @@ func (m *Manager) Refresh() {
 
 // Active returns the set of service IDs currently being managed.
 // Mostly useful for tests.
-func (m *Manager) Active() (serviceIDs []string) {
-	m.mtx.RLock()
-	defer m.mtx.RUnlock()
-	return m.managedIDsWithLock()
+func (m *Manager) Active() []string {
+	m.mtx.Lock()
+	defer m.mtx.Unlock()
+	serviceIDs := make([]string, 0, len(m.managed))
+	for key := range m.managed {
+		serviceIDs = append(serviceIDs, key.serviceID)
+	}
+	return serviceIDs
 }
 
 // StopAll terminates and cleans up all active subscribers.
@@ -113,36 +142,31 @@ func (m *Manager) StopAll() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 
-	for _, id := range m.managedIDsWithLock() {
-		level.Info(m.logger).Log("service_id", id, "subscriber", "stop")
-		irq := m.managed[id]
+	for key, irq := range m.managed {
+		level.Info(m.logger).Log("service_id", key.serviceID, "type", key.product, "subscriber", "stop")
 		irq.cancel()
 		for i := 0; i < cap(irq.done); i++ {
 			err := <-irq.done
-			level.Debug(m.logger).Log("service_id", id, "goroutine", i+1, "of", cap(irq.done), "interrupt", err)
+			level.Debug(m.logger).Log("service_id", key.serviceID, "goroutine", i+1, "of", cap(irq.done), "interrupt", err)
 		}
-		delete(m.managed, id)
+		delete(m.managed, key)
 	}
 }
 
-func (m *Manager) spawn(serviceID string) interrupt {
+func (m *Manager) spawn(serviceID string, product string) interrupt {
 	var (
 		subscriber  = NewSubscriber(m.client, m.token, serviceID, m.metrics.MetricsFor(serviceID), m.subscriberOptions...)
 		ctx, cancel = context.WithCancel(context.Background())
-		done        = make(chan error, 2)
+		done        = make(chan error, 1)
 	)
-	go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()
-	go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
-	return interrupt{cancel, done}
-}
-
-func (m *Manager) managedIDsWithLock() []string {
-	ids := make([]string, 0, len(m.managed))
-	for id := range m.managed {
-		ids = append(ids, id)
+	switch product {
+	case api.OriginInspector:
+		go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
+	default:
+		go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()
 	}
-	sort.Strings(ids)
-	return ids
+
+	return interrupt{cancel, done}
 }
 
 type interrupt struct {

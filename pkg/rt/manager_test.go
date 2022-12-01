@@ -2,6 +2,7 @@ package rt_test
 
 import (
 	"bytes"
+	"sort"
 	"strings"
 	"testing"
 
@@ -26,53 +27,75 @@ func TestManager(t *testing.T) {
 		logbuf   = &bytes.Buffer{}
 		logger   = log.NewLogfmtLogger(logbuf)
 		options  = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}
-		manager  = rt.NewManager(cache, client, token, registry, options, level.NewFilter(logger, level.AllowInfo()))
+		products = newMockProductCache()
+		manager  = rt.NewManager(cache, client, token, registry, options, products, level.NewFilter(logger, level.AllowInfo()))
 	)
 
-	assertStringSliceEqual(t, []string{}, manager.Active())
+	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
+
+	products.update(api.OriginInspector, false)
 
 	cache.update([]api.Service{s1, s2})
 	manager.Refresh() // create s1, create s2
-	assertStringSliceEqual(t, []string{s1.ID, s2.ID}, manager.Active())
+	assertStringSliceEqual(t, []string{s1.ID, s2.ID}, sortedServiceIDs(manager))
 
 	cache.update([]api.Service{s3, s1, s2})
 	manager.Refresh() // create s3
-	assertStringSliceEqual(t, []string{s1.ID, s2.ID, s3.ID}, manager.Active())
+	assertStringSliceEqual(t, []string{s1.ID, s2.ID, s3.ID}, sortedServiceIDs(manager))
 
 	manager.Refresh() // no effect
-	assertStringSliceEqual(t, []string{s1.ID, s2.ID, s3.ID}, manager.Active())
+	assertStringSliceEqual(t, []string{s1.ID, s2.ID, s3.ID}, sortedServiceIDs(manager))
 
 	cache.update([]api.Service{s3, s2})
 	manager.Refresh() // stop s1
-	assertStringSliceEqual(t, []string{s2.ID, s3.ID}, manager.Active())
+	assertStringSliceEqual(t, []string{s2.ID, s3.ID}, sortedServiceIDs(manager))
 
 	cache.update([]api.Service{s2})
 	manager.Refresh() // stop s3
-	assertStringSliceEqual(t, []string{s2.ID}, manager.Active())
+	assertStringSliceEqual(t, []string{s2.ID}, sortedServiceIDs(manager))
 
 	cache.update([]api.Service{})
 	manager.Refresh() // stop s2
-	assertStringSliceEqual(t, []string{}, manager.Active())
+	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
 
 	cache.update([]api.Service{s2, s3})
 	manager.Refresh() // create s2, create s3
-	assertStringSliceEqual(t, []string{s2.ID, s3.ID}, manager.Active())
+	assertStringSliceEqual(t, []string{s2.ID, s3.ID}, sortedServiceIDs(manager))
 
 	manager.StopAll() // stop s2, stop s3
-	assertStringSliceEqual(t, []string{}, manager.Active())
+	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
+
+	products.update(api.OriginInspector, true)
+	cache.update([]api.Service{s1})
+	manager.Refresh() // create s1 with origin inspector
+	// expecting the ID twice -- one for each product
+	assertStringSliceEqual(t, []string{s1.ID, s1.ID}, sortedServiceIDs(manager))
+
+	manager.StopAll() // stop s1
+	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
 
 	if want, have := []string{
-		`level=info service_id=101010 subscriber=create`,
-		`level=info service_id=2f2f2f subscriber=create`,
-		`level=info service_id=3a3b3c subscriber=create`,
-		`level=info service_id=101010 subscriber=stop`,
-		`level=info service_id=3a3b3c subscriber=stop`,
-		`level=info service_id=2f2f2f subscriber=stop`,
-		`level=info service_id=2f2f2f subscriber=create`,
-		`level=info service_id=3a3b3c subscriber=create`,
-		`level=info service_id=2f2f2f subscriber=stop`,
-		`level=info service_id=3a3b3c subscriber=stop`,
+		`level=info service_id=101010 type=default subscriber=create`,
+		`level=info service_id=2f2f2f type=default subscriber=create`,
+		`level=info service_id=3a3b3c type=default subscriber=create`,
+		`level=info service_id=101010 type=default subscriber=stop`,
+		`level=info service_id=3a3b3c type=default subscriber=stop`,
+		`level=info service_id=2f2f2f type=default subscriber=stop`,
+		`level=info service_id=2f2f2f type=default subscriber=create`,
+		`level=info service_id=3a3b3c type=default subscriber=create`,
+		`level=info service_id=2f2f2f type=default subscriber=stop`,
+		`level=info service_id=3a3b3c type=default subscriber=stop`,
+		`level=info service_id=101010 type=default subscriber=create`,
+		`level=info service_id=101010 type=origin_inspector subscriber=create`,
+		`level=info service_id=101010 type=default subscriber=stop`,
+		`level=info service_id=101010 type=origin_inspector subscriber=stop`,
 	}, strings.Split(strings.TrimSpace(logbuf.String()), "\n"); !cmp.Equal(want, have) {
 		t.Error(cmp.Diff(want, have))
 	}
+}
+
+func sortedServiceIDs(m *rt.Manager) []string {
+	serviceIDs := m.Active()
+	sort.Strings(serviceIDs)
+	return serviceIDs
 }

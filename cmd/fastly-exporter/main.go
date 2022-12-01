@@ -1,3 +1,4 @@
+// Package main is the entry point for the fastly-exporter.
 package main
 
 import (
@@ -39,6 +40,7 @@ func main() {
 		metricAllowlist     stringslice
 		metricBlocklist     stringslice
 		datacenterRefresh   time.Duration
+		productRefresh      time.Duration
 		serviceRefresh      time.Duration
 		apiTimeout          time.Duration
 		rtTimeout           time.Duration
@@ -60,6 +62,7 @@ func main() {
 		fs.Var(&metricAllowlist, "metric-allowlist", "if set, only export metrics whose names match this regex (repeatable)")
 		fs.Var(&metricBlocklist, "metric-blocklist", "if set, don't export metrics whose names match this regex (repeatable)")
 		fs.DurationVar(&datacenterRefresh, "datacenter-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated datacenter metadata (10m–1h)")
+		fs.DurationVar(&productRefresh, "product-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated product metadata (10m–1h)")
 		fs.DurationVar(&serviceRefresh, "service-refresh", 1*time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
 		fs.DurationVar(&serviceRefresh, "api-refresh", 1*time.Minute, "DEPRECATED -- use service-refresh instead")
 		fs.DurationVar(&apiTimeout, "api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
@@ -126,6 +129,14 @@ func main() {
 		if datacenterRefresh > 1*time.Hour {
 			level.Warn(logger).Log("msg", "-datacenter-refresh cannot be longer than 1h; setting it to 1h")
 			datacenterRefresh = 1 * time.Hour
+		}
+		if productRefresh < 10*time.Minute {
+			level.Warn(logger).Log("msg", "-product-refresh cannot be shorter than 10m; setting it to 10m")
+			productRefresh = 10 * time.Minute
+		}
+		if productRefresh > 1*time.Hour {
+			level.Warn(logger).Log("msg", "-product-refresh cannot be longer than 1h; setting it to 1h")
+			productRefresh = 1 * time.Hour
 		}
 		if serviceRefresh < 15*time.Second {
 			level.Warn(logger).Log("msg", "-service-refresh cannot be shorter than 15s; setting it to 15s")
@@ -261,6 +272,11 @@ func main() {
 		datacenterCache = api.NewDatacenterCache(apiClient, token)
 	}
 
+	var productCache *api.ProductCache
+	{
+		productCache = api.NewProductCache(apiClient, token, apiLogger)
+	}
+
 	{
 		var g errgroup.Group
 		g.Go(func() error {
@@ -275,6 +291,13 @@ func main() {
 			}
 			return nil
 		})
+		g.Go(func() error {
+			if err := productCache.Refresh(context.Background()); err != nil {
+				level.Warn(logger).Log("during", "initial fetch of products", "err", err, "msg", "products API unavailable, will retry")
+			}
+			return nil
+		})
+
 		g.Wait()
 	}
 
@@ -303,7 +326,7 @@ func main() {
 				rt.WithMetadataProvider(serviceCache),
 			}
 		)
-		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, rtLogger)
+		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, productCache, rtLogger)
 		manager.Refresh() // populate initial subscribers, based on the initial cache refresh
 	}
 
@@ -321,6 +344,29 @@ func main() {
 				case <-ticker.C:
 					if err := datacenterCache.Refresh(ctx); err != nil {
 						level.Warn(apiLogger).Log("during", "datacenter refresh", "err", err, "msg", "the datacenter info metrics may be stale")
+					}
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+		}, func(error) {
+			ticker.Stop()
+			cancel()
+		})
+	}
+	{
+		// Every productRefresh, ask the api.ProductCache to refresh
+		// data from the product entitlement endpoint.
+		var (
+			ctx, cancel = context.WithCancel(context.Background())
+			ticker      = time.NewTicker(productRefresh)
+		)
+		g.Add(func() error {
+			for {
+				select {
+				case <-ticker.C:
+					if err := productCache.Refresh(ctx); err != nil {
+						level.Warn(apiLogger).Log("during", "product refresh", "err", err, "msg", "the product entitlement data may be stale")
 					}
 				case <-ctx.Done():
 					return ctx.Err()

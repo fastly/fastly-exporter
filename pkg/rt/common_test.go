@@ -107,6 +107,37 @@ func (c *mockCache) Metadata(id string) (name string, version int, found bool) {
 //
 //
 
+type mockProductCache struct {
+	mtx      sync.RWMutex
+	products map[string]bool
+}
+
+func newMockProductCache() *mockProductCache {
+	return &mockProductCache{
+		products: make(map[string]bool),
+	}
+}
+
+func (c *mockProductCache) HasAccess(product string) bool {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	if v, ok := c.products[product]; ok {
+		return v
+	}
+	return true
+}
+
+func (c *mockProductCache) update(product string, hasAccess bool) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	c.products[product] = hasAccess
+}
+
+//
+//
+//
+
 type mockRealtimeClient struct {
 	responses     []string
 	next          chan struct{}
