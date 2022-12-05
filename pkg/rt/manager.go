@@ -17,8 +17,8 @@ type ServiceIdentifier interface {
 	ServiceIDs() []string
 }
 
-// ProductCache represents the api.ProductCache behavior.
-type ProductCache interface {
+// HasAccesser models the read side of an api.ProductCache.
+type HasAccesser interface {
 	HasAccess(string) bool
 }
 
@@ -43,7 +43,7 @@ type Manager struct {
 	token             string
 	metrics           MetricsProvider
 	subscriberOptions []SubscriberOption
-	productCache      ProductCache
+	productCache      HasAccesser
 	logger            log.Logger
 
 	mtx     sync.RWMutex
@@ -54,7 +54,7 @@ type Manager struct {
 // regular schedule to keep the set of managed subscribers up-to-date. The HTTP
 // client, token, metrics, and subscriber options parameters are passed thru to
 // constructed subscribers.
-func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, productCache ProductCache, logger log.Logger) *Manager {
+func NewManager(ids ServiceIdentifier, client HTTPClient, token string, metrics MetricsProvider, subscriberOptions []SubscriberOption, productCache HasAccesser, logger log.Logger) *Manager {
 	return &Manager{
 		ids:               ids,
 		client:            client,
@@ -160,7 +160,7 @@ func (m *Manager) spawn(serviceID string, product string) interrupt {
 		done        = make(chan error, 1)
 	)
 	switch product {
-	case api.OriginInspector:
+	case api.ProductOriginInspector:
 		go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
 	default:
 		go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()

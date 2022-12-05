@@ -33,7 +33,7 @@ func TestManager(t *testing.T) {
 
 	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
 
-	products.update(api.OriginInspector, false)
+	products.update(api.ProductOriginInspector, false)
 
 	cache.update([]api.Service{s1, s2})
 	manager.Refresh() // create s1, create s2
@@ -65,7 +65,7 @@ func TestManager(t *testing.T) {
 	manager.StopAll() // stop s2, stop s3
 	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
 
-	products.update(api.OriginInspector, true)
+	products.update(api.ProductOriginInspector, true)
 	cache.update([]api.Service{s1})
 	manager.Refresh() // create s1 with origin inspector
 	// expecting the ID twice -- one for each product

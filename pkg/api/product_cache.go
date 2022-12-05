@@ -12,19 +12,21 @@ import (
 )
 
 const (
-	// Default is the standard real-time stats available to all services
-	Default = "default"
-	// OriginInspector is the product name used to determine access to Origin Inspector via the entitlement API
-	OriginInspector = "origin_inspector"
+	// ProductDefault represents the standard real-time stats available to all services.
+	ProductDefault = "default"
+
+	// ProductOriginInspector represents the origin inspector stats available via the
+	// entitlement API.
+	ProductOriginInspector = "origin_inspector"
 )
 
 // Products is the slice of available products supported by real-time stats.
-var Products = []string{Default, OriginInspector}
+var Products = []string{ProductDefault, ProductOriginInspector}
 
 // Product models the response from the Fastly Product Entitlement API.
 type Product struct {
 	HasAccess bool `json:"has_access"`
-	Meta      struct {
+	Product   struct {
 		Name string `json:"id"`
 	} `json:"product"`
 }
@@ -54,7 +56,7 @@ func NewProductCache(client HTTPClient, token string, logger log.Logger) *Produc
 // Refresh requests data from the Fastly API and stores data in the cache.
 func (p *ProductCache) Refresh(ctx context.Context) error {
 	for _, product := range Products {
-		if product == Default {
+		if product == ProductDefault {
 			continue
 		}
 		uri := fmt.Sprintf("https://api.fastly.com/entitled-products/%s", product)
@@ -82,10 +84,10 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 			return fmt.Errorf("error decoding API product response: %w", err)
 		}
 
-		level.Debug(p.logger).Log("product", response.Meta.Name, "hasAccess", response.HasAccess)
+		level.Debug(p.logger).Log("product", response.Product.Name, "hasAccess", response.HasAccess)
 
 		p.mtx.Lock()
-		p.products[response.Meta.Name] = response.HasAccess
+		p.products[response.Product.Name] = response.HasAccess
 		p.mtx.Unlock()
 
 	}
@@ -96,7 +98,7 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 // HasAccess takes a product as a string and returns a boolean
 // based on the response from the Product API.
 func (p *ProductCache) HasAccess(product string) bool {
-	if product == Default {
+	if product == ProductDefault {
 		return true
 	}
 	p.mtx.Lock()
