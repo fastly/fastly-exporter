@@ -90,6 +90,7 @@ func TestFilter(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
+			testcase := testcase
 			t.Parallel()
 
 			var f filter.Filter
