@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fastly/fastly-exporter/pkg/domain"
 	"github.com/fastly/fastly-exporter/pkg/origin"
 	"github.com/fastly/fastly-exporter/pkg/prom"
 	"github.com/fastly/fastly-exporter/pkg/realtime"
@@ -43,6 +44,7 @@ type Subscriber struct {
 	logger       log.Logger
 	rtDelayCount int
 	oiDelayCount int
+	diDelayCount int
 }
 
 // SubscriberOption provides some additional behavior to a subscriber.
@@ -115,7 +117,7 @@ func (s *Subscriber) RunRealtime(ctx context.Context) error {
 }
 
 // RunOrigins polls rt.fastly.com, collecting real-time origin stats and
-// emitting them to the Prometheus metrics provided to the constructor. The
+// emits them to the Prometheus metrics provided to the constructor. The
 // method returns when the context is canceled, or a non-recoverable error
 // occurs.
 func (s *Subscriber) RunOrigins(ctx context.Context) error {
@@ -126,6 +128,30 @@ func (s *Subscriber) RunOrigins(ctx context.Context) error {
 			return ctx.Err()
 		default:
 			name, _, delay, newts, fatal := s.queryOrigins(ctx, ts)
+			if fatal != nil {
+				return fatal
+			}
+			s.metrics.LastSuccessfulResponse.WithLabelValues(s.serviceID, name).Set(float64(time.Now().Unix()))
+			if delay > 0 {
+				contextSleep(ctx, delay)
+			}
+			ts = newts
+		}
+	}
+}
+
+// RunDomains polls rt.fastly.com, collecting real-time domain stats and
+// emits them to the Prometheus metrics provided to the constructor. The
+// method returns when the context is canceled, or a non-recoverable error
+// occurs.
+func (s *Subscriber) RunDomains(ctx context.Context) error {
+	var ts uint64
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			name, _, delay, newts, fatal := s.queryDomains(ctx, ts)
 			if fatal != nil {
 				return fatal
 			}
@@ -203,7 +229,7 @@ func (s *Subscriber) queryRealtime(ctx context.Context, ts uint64) (currentName 
 	case http.StatusUnauthorized, http.StatusForbidden:
 		result = apiResultError
 		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr, "msg", "token may be invalid")
-		delay = 15 * time.Second
+		delay = 120 * time.Second
 
 	default:
 		result = apiResultUnknown
@@ -267,7 +293,71 @@ func (s *Subscriber) queryOrigins(ctx context.Context, ts uint64) (currentName s
 	case http.StatusUnauthorized, http.StatusForbidden:
 		result = apiResultError
 		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr, "msg", "token may be invalid")
-		delay = 15 * time.Second
+		delay = 120 * time.Second
+
+	default:
+		result = apiResultUnknown
+		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
+		delay = 5 * time.Second
+	}
+
+	return name, result, delay, response.Timestamp, nil
+}
+
+func (s *Subscriber) queryDomains(ctx context.Context, ts uint64) (currentName string, result apiResult, delay time.Duration, newts uint64, fatal error) {
+	name, ver, found := s.provider.Metadata(s.serviceID)
+	version := strconv.Itoa(ver)
+	if !found {
+		name, version = s.serviceID, "unknown"
+	}
+	s.metrics.ServiceInfo.WithLabelValues(s.serviceID, name, version).Set(1)
+
+	// rt.fastly.com blocks until it has data to return.
+	// It's safe to call in a (single-threaded!) hot loop.
+	u := fmt.Sprintf("https://rt.fastly.com/v1/domains/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
+	req, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return name, apiResultError, 0, ts, fmt.Errorf("error constructing domains API request: %w", err)
+	}
+
+	req.Header.Set("Fastly-Key", s.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := s.client.Do(req.WithContext(ctx))
+	if err != nil {
+		levelForError(s.logger, err).Log("during", "execute request", "err", err)
+		return name, apiResultError, time.Second, ts, nil
+	}
+
+	var response domain.Response
+	if err := jsoniterAPI.NewDecoder(resp.Body).Decode(&response); err != nil {
+		resp.Body.Close()
+		level.Error(s.logger).Log("during", "decode response", "err", err)
+		return name, apiResultError, time.Second, ts, nil
+	}
+	resp.Body.Close()
+
+	apiErr := response.Error
+	if apiErr == "" {
+		apiErr = "<none>"
+	}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		level.Debug(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
+		if strings.Contains(apiErr, "No data available") {
+			delay = s.diDelay()
+			result = apiResultNoData
+		} else {
+			s.diDelayCount = 0
+			result = apiResultSuccess
+		}
+		domain.Process(&response, s.serviceID, name, version, s.metrics.Domain)
+		s.postprocess()
+
+	case http.StatusUnauthorized, http.StatusForbidden:
+		result = apiResultError
+		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr, "msg", "token may be invalid")
+		delay = 120 * time.Second
 
 	default:
 		result = apiResultUnknown
@@ -339,6 +429,15 @@ func (s *Subscriber) oiDelay() time.Duration {
 	}
 
 	return time.Duration(cube(s.oiDelayCount)+((rand.Intn(10)+1)*(s.oiDelayCount))) * time.Second
+}
+
+func (s *Subscriber) diDelay() time.Duration {
+	s.diDelayCount++
+	if s.diDelayCount > maxDelayCount {
+		s.diDelayCount = maxDelayCount
+	}
+
+	return time.Duration(cube(s.diDelayCount)+((rand.Intn(10)+1)*(s.diDelayCount))) * time.Second
 }
 
 func cube(i int) int {

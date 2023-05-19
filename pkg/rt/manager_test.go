@@ -34,6 +34,7 @@ func TestManager(t *testing.T) {
 	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
 
 	products.update(api.ProductOriginInspector, false)
+	products.update(api.ProductDomainInspector, false)
 
 	cache.update([]api.Service{s1, s2})
 	manager.Refresh() // create s1, create s2
@@ -71,6 +72,12 @@ func TestManager(t *testing.T) {
 	// expecting the ID twice -- one for each product
 	assertStringSliceEqual(t, []string{s1.ID, s1.ID}, sortedServiceIDs(manager))
 
+	products.update(api.ProductDomainInspector, true)
+	cache.update([]api.Service{s1})
+	manager.Refresh() // create s1 with domain inspector
+	// expecting the ID thrice -- one for each product
+	assertStringSliceEqual(t, []string{s1.ID, s1.ID, s1.ID}, sortedServiceIDs(manager))
+
 	manager.StopAll() // stop s1
 	assertStringSliceEqual(t, []string{}, sortedServiceIDs(manager))
 
@@ -87,8 +94,10 @@ func TestManager(t *testing.T) {
 		`level=info service_id=3a3b3c type=default subscriber=stop`,
 		`level=info service_id=101010 type=default subscriber=create`,
 		`level=info service_id=101010 type=origin_inspector subscriber=create`,
+		`level=info service_id=101010 type=domain_inspector subscriber=create`,
 		`level=info service_id=101010 type=default subscriber=stop`,
 		`level=info service_id=101010 type=origin_inspector subscriber=stop`,
+		`level=info service_id=101010 type=domain_inspector subscriber=stop`,
 	}
 	have := strings.Split(strings.TrimSpace(logbuf.String()), "\n")
 	sort.Strings(want)

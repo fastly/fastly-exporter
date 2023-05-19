@@ -1,6 +1,7 @@
 package prom
 
 import (
+	"github.com/fastly/fastly-exporter/pkg/domain"
 	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/fastly/fastly-exporter/pkg/origin"
 	"github.com/fastly/fastly-exporter/pkg/realtime"
@@ -15,6 +16,7 @@ type Metrics struct {
 	LastSuccessfulResponse *prometheus.GaugeVec
 	Realtime               *realtime.Metrics
 	Origin                 *origin.Metrics
+	Domain                 *domain.Metrics
 }
 
 // NewMetrics returns a fresh Metrics with the provided parameters.
@@ -30,5 +32,6 @@ func NewMetrics(namespace, rtSubsystemWillBeDeprecated string, nameFilter filter
 		LastSuccessfulResponse: lastSuccessfulResponse,
 		Realtime:               realtime.NewMetrics(namespace, rtSubsystemWillBeDeprecated, nameFilter, r), // TODO(pb): change this to "rt" or "realtime"
 		Origin:                 origin.NewMetrics(namespace, "origin", nameFilter, r),
+		Domain:                 domain.NewMetrics(namespace, "domain", nameFilter, r),
 	}
 }

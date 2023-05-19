@@ -18,10 +18,14 @@ const (
 	// ProductOriginInspector represents the origin inspector stats available via the
 	// entitlement API.
 	ProductOriginInspector = "origin_inspector"
+
+	// ProductDomainInspector represents the domain inspector stats available via the
+	// entitlement API.
+	ProductDomainInspector = "domain_inspector"
 )
 
 // Products is the slice of available products supported by real-time stats.
-var Products = []string{ProductDefault, ProductOriginInspector}
+var Products = []string{ProductDefault, ProductOriginInspector, ProductDomainInspector}
 
 // Product models the response from the Fastly Product Entitlement API.
 type Product struct {
