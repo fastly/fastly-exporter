@@ -298,7 +298,7 @@ func (s *Subscriber) queryOrigins(ctx context.Context, ts uint64) (currentName s
 	default:
 		result = apiResultUnknown
 		level.Error(s.logger).Log("status_code", resp.StatusCode, "response_ts", response.Timestamp, "err", apiErr)
-		delay = 5 * time.Second
+		delay = 30 * time.Second
 	}
 
 	return name, result, delay, response.Timestamp, nil
