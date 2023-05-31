@@ -7,6 +7,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 			for domain, stats := range byDomain {
 				m.BackendReqBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.BereqBodyBytes))
 				m.BackendReqHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.BereqHeaderBytes))
+				m.EdgeHitRatio.WithLabelValues(serviceID, serviceName, datacenter, domain).Set(stats.EdgeHitRatio)
 				m.EdgeHitRequestsTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.EdgeHitRequests))
 				m.EdgeMissRequestsTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.EdgeMissRequests))
 				m.EdgeRequestsTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.EdgeRequests))
@@ -15,6 +16,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 				m.OriginFetchRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.OriginFetchRespBodyBytes))
 				m.OriginFetchRespHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.OriginFetchRespHeaderBytes))
 				m.OriginFetches.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.OriginFetches))
+				m.OriginOffload.WithLabelValues(serviceID, serviceName, datacenter, domain).Set(stats.OriginOffload)
 				m.OriginStatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "1xx").Add(float64(stats.OriginStatus1xx))
 				m.OriginStatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "200").Add(float64(stats.OriginStatus200))
 				m.OriginStatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "204").Add(float64(stats.OriginStatus204))
