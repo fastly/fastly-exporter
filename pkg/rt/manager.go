@@ -162,6 +162,8 @@ func (m *Manager) spawn(serviceID string, product string) interrupt {
 	switch product {
 	case api.ProductOriginInspector:
 		go func() { done <- fmt.Errorf("origins: %w", subscriber.RunOrigins(ctx)) }()
+	case api.ProductDomainInspector:
+		go func() { done <- fmt.Errorf("domains: %w", subscriber.RunDomains(ctx)) }()
 	default:
 		go func() { done <- fmt.Errorf("realtime: %w", subscriber.RunRealtime(ctx)) }()
 	}
