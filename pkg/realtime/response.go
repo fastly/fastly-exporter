@@ -196,4 +196,52 @@ type Datacenter struct {
 	WAFBlocked                         uint64            `json:"waf_blocked"`
 	WAFLogged                          uint64            `json:"waf_logged"`
 	WAFPassed                          uint64            `json:"waf_passed"`
+	DDOSActionBlackhole                uint64            `json:"ddos_action_blackhole"`
+	DDOSActionClose                    uint64            `json:"ddos_action_close"`
+	DDOSActionLimitStreamsConnections  uint64            `json:"ddos_action_limit_streams_connections"`
+	DDOSActionLimitStreamsRequests     uint64            `json:"ddos_action_limit_streams_requests"`
+	DDOSActionTarpit                   uint64            `json:"ddos_action_tarpit"`
+	DDOSActionTarpitAccept             uint64            `json:"ddos_action_tarpit_accept"`
+	EdgeHitRequests                    uint64            `json:"edge_hit_requests"`
+	EdgeHitRespBodyBytes               uint64            `json:"edge_hit_resp_body_bytes"`
+	EdgeHitRespHeaderBytes             uint64            `json:"edge_hit_resp_header_bytes"`
+	EdgeMissRequests                   uint64            `json:"edge_miss_requests"`
+	EdgeMissRespBodyBytes              uint64            `json:"edge_miss_resp_body_bytes"`
+	EdgeMissRespHeaderBytes            uint64            `json:"edge_miss_resp_header_bytes"`
+	FanoutBackendReqBodyBytes          uint64            `json:"fanout_bereq_body_bytes"`
+	FanoutBackendReqHeaderBytes        uint64            `json:"fanout_bereq_header_bytes"`
+	FanoutBackendRespBodyBytes         uint64            `json:"fanout_beresp_body_bytes"`
+	FanoutBackendRespHeaderBytes       uint64            `json:"fanout_beresp_header_bytes"`
+	FanoutConnTimeMs                   uint64            `json:"fanout_conn_time_ms"`
+	FanoutRecvPublishes                uint64            `json:"fanout_recv_publishes"`
+	FanoutReqBodyBytes                 uint64            `json:"fanout_req_body_bytes"`
+	FanoutReqHeaderBytes               uint64            `json:"fanout_req_header_bytes"`
+	FanoutRespBodyBytes                uint64            `json:"fanout_resp_body_bytes"`
+	FanoutRespHeaderBytes              uint64            `json:"fanout_resp_header_bytes"`
+	FanoutSendPublishes                uint64            `json:"fanout_send_publishes"`
+	ObjectStoreClassAOperations        uint64            `json:"object_store_class_a_operations"`
+	ObjectStoreClassBOperations        uint64            `json:"object_store_class_b_operations"`
+	ObjectStoreReadRequests            uint64            `json:"object_store_read_requests"`
+	ObjectStoreWriteRequests           uint64            `json:"object_store_write_requests"`
+	OriginCacheFetchRespBodyBytes      uint64            `json:"origin_cache_fetch_resp_body_bytes"`
+	OriginCacheFetchRespHeaderBytes    uint64            `json:"origin_cache_fetch_resp_header_bytes"`
+	OriginCacheFetches                 uint64            `json:"origin_cache_fetches"`
+	ShieldCacheFetches                 uint64            `json:"shield_cache_fetches"`
+	ShieldHitRequests                  uint64            `json:"shield_hit_requests"`
+	ShieldHitRespBodyBytes             uint64            `json:"shield_hit_resp_body_bytes"`
+	ShieldHitRespHeaderBytes           uint64            `json:"shield_hit_resp_header_bytes"`
+	ShieldMissRequests                 uint64            `json:"shield_miss_requests"`
+	ShieldMissRespBodyBytes            uint64            `json:"shield_miss_resp_body_bytes"`
+	ShieldMissRespHeaderBytes          uint64            `json:"shield_miss_resp_header_bytes"`
+	Status406                          uint64            `json:"status_406"`
+	TLSHandshakeSentBytes              uint64            `json:"tls_handshake_sent_bytes"`
+	WebsocketBackendReqBodyBytes       uint64            `json:"websocket_bereq_body_bytes"`
+	WebsocketBackendReqHeaderBytes     uint64            `json:"websocket_bereq_header_bytes"`
+	WebsocketBackendRespBodyBytes      uint64            `json:"websocket_beresp_body_bytes"`
+	WebsocketBackendRespHeaderBytes    uint64            `json:"websocket_beresp_header_bytes"`
+	WebsocketConnTimeMs                uint64            `json:"websocket_conn_time_ms"`
+	WebsocketReqBodyBytes              uint64            `json:"websocket_req_body_bytes"`
+	WebsocketReqHeaderBytes            uint64            `json:"websocket_req_header_bytes"`
+	WebsocketRespBodyBytes             uint64            `json:"websocket_resp_body_bytes"`
+	WebsocketRespHeaderBytes           uint64            `json:"websocket_resp_header_bytes"`
 }
