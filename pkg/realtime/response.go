@@ -45,8 +45,8 @@ type Datacenter struct {
 	ComputeRAMUsed                     uint64            `json:"compute_ram_used"`
 	ComputeReqBodyBytesTotal           uint64            `json:"compute_req_body_bytes"`
 	ComputeReqHeaderBytesTotal         uint64            `json:"compute_req_header_bytes"`
-	ComputeRequests                    uint64            `json:"compute_requests"`
 	ComputeRequestTimeMilliseconds     uint64            `json:"compute_request_time_ms"`
+	ComputeRequests                    uint64            `json:"compute_requests"`
 	ComputeResourceLimitExceedTotal    uint64            `json:"compute_resource_limit_exceeded"`
 	ComputeRespBodyBytesTotal          uint64            `json:"compute_resp_body_bytes"`
 	ComputeRespHeaderBytesTotal        uint64            `json:"compute_resp_header_bytes"`
@@ -57,26 +57,50 @@ type Datacenter struct {
 	ComputeRespStatus5xx               uint64            `json:"compute_resp_status_5xx"`
 	ComputeRuntimeErrorsTotal          uint64            `json:"compute_runtime_errors"`
 	ComputeStackLimitExceededTotal     uint64            `json:"compute_stack_limit_exceeded"`
+	DDOSActionBlackhole                uint64            `json:"ddos_action_blackhole"`
+	DDOSActionClose                    uint64            `json:"ddos_action_close"`
+	DDOSActionLimitStreamsConnections  uint64            `json:"ddos_action_limit_streams_connections"`
+	DDOSActionLimitStreamsRequests     uint64            `json:"ddos_action_limit_streams_requests"`
+	DDOSActionTarpit                   uint64            `json:"ddos_action_tarpit"`
+	DDOSActionTarpitAccept             uint64            `json:"ddos_action_tarpit_accept"`
 	DeliverSubCount                    uint64            `json:"deliver_sub_count"`
 	DeliverSubTime                     uint64            `json:"deliver_sub_time"`
 	Edge                               uint64            `json:"edge_requests"`
+	EdgeHitRequests                    uint64            `json:"edge_hit_requests"`
+	EdgeHitRespBodyBytes               uint64            `json:"edge_hit_resp_body_bytes"`
+	EdgeHitRespHeaderBytes             uint64            `json:"edge_hit_resp_header_bytes"`
+	EdgeMissRequests                   uint64            `json:"edge_miss_requests"`
+	EdgeMissRespBodyBytes              uint64            `json:"edge_miss_resp_body_bytes"`
+	EdgeMissRespHeaderBytes            uint64            `json:"edge_miss_resp_header_bytes"`
 	EdgeRespBodyBytes                  uint64            `json:"edge_resp_body_bytes"`
 	EdgeRespHeaderBytes                uint64            `json:"edge_resp_header_bytes"`
-	Errors                             uint64            `json:"errors"`
 	ErrorSubCount                      uint64            `json:"error_sub_count"`
 	ErrorSubTime                       uint64            `json:"error_sub_time"`
+	Errors                             uint64            `json:"errors"`
+	FanoutBackendReqBodyBytes          uint64            `json:"fanout_bereq_body_bytes"`
+	FanoutBackendReqHeaderBytes        uint64            `json:"fanout_bereq_header_bytes"`
+	FanoutBackendRespBodyBytes         uint64            `json:"fanout_beresp_body_bytes"`
+	FanoutBackendRespHeaderBytes       uint64            `json:"fanout_beresp_header_bytes"`
+	FanoutConnTimeMs                   uint64            `json:"fanout_conn_time_ms"`
+	FanoutRecvPublishes                uint64            `json:"fanout_recv_publishes"`
+	FanoutReqBodyBytes                 uint64            `json:"fanout_req_body_bytes"`
+	FanoutReqHeaderBytes               uint64            `json:"fanout_req_header_bytes"`
+	FanoutRespBodyBytes                uint64            `json:"fanout_resp_body_bytes"`
+	FanoutRespHeaderBytes              uint64            `json:"fanout_resp_header_bytes"`
+	FanoutSendPublishes                uint64            `json:"fanout_send_publishes"`
 	FetchSubCount                      uint64            `json:"fetch_sub_count"`
 	FetchSubTime                       uint64            `json:"fetch_sub_time"`
+	HTTP2                              uint64            `json:"http2"`
+	HTTP3                              uint64            `json:"http3"`
 	HashSubCount                       uint64            `json:"hash_sub_count"`
 	HashSubTime                        uint64            `json:"hash_sub_time"`
 	HeaderSize                         uint64            `json:"header_size"`
 	HitRespBodyBytes                   uint64            `json:"hit_resp_body_bytes"`
-	Hits                               uint64            `json:"hits"`
-	HitsTime                           float64           `json:"hits_time"`
 	HitSubCount                        uint64            `json:"hit_sub_count"`
 	HitSubTime                         uint64            `json:"hit_sub_time"`
-	HTTP2                              uint64            `json:"http2"`
-	HTTP3                              uint64            `json:"http3"`
+	Hits                               uint64            `json:"hits"`
+	HitsTime                           float64           `json:"hits_time"`
+	IPv6                               uint64            `json:"ipv6"`
 	ImgOpto                            uint64            `json:"imgopto"`
 	ImgOptoRespBodyBytes               uint64            `json:"imgopto_resp_body_bytes"`
 	ImgOptoRespHeaderBytes             uint64            `json:"imgopto_resp_header_bytes"`
@@ -94,29 +118,14 @@ type Datacenter struct {
 	ImgVideoShieldFrames               uint64            `json:"imgvideo_shield_frames"`
 	ImgVideoShieldRespBodyBytes        uint64            `json:"imgvideo_shield_resp_body_bytes"`
 	ImgVideoShieldRespHeaderBytes      uint64            `json:"imgvideo_shield_resp_header_bytes"`
-	IPv6                               uint64            `json:"ipv6"`
 	LogBytes                           uint64            `json:"log_bytes"`
 	Logging                            uint64            `json:"logging"`
-	Misses                             uint64            `json:"miss"`
 	MissHistogram                      map[string]uint64 `json:"miss_histogram"`
 	MissRespBodyBytes                  uint64            `json:"miss_resp_body_bytes"`
 	MissSubCount                       uint64            `json:"miss_sub_count"`
 	MissSubTime                        uint64            `json:"miss_sub_time"`
 	MissTime                           float64           `json:"miss_time"`
-	ObjectSize100k                     uint64            `json:"object_size_100k"`
-	ObjectSize100m                     uint64            `json:"object_size_100m"`
-	ObjectSize10k                      uint64            `json:"object_size_10k"`
-	ObjectSize10m                      uint64            `json:"object_size_10m"`
-	ObjectSize1g                       uint64            `json:"object_size_1g"`
-	ObjectSize1k                       uint64            `json:"object_size_1k"`
-	ObjectSize1m                       uint64            `json:"object_size_1m"`
-	ObjectSizeOther                    uint64            `json:"object_size_other"`
-	OriginFetchBodyBytes               uint64            `json:"origin_fetch_body_bytes"`
-	OriginFetches                      uint64            `json:"origin_fetches"`
-	OriginFetchHeaderBytes             uint64            `json:"origin_fetch_header_bytes"`
-	OriginFetchRespBodyBytes           uint64            `json:"origin_fetch_resp_body_bytes"`
-	OriginFetchRespHeaderBytes         uint64            `json:"origin_fetch_resp_header_bytes"`
-	OriginRevalidations                uint64            `json:"origin_revalidations"`
+	Misses                             uint64            `json:"miss"`
 	OTFP                               uint64            `json:"otfp"`
 	OTFPDeliverTime                    uint64            `json:"otfp_deliver_time"`
 	OTFPManifest                       uint64            `json:"otfp_manifests"`
@@ -130,12 +139,33 @@ type Datacenter struct {
 	OTFPTransformRespBodyBytes         uint64            `json:"otfp_transform_resp_body_bytes"`
 	OTFPTransformRespHeaderBytes       uint64            `json:"otfp_transform_resp_header_bytes"`
 	OTFPTransformTime                  uint64            `json:"otfp_transform_time"`
-	Passes                             uint64            `json:"pass"`
+	ObjectSize100k                     uint64            `json:"object_size_100k"`
+	ObjectSize100m                     uint64            `json:"object_size_100m"`
+	ObjectSize10k                      uint64            `json:"object_size_10k"`
+	ObjectSize10m                      uint64            `json:"object_size_10m"`
+	ObjectSize1g                       uint64            `json:"object_size_1g"`
+	ObjectSize1k                       uint64            `json:"object_size_1k"`
+	ObjectSize1m                       uint64            `json:"object_size_1m"`
+	ObjectSizeOther                    uint64            `json:"object_size_other"`
+	ObjectStoreClassAOperations        uint64            `json:"object_store_class_a_operations"`
+	ObjectStoreClassBOperations        uint64            `json:"object_store_class_b_operations"`
+	ObjectStoreReadRequests            uint64            `json:"object_store_read_requests"`
+	ObjectStoreWriteRequests           uint64            `json:"object_store_write_requests"`
+	OriginCacheFetchRespBodyBytes      uint64            `json:"origin_cache_fetch_resp_body_bytes"`
+	OriginCacheFetchRespHeaderBytes    uint64            `json:"origin_cache_fetch_resp_header_bytes"`
+	OriginCacheFetches                 uint64            `json:"origin_cache_fetches"`
+	OriginFetchBodyBytes               uint64            `json:"origin_fetch_body_bytes"`
+	OriginFetchHeaderBytes             uint64            `json:"origin_fetch_header_bytes"`
+	OriginFetchRespBodyBytes           uint64            `json:"origin_fetch_resp_body_bytes"`
+	OriginFetchRespHeaderBytes         uint64            `json:"origin_fetch_resp_header_bytes"`
+	OriginFetches                      uint64            `json:"origin_fetches"`
+	OriginRevalidations                uint64            `json:"origin_revalidations"`
+	PCI                                uint64            `json:"pci"`
 	PassRespBodyBytes                  uint64            `json:"pass_resp_body_bytes"`
 	PassSubCount                       uint64            `json:"pass_sub_count"`
 	PassSubTime                        uint64            `json:"pass_sub_time"`
 	PassTime                           float64           `json:"pass_time"`
-	PCI                                uint64            `json:"pci"`
+	Passes                             uint64            `json:"pass"`
 	Pipe                               uint64            `json:"pipe"`
 	PipeSubCount                       uint64            `json:"pipe_sub_count"`
 	PipeSubTime                        uint64            `json:"pipe_sub_time"`
@@ -154,11 +184,18 @@ type Datacenter struct {
 	SegBlockOriginFetches              uint64            `json:"segblock_origin_fetches"`
 	SegBlockShieldFetches              uint64            `json:"segblock_shield_fetches"`
 	Shield                             uint64            `json:"shield"`
+	ShieldCacheFetches                 uint64            `json:"shield_cache_fetches"`
 	ShieldFetchBodyBytes               uint64            `json:"shield_fetch_body_bytes"`
-	ShieldFetches                      uint64            `json:"shield_fetches"`
 	ShieldFetchHeaderBytes             uint64            `json:"shield_fetch_header_bytes"`
 	ShieldFetchRespBodyBytes           uint64            `json:"shield_fetch_resp_body_bytes"`
 	ShieldFetchRespHeaderBytes         uint64            `json:"shield_fetch_resp_header_bytes"`
+	ShieldFetches                      uint64            `json:"shield_fetches"`
+	ShieldHitRequests                  uint64            `json:"shield_hit_requests"`
+	ShieldHitRespBodyBytes             uint64            `json:"shield_hit_resp_body_bytes"`
+	ShieldHitRespHeaderBytes           uint64            `json:"shield_hit_resp_header_bytes"`
+	ShieldMissRequests                 uint64            `json:"shield_miss_requests"`
+	ShieldMissRespBodyBytes            uint64            `json:"shield_miss_resp_body_bytes"`
+	ShieldMissRespHeaderBytes          uint64            `json:"shield_miss_resp_header_bytes"`
 	ShieldRespBodyBytes                uint64            `json:"shield_resp_body_bytes"`
 	ShieldRespHeaderBytes              uint64            `json:"shield_resp_header_bytes"`
 	ShieldRevalidations                uint64            `json:"shield_revalidations"`
@@ -175,6 +212,7 @@ type Datacenter struct {
 	Status401                          uint64            `json:"status_401"`
 	Status403                          uint64            `json:"status_403"`
 	Status404                          uint64            `json:"status_404"`
+	Status406                          uint64            `json:"status_406"`
 	Status416                          uint64            `json:"status_416"`
 	Status429                          uint64            `json:"status_429"`
 	Status4xx                          uint64            `json:"status_4xx"`
@@ -187,6 +225,7 @@ type Datacenter struct {
 	Status5xx                          uint64            `json:"status_5xx"`
 	Synths                             uint64            `json:"synth"`
 	TLS                                uint64            `json:"tls"`
+	TLSHandshakeSentBytes              uint64            `json:"tls_handshake_sent_bytes"`
 	TLSv10                             uint64            `json:"tls_v10"`
 	TLSv11                             uint64            `json:"tls_v11"`
 	TLSv12                             uint64            `json:"tls_v12"`
@@ -196,4 +235,13 @@ type Datacenter struct {
 	WAFBlocked                         uint64            `json:"waf_blocked"`
 	WAFLogged                          uint64            `json:"waf_logged"`
 	WAFPassed                          uint64            `json:"waf_passed"`
+	WebsocketBackendReqBodyBytes       uint64            `json:"websocket_bereq_body_bytes"`
+	WebsocketBackendReqHeaderBytes     uint64            `json:"websocket_bereq_header_bytes"`
+	WebsocketBackendRespBodyBytes      uint64            `json:"websocket_beresp_body_bytes"`
+	WebsocketBackendRespHeaderBytes    uint64            `json:"websocket_beresp_header_bytes"`
+	WebsocketConnTimeMs                uint64            `json:"websocket_conn_time_ms"`
+	WebsocketReqBodyBytes              uint64            `json:"websocket_req_body_bytes"`
+	WebsocketReqHeaderBytes            uint64            `json:"websocket_req_header_bytes"`
+	WebsocketRespBodyBytes             uint64            `json:"websocket_resp_body_bytes"`
+	WebsocketRespHeaderBytes           uint64            `json:"websocket_resp_header_bytes"`
 }
