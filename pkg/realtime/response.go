@@ -118,6 +118,8 @@ type Datacenter struct {
 	ImgVideoShieldFrames               uint64            `json:"imgvideo_shield_frames"`
 	ImgVideoShieldRespBodyBytes        uint64            `json:"imgvideo_shield_resp_body_bytes"`
 	ImgVideoShieldRespHeaderBytes      uint64            `json:"imgvideo_shield_resp_header_bytes"`
+	KVStoreClassAOperations            uint64            `json:"kv_store_class_a_operations"`
+	KVStoreClassBOperations            uint64            `json:"kv_store_class_b_operations"`
 	LogBytes                           uint64            `json:"log_bytes"`
 	Logging                            uint64            `json:"logging"`
 	MissHistogram                      map[string]uint64 `json:"miss_histogram"`
@@ -147,10 +149,6 @@ type Datacenter struct {
 	ObjectSize1k                       uint64            `json:"object_size_1k"`
 	ObjectSize1m                       uint64            `json:"object_size_1m"`
 	ObjectSizeOther                    uint64            `json:"object_size_other"`
-	ObjectStoreClassAOperations        uint64            `json:"object_store_class_a_operations"`
-	ObjectStoreClassBOperations        uint64            `json:"object_store_class_b_operations"`
-	ObjectStoreReadRequests            uint64            `json:"object_store_read_requests"`
-	ObjectStoreWriteRequests           uint64            `json:"object_store_write_requests"`
 	OriginCacheFetchRespBodyBytes      uint64            `json:"origin_cache_fetch_resp_body_bytes"`
 	OriginCacheFetchRespHeaderBytes    uint64            `json:"origin_cache_fetch_resp_header_bytes"`
 	OriginCacheFetches                 uint64            `json:"origin_cache_fetches"`
