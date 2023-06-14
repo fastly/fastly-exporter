@@ -134,7 +134,7 @@ func main() {
 			level.Warn(logger).Log("msg", "-product-refresh cannot be shorter than 10m; setting it to 10m")
 			productRefresh = 10 * time.Minute
 		}
-		if productRefresh > 1*time.Hour {
+		if productRefresh > 24*time.Hour {
 			level.Warn(logger).Log("msg", "-product-refresh cannot be longer than 24h; setting it to 24h")
 			productRefresh = 24 * time.Hour
 		}
