@@ -27,9 +27,6 @@ type Datacenter struct {
 	AttackRespSynthBytes               uint64            `json:"attack_resp_synth_bytes"`
 	BackendReqBodyBytes                uint64            `json:"bereq_body_bytes"`
 	BackendReqHeaderBytes              uint64            `json:"bereq_header_bytes"`
-	Billed                             uint64            `json:"billed"`
-	BilledBodyBytes                    uint64            `json:"billed_body_bytes"`
-	BilledHeaderBytes                  uint64            `json:"billed_header_bytes"`
 	Blacklisted                        uint64            `json:"blacklist"`
 	BodySize                           uint64            `json:"body_size"`
 	ComputeBackendReqBodyBytesTotal    uint64            `json:"compute_bereq_body_bytes"`

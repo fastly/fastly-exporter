@@ -22,9 +22,6 @@ type Metrics struct {
 	AttackRespSynthBytesTotal              *prometheus.CounterVec
 	BackendReqBodyBytesTotal               *prometheus.CounterVec
 	BackendReqHeaderBytesTotal             *prometheus.CounterVec
-	BilledBodyBytesTotal                   *prometheus.CounterVec
-	BilledHeaderBytesTotal                 *prometheus.CounterVec
-	BilledTotal                            *prometheus.CounterVec
 	BlacklistedTotal                       *prometheus.CounterVec
 	BodySizeTotal                          *prometheus.CounterVec
 	ComputeBackendReqBodyBytesTotal        *prometheus.CounterVec
@@ -220,9 +217,6 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		AttackRespSynthBytesTotal:              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "attack_resp_synth_bytes_total", Help: "Total bytes delivered for requests that triggered a WAF rule and returned a synthetic response."}, []string{"service_id", "service_name", "datacenter"}),
 		BackendReqBodyBytesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bereq_body_bytes_total", Help: "Total body bytes sent to origin."}, []string{"service_id", "service_name", "datacenter"}),
 		BackendReqHeaderBytesTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bereq_header_bytes_total", Help: "Total header bytes sent to origin."}, []string{"service_id", "service_name", "datacenter"}),
-		BilledBodyBytesTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "billed_body_bytes_total", Help: "TODO"}, []string{"service_id", "service_name", "datacenter"}),
-		BilledHeaderBytesTotal:                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "billed_header_bytes_total", Help: "TODO"}, []string{"service_id", "service_name", "datacenter"}),
-		BilledTotal:                            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "billed_total", Help: "TODO"}, []string{"service_id", "service_name", "datacenter"}),
 		BlacklistedTotal:                       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "blacklist_total", Help: "TODO"}, []string{"service_id", "service_name", "datacenter"}),
 		BodySizeTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "body_size_total", Help: "Total body bytes delivered (alias for resp_body_bytes)."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeBackendReqBodyBytesTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_bereq_body_bytes_total", Help: "Total body bytes sent to backends (origins) by Compute@Edge."}, []string{"service_id", "service_name", "datacenter"}),
