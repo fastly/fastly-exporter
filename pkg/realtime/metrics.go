@@ -107,6 +107,8 @@ type Metrics struct {
 	ImgVideoShieldRespHeaderBytesTotal     *prometheus.CounterVec
 	ImgVideoShieldTotal                    *prometheus.CounterVec
 	ImgVideoTotal                          *prometheus.CounterVec
+	KVStoreClassAOperationsTotal           *prometheus.CounterVec
+	KVStoreClassBOperationsTotal           *prometheus.CounterVec
 	LogBytesTotal                          *prometheus.CounterVec
 	LoggingTotal                           *prometheus.CounterVec
 	MissDurationSeconds                    *prometheus.HistogramVec
@@ -129,10 +131,6 @@ type Metrics struct {
 	OTFPTransformTimeTotal                 *prometheus.CounterVec
 	OTFPTransformTotal                     *prometheus.CounterVec
 	ObjectSizeBytes                        *prometheus.HistogramVec
-	ObjectStoreClassAOperationsTotal       *prometheus.CounterVec
-	ObjectStoreClassBOperationsTotal       *prometheus.CounterVec
-	ObjectStoreReadRequestsTotal           *prometheus.CounterVec
-	ObjectStoreWriteRequestsTotal          *prometheus.CounterVec
 	OriginCacheFetchRespBodyBytesTotal     *prometheus.CounterVec
 	OriginCacheFetchRespHeaderBytesTotal   *prometheus.CounterVec
 	OriginCacheFetchesTotal                *prometheus.CounterVec
@@ -302,6 +300,8 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		ImgVideoShieldRespHeaderBytesTotal:     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_shield_resp_header_bytes_total", Help: "Total header bytes of video delivered via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgVideoShieldTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_shield_total", Help: "Number of video responses that came via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgVideoTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_total", Help: "Number of video responses that came via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
+		KVStoreClassAOperationsTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "kv_store_class_a_operations_total", Help: "The total number of class a operations for the KV store."}, []string{"service_id", "service_name", "datacenter"}),
+		KVStoreClassBOperationsTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "kv_store_class_b_operations_total", Help: "The total number of class b operations for the KV store."}, []string{"service_id", "service_name", "datacenter"}),
 		LogBytesTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "log_bytes_total", Help: "Total log bytes sent."}, []string{"service_id", "service_name", "datacenter"}),
 		LoggingTotal:                           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "logging_total", Help: "Number of log lines sent."}, []string{"service_id", "service_name", "datacenter"}),
 		MissDurationSeconds:                    prometheus.NewHistogramVec(prometheus.HistogramOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_duration_seconds", Help: "Histogram of time spent processing cache misses (in seconds).", Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 60}}, []string{"service_id", "service_name", "datacenter"}),
@@ -324,10 +324,6 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		OTFPTransformTimeTotal:                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "otfp_transform_resp_header_bytes_total", Help: "Total body bytes of transforms delivered from the Fastly On-the-Fly Packager."}, []string{"service_id", "service_name", "datacenter"}),
 		OTFPTransformTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "otfp_transform_time_total", Help: "Total amount of time spent performing transforms from the Fastly On-the-Fly Packager."}, []string{"service_id", "service_name", "datacenter"}),
 		ObjectSizeBytes:                        prometheus.NewHistogramVec(prometheus.HistogramOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_size_bytes", Help: "Histogram of count of objects served, bucketed by object size range.", Buckets: []float64{1024, 10240, 102400, 1.024e+06, 1.024e+07, 1.024e+08, 1.024e+09}}, []string{"service_id", "service_name", "datacenter"}),
-		ObjectStoreClassAOperationsTotal:       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_store_class_a_operations_total", Help: "The total number of class a operations for the object store."}, []string{"service_id", "service_name", "datacenter"}),
-		ObjectStoreClassBOperationsTotal:       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_store_class_b_operations_total", Help: "The total number of class b operations for the object store."}, []string{"service_id", "service_name", "datacenter"}),
-		ObjectStoreReadRequestsTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_store_read_requests_total", Help: "Use object_store_class_b_operations."}, []string{"service_id", "service_name", "datacenter"}),
-		ObjectStoreWriteRequestsTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_store_write_requests_total", Help: "Use object_store_class_a_operations."}, []string{"service_id", "service_name", "datacenter"}),
 		OriginCacheFetchRespBodyBytesTotal:     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_cache_fetch_resp_body_bytes_total", Help: "Body bytes received from origin for cacheable content."}, []string{"service_id", "service_name", "datacenter"}),
 		OriginCacheFetchRespHeaderBytesTotal:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_cache_fetch_resp_header_bytes_total", Help: "Header bytes received from an origin for cacheable content."}, []string{"service_id", "service_name", "datacenter"}),
 		OriginCacheFetchesTotal:                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_cache_fetches_total", Help: "The total number of completed requests made to backends (origins) that returned cacheable content."}, []string{"service_id", "service_name", "datacenter"}),
