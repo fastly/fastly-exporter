@@ -2,3 +2,4 @@
 /fastly-exporter
 *.tar.gz
 *.test
+/vendor
