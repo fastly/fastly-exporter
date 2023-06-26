@@ -81,6 +81,7 @@ type Metrics struct {
 	FanoutSendPublishesTotal               *prometheus.CounterVec
 	FetchSubCountTotal                     *prometheus.CounterVec
 	FetchSubTimeTotal                      *prometheus.CounterVec
+	HTTPTotal                              *prometheus.CounterVec
 	HTTP2Total                             *prometheus.CounterVec
 	HTTP3Total                             *prometheus.CounterVec
 	HashSubCountTotal                      *prometheus.CounterVec
@@ -278,6 +279,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		FanoutSendPublishesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "fanout_send_publishes_total", Help: "Total published messages sent to end users."}, []string{"service_id", "service_name", "datacenter"}),
 		FetchSubCountTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "fetch_sub_count_total", Help: "Number of executions of the 'fetch' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
 		FetchSubTimeTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "fetch_sub_time_total", Help: "Time spent inside the 'fetch' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
+		HTTPTotal:                              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http_total", Help: "Number of requests received, by HTTP version."}, []string{"service_id", "service_name", "datacenter", "http_version"}),
 		HTTP2Total:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http2_total", Help: "Number of requests received over HTTP2."}, []string{"service_id", "service_name", "datacenter"}),
 		HTTP3Total:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http3_total", Help: "Number of requests received over HTTP3."}, []string{"service_id", "service_name", "datacenter"}),
 		HashSubCountTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "hash_sub_count_total", Help: "Number of executions of the 'hash' Varnish subroutine."}, []string{"service_id", "service_name", "datacenter"}),
