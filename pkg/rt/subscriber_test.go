@@ -14,7 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func TestSubscriberFixture(t *testing.T) {
+func TestRTSubscriberFixture(t *testing.T) {
 	var (
 		namespace  = "testspace"
 		subsystem  = "testsystem"
@@ -49,7 +49,103 @@ func TestSubscriberFixture(t *testing.T) {
 
 	// Assert the Prometheus metrics.
 	output := prometheusOutput(t, registry, namespace+"_"+subsystem+"_")
-	assertMetricOutput(t, expetedMetricsOutputMap, output)
+	assertMetricOutput(t, expectedRTMetricsOutputMap, output)
+
+	// Kill the subscriber's goroutine, and wait for it to finish.
+	cancel()
+	err := <-errc
+	switch {
+	case err == nil:
+	case errors.Is(err, context.Canceled):
+	case err != nil:
+		t.Fatal(err)
+	}
+}
+
+func TestOriginSubscriberFixture(t *testing.T) {
+	var (
+		namespace  = "testspace"
+		subsystem  = "testsytem"
+		registry   = prometheus.NewRegistry()
+		nameFilter = filter.Filter{}
+		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, registry)
+	)
+
+	// Set up a subscriber.
+	var (
+		client         = newMockRealtimeClient(originsResponseFixture, `{}`)
+		serviceID      = "my-service-id"
+		serviceName    = "my-service-name"
+		serviceVersion = 123
+		cache          = &mockCache{}
+		processed      = make(chan struct{})
+		postprocess    = func() { close(processed) }
+		options        = []rt.SubscriberOption{rt.WithMetadataProvider(cache), rt.WithPostprocess(postprocess)}
+		subscriber     = rt.NewSubscriber(client, "irrelevant token", serviceID, metrics, options...)
+	)
+
+	// Prep the mock cache.
+	cache.update([]api.Service{{ID: serviceID, Name: serviceName, Version: serviceVersion}})
+
+	// Tell the subscriber to fetch real-time stats.
+	ctx, cancel := context.WithCancel(context.Background())
+	errc := make(chan error, 1)
+	go func() { errc <- subscriber.RunOrigins(ctx) }()
+
+	// Block until the subscriber does finishes one fetch
+	<-processed
+
+	// Assert the Prometheus metrics.
+	output := prometheusOutput(t, registry, namespace+"_origin_")
+	assertMetricOutput(t, expectedOriginsMetricsOutputMap, output)
+
+	// Kill the subscriber's goroutine, and wait for it to finish.
+	cancel()
+	err := <-errc
+	switch {
+	case err == nil:
+	case errors.Is(err, context.Canceled):
+	case err != nil:
+		t.Fatal(err)
+	}
+}
+
+func TestDomainSubscriberFixture(t *testing.T) {
+	var (
+		namespace  = "testspace"
+		subsystem  = "testsytem"
+		registry   = prometheus.NewRegistry()
+		nameFilter = filter.Filter{}
+		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, registry)
+	)
+
+	// Set up a subscriber.
+	var (
+		client         = newMockRealtimeClient(domainsResponseFixture, `{}`)
+		serviceID      = "my-service-id"
+		serviceName    = "my-service-name"
+		serviceVersion = 123
+		cache          = &mockCache{}
+		processed      = make(chan struct{})
+		postprocess    = func() { close(processed) }
+		options        = []rt.SubscriberOption{rt.WithMetadataProvider(cache), rt.WithPostprocess(postprocess)}
+		subscriber     = rt.NewSubscriber(client, "irrelevant token", serviceID, metrics, options...)
+	)
+
+	// Prep the mock cache.
+	cache.update([]api.Service{{ID: serviceID, Name: serviceName, Version: serviceVersion}})
+
+	// Tell the subscriber to fetch real-time stats.
+	ctx, cancel := context.WithCancel(context.Background())
+	errc := make(chan error, 1)
+	go func() { errc <- subscriber.RunDomains(ctx) }()
+
+	// Block until the subscriber does finishes one fetch
+	<-processed
+
+	// Assert the Prometheus metrics.
+	output := prometheusOutput(t, registry, namespace+"_domain_")
+	assertMetricOutput(t, expectedDomainsMetricsOutputMap, output)
 
 	// Kill the subscriber's goroutine, and wait for it to finish.
 	cancel()
