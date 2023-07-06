@@ -113,7 +113,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 					0.0005: stats.Latency0to1, // yolo
 				} {
 					for i := uint64(0); i < n; i++ {
-						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin).Observe(v)
+						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery).Observe(v)
 					}
 				}
 
@@ -132,7 +132,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 					0.0005: stats.WafLatency0to1, // yolo
 				} {
 					for i := uint64(0); i < n; i++ {
-						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin).Observe(v)
+						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf).Observe(v)
 					}
 				}
 
@@ -151,7 +151,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 					0.0005: stats.ComputeLatency0to1, // yolo
 				} {
 					for i := uint64(0); i < n; i++ {
-						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin).Observe(v)
+						m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute).Observe(v)
 					}
 				}
 			}
