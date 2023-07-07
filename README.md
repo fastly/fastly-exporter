@@ -144,7 +144,7 @@ scrape_configs:
 
 ### Dashboards and Alerting
 
-Data from the the Fastly exporter can be used to build dashboards and alerts with [Grafana](grafana) and [Alertmanager](alertmanager). For a fully working example see [fastly-dashboards](dashboards) created by [@mrnetops](mrnetops). Fastly-dashboards contains a Docker Compose setup, which boots up a full fastly-exporter + Prometheus + Alertmanager + Grafana + Fastly dashboard stack with Slack alerting integration.
+Data from the the Fastly exporter can be used to build dashboards and alerts with [Grafana][grafana] and [Alertmanager][alertmanager]. For a fully working example see [fastly-dashboards][dashboards] created by [@mrnetops][mrnetops]. Fastly-dashboards contains a Docker Compose setup, which boots up a full fastly-exporter + Prometheus + Alertmanager + Grafana + Fastly dashboard stack with Slack alerting integration.
 
 [grafana]: https://grafana.com
 [alertmanager]: https://prometheus.io/docs/alerting/latest/alertmanager/
