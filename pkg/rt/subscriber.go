@@ -35,16 +35,17 @@ type MetadataProvider interface {
 // Subscriber polls rt.fastly.com endpoints for a single service ID. It emits
 // the received stats data to Prometheus metrics.
 type Subscriber struct {
-	client       HTTPClient
-	token        string
-	serviceID    string
-	provider     MetadataProvider
-	metrics      *prom.Metrics
-	postprocess  func()
-	logger       log.Logger
-	rtDelayCount int
-	oiDelayCount int
-	diDelayCount int
+	client              HTTPClient
+	token               string
+	serviceID           string
+	aggregateDatacenter realtime.DatacenterAggregate
+	provider            MetadataProvider
+	metrics             *prom.Metrics
+	postprocess         func()
+	logger              log.Logger
+	rtDelayCount        int
+	oiDelayCount        int
+	diDelayCount        int
 }
 
 // SubscriberOption provides some additional behavior to a subscriber.
@@ -69,6 +70,12 @@ func WithLogger(logger log.Logger) SubscriberOption {
 // postprocess function is invoked. This option is only useful for tests.
 func WithPostprocess(f func()) SubscriberOption {
 	return func(s *Subscriber) { s.postprocess = f }
+}
+
+// WithAggregateDatacenter enables aggregate datacenter metrics.
+// By default, no datacenter aggregation is applied.
+func WithAggregateDatacenter(agg realtime.DatacenterAggregate) SubscriberOption {
+	return func(s *Subscriber) { s.aggregateDatacenter = agg }
 }
 
 // NewSubscriber returns a ready-to-use subscriber. Callers must be sure to
@@ -223,7 +230,13 @@ func (s *Subscriber) queryRealtime(ctx context.Context, ts uint64) (currentName 
 			s.rtDelayCount = 0
 			result = apiResultSuccess
 		}
-		realtime.Process(&response, s.serviceID, name, version, s.metrics.Realtime)
+
+		if s.aggregateDatacenter {
+			realtime.ProcessAggregated(&response, s.serviceID, name, version, s.metrics.Realtime)
+		} else {
+			realtime.Process(&response, s.serviceID, name, version, s.metrics.Realtime)
+		}
+
 		s.postprocess()
 
 	case http.StatusUnauthorized, http.StatusForbidden:

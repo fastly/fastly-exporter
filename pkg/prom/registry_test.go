@@ -11,6 +11,7 @@ import (
 
 	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/fastly/fastly-exporter/pkg/prom"
+	"github.com/fastly/fastly-exporter/pkg/realtime"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -22,7 +23,7 @@ func TestRegistryEndpoints(t *testing.T) {
 		namespace        = "fastly"
 		subsystem        = "rt"
 		metricNameFilter = filter.Filter{}
-		registry         = prom.NewRegistry(version, namespace, subsystem, metricNameFilter)
+		registry         = prom.NewRegistry(version, namespace, subsystem, metricNameFilter, realtime.IndividualDatacenter)
 	)
 
 	registry.MetricsFor("AAA").Realtime.RequestsTotal.With(prometheus.Labels{
