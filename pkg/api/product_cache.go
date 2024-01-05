@@ -27,12 +27,20 @@ const (
 // Products is the slice of available products supported by real-time stats.
 var Products = []string{ProductDefault, ProductOriginInspector, ProductDomainInspector}
 
-// Product models the response from the Fastly Product Entitlement API.
-type Product struct {
-	HasAccess bool `json:"has_access"`
-	Product   struct {
-		Name string `json:"id"`
-	} `json:"product"`
+type response struct {
+	Customers *[]customer `json:"customers,omitempty"`
+}
+
+type customer struct {
+	Contracts *[]contract `json:"contracts,omitempty"`
+}
+
+type contract struct {
+	Items *[]item `json:"items,omitempty"`
+}
+
+type item struct {
+	ProductID *string `json:"product_id,omitempty"`
 }
 
 // ProductCache fetches product information from the Fastly Product Entitlement API
@@ -59,41 +67,60 @@ func NewProductCache(client HTTPClient, token string, logger log.Logger) *Produc
 
 // Refresh requests data from the Fastly API and stores data in the cache.
 func (p *ProductCache) Refresh(ctx context.Context) error {
+
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.fastly.com/entitlements", nil)
+	if err != nil {
+		return fmt.Errorf("error constructing API product request: %w", err)
+	}
+
+	req.Header.Set("Fastly-Key", p.token)
+	req.Header.Set("Accept", "application/json")
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error executing API product request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return NewError(resp)
+	}
+
+	var response response
+
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return fmt.Errorf("error decoding API product response: %w", err)
+	}
+
+	activeProducts := make(map[string]interface{})
+
+	if response.Customers != nil {
+		for _, customer := range *response.Customers {
+			if customer.Contracts == nil {
+				continue
+			}
+			for _, contract := range *customer.Contracts {
+				if contract.Items == nil {
+					continue
+				}
+				for _, item := range *contract.Items {
+					if item.ProductID == nil {
+						continue
+					}
+					activeProducts[*item.ProductID] = true
+				}
+			}
+		}
+	}
+
 	for _, product := range Products {
 		if product == ProductDefault {
 			continue
 		}
-		uri := fmt.Sprintf("https://api.fastly.com/entitled-products/%s", product)
-
-		req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
-		if err != nil {
-			return fmt.Errorf("error constructing API product request: %w", err)
-		}
-
-		req.Header.Set("Fastly-Key", p.token)
-		req.Header.Set("Accept", "application/json")
-		resp, err := p.client.Do(req)
-		if err != nil {
-			return fmt.Errorf("error executing API product request: %w", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return NewError(resp)
-		}
-
-		var response Product
-
-		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-			return fmt.Errorf("error decoding API product response: %w", err)
-		}
-
-		level.Debug(p.logger).Log("product", response.Product.Name, "hasAccess", response.HasAccess)
-
+		_, hasAccess := activeProducts[product]
+		level.Debug(p.logger).Log("product", product, "hasAccess", hasAccess)
 		p.mtx.Lock()
-		p.products[response.Product.Name] = response.HasAccess
+		p.products[product] = hasAccess
 		p.mtx.Unlock()
-
 	}
 
 	return nil

@@ -21,7 +21,7 @@ func TestProductCache(t *testing.T) {
 	}{
 		{
 			name:    "success",
-			client:  newSequentialResponseClient(productsResponseOne, productsResponseTwo),
+			client:  newSequentialResponseClient(productsResponse),
 			wantErr: nil,
 			wantProds: map[string]bool{
 				"origin_inspector": true,
@@ -55,34 +55,28 @@ func TestProductCache(t *testing.T) {
 	}
 }
 
-const productsResponseOne = `
+// only products that the customer is entitled to are returned from the /entitlements endpoint
+const productsResponse = `
 {
-  "product": {
-    "id": "origin_inspector",
-    "object": "product"
-  },
-  "has_access": true,
-  "access_level": "Origin_Inspector",
-  "has_permission_to_enable": false,
-  "has_permission_to_disable": true,
-  "_links": {
-    "self": ""
-  }
-}
-`
-
-const productsResponseTwo = `
-{
-  "product": {
-    "id": "domain_inspector",
-    "object": "product"
-  },
-  "has_access": false,
-  "access_level": "Domain_Inspector",
-  "has_permission_to_enable": false,
-  "has_permission_to_disable": true,
-  "_links": {
-    "self": ""
-  }
+  "customers": [
+    {
+      "contracts": [
+        {
+          "items": [
+            {
+              "product_id": "origin_inspector"
+            },
+            {
+              "other_key": "other"
+            }
+          ]
+        },
+        {
+          "other_key_2": [
+          ]
+        }
+      ]
+    }
+  ]
 }
 `
