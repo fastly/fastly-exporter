@@ -27,20 +27,14 @@ const (
 // Products is the slice of available products supported by real-time stats.
 var Products = []string{ProductDefault, ProductOriginInspector, ProductDomainInspector}
 
-type response struct {
-	Customers *[]customer `json:"customers,omitempty"`
-}
-
-type customer struct {
-	Contracts *[]contract `json:"contracts,omitempty"`
-}
-
-type contract struct {
-	Items *[]item `json:"items,omitempty"`
-}
-
-type item struct {
-	ProductID *string `json:"product_id,omitempty"`
+type entitlementsResponse struct {
+	Customers []struct {
+		Contracts []struct {
+			Items []struct {
+				ProductID *string `json:"product_id,omitempty"`
+			} `json:"items,omitempty"`
+		} `json:"contracts"`
+	} `json:"customers"`
 }
 
 // ProductCache fetches product information from the Fastly Product Entitlement API
@@ -85,7 +79,7 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 		return NewError(resp)
 	}
 
-	var response response
+	var response entitlementsResponse
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return fmt.Errorf("error decoding API product response: %w", err)
@@ -93,21 +87,19 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 
 	activeProducts := make(map[string]interface{})
 
-	if response.Customers != nil {
-		for _, customer := range *response.Customers {
-			if customer.Contracts == nil {
+	for _, customer := range response.Customers {
+		if customer.Contracts == nil {
+			continue
+		}
+		for _, contract := range customer.Contracts {
+			if contract.Items == nil {
 				continue
 			}
-			for _, contract := range *customer.Contracts {
-				if contract.Items == nil {
+			for _, item := range contract.Items {
+				if item.ProductID == nil {
 					continue
 				}
-				for _, item := range *contract.Items {
-					if item.ProductID == nil {
-						continue
-					}
-					activeProducts[*item.ProductID] = true
-				}
+				activeProducts[*item.ProductID] = true
 			}
 		}
 	}

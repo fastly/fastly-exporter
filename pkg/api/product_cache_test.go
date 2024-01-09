@@ -21,11 +21,17 @@ func TestProductCache(t *testing.T) {
 	}{
 		{
 			name:    "success",
-			client:  newSequentialResponseClient(productsResponse),
+			client:  fixedResponseClient{response: productsResponse, code: http.StatusOK},
 			wantErr: nil,
 			wantProds: map[string]bool{
 				"origin_inspector": true,
 			},
+		},
+		{
+			name:      "noCustomerSuccess",
+			client:    fixedResponseClient{response: noCustomerResponse, code: http.StatusOK},
+			wantErr:   nil,
+			wantProds: map[string]bool{},
 		},
 		{
 			name:      "error",
@@ -76,7 +82,16 @@ const productsResponse = `
           ]
         }
       ]
+    },
+    {
+      "other key": {}
     }
   ]
+}
+`
+
+const noCustomerResponse = `
+{
+  "metadata": {}
 }
 `
