@@ -88,13 +88,7 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 	activeProducts := make(map[string]interface{})
 
 	for _, customer := range response.Customers {
-		if customer.Contracts == nil {
-			continue
-		}
 		for _, contract := range customer.Contracts {
-			if contract.Items == nil {
-				continue
-			}
 			for _, item := range contract.Items {
 				if item.ProductID == nil {
 					continue
