@@ -84,7 +84,7 @@ By default, all services available to your token will be exported. You can
 specify an explicit set of service IDs to export by using the `-service xxx`
 flag. (Service IDs are available at the top of your [Fastly dashboard][db].) You
 can also include only those services whose name matches a regex by using the
-`-service-allowlist '^Production'` flag, or elide any service whose name matches
+`-service-allowlist '^Production'` flag, or exclude any service whose name matches
 a regex by using the `-service-blocklist '.*TEST.*'` flag.
 
 [db]: https://manage.fastly.com/services/all
