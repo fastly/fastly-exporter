@@ -10,6 +10,7 @@ import (
 	"github.com/fastly/fastly-exporter/pkg/api"
 	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/fastly/fastly-exporter/pkg/prom"
+	"github.com/fastly/fastly-exporter/pkg/realtime"
 	"github.com/fastly/fastly-exporter/pkg/rt"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -20,7 +21,7 @@ func TestRTSubscriberFixture(t *testing.T) {
 		subsystem  = "testsystem"
 		registry   = prometheus.NewRegistry()
 		nameFilter = filter.Filter{}
-		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, registry)
+		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, realtime.IndividualDatacenter, registry)
 	)
 
 	// Set up a subscriber.
@@ -68,7 +69,7 @@ func TestOriginSubscriberFixture(t *testing.T) {
 		subsystem  = "testsytem"
 		registry   = prometheus.NewRegistry()
 		nameFilter = filter.Filter{}
-		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, registry)
+		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, realtime.IndividualDatacenter, registry)
 	)
 
 	// Set up a subscriber.
@@ -116,7 +117,7 @@ func TestDomainSubscriberFixture(t *testing.T) {
 		subsystem  = "testsytem"
 		registry   = prometheus.NewRegistry()
 		nameFilter = filter.Filter{}
-		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, registry)
+		metrics    = prom.NewMetrics(namespace, subsystem, nameFilter, realtime.IndividualDatacenter, registry)
 	)
 
 	// Set up a subscriber.
@@ -162,7 +163,7 @@ func TestSubscriberNoData(t *testing.T) {
 	var (
 		client      = newMockRealtimeClient(`{"Error": "No data available, please retry"}`, `{}`)
 		registry    = prometheus.NewRegistry()
-		metrics     = prom.NewMetrics("ns", "ss", filter.Filter{}, registry)
+		metrics     = prom.NewMetrics("ns", "ss", filter.Filter{}, realtime.IndividualDatacenter, registry)
 		processed   = make(chan struct{}, 100)
 		postprocess = func() { processed <- struct{}{} }
 		options     = []rt.SubscriberOption{rt.WithPostprocess(postprocess)}
@@ -187,7 +188,7 @@ func TestSubscriberNoData(t *testing.T) {
 func TestBadTokenNoSpam(t *testing.T) {
 	var (
 		client     = &countingRealtimeClient{code: 403, response: `{"Error": "unauthorized"}`}
-		metrics    = prom.NewMetrics("namespace", "subsystem", filter.Filter{}, prometheus.NewRegistry())
+		metrics    = prom.NewMetrics("namespace", "subsystem", filter.Filter{}, realtime.IndividualDatacenter, prometheus.NewRegistry())
 		subscriber = rt.NewSubscriber(client, "presumably bad token", "service ID", metrics)
 	)
 	go subscriber.RunRealtime(context.Background())

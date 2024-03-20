@@ -16,6 +16,7 @@ import (
 	"github.com/fastly/fastly-exporter/pkg/api"
 	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/fastly/fastly-exporter/pkg/prom"
+	"github.com/fastly/fastly-exporter/pkg/realtime"
 	"github.com/fastly/fastly-exporter/pkg/rt"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -44,6 +45,7 @@ func main() {
 		serviceRefresh      time.Duration
 		apiTimeout          time.Duration
 		rtTimeout           time.Duration
+		aggregateDatacenter bool
 		debug               bool
 		versionFlag         bool
 		configFileExample   bool
@@ -67,6 +69,7 @@ func main() {
 		fs.DurationVar(&serviceRefresh, "api-refresh", 1*time.Minute, "DEPRECATED -- use service-refresh instead")
 		fs.DurationVar(&apiTimeout, "api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
 		fs.DurationVar(&rtTimeout, "rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
+		fs.BoolVar(&aggregateDatacenter, "aggregate-datacenter", false, "Use aggregated data rather than per-datacenter")
 		fs.BoolVar(&debug, "debug", false, "log debug information")
 		fs.BoolVar(&versionFlag, "version", false, "print version information and exit")
 		fs.String("config-file", "", "config file (optional)")
@@ -311,9 +314,19 @@ func main() {
 		defaultGatherers = append(defaultGatherers, dcs)
 	}
 
+	var datacenterAggregate realtime.DatacenterAggregate
+	{
+		switch aggregateDatacenter {
+		case true:
+			datacenterAggregate = realtime.AggregateDatacenter
+		case false:
+			datacenterAggregate = realtime.IndividualDatacenter
+		}
+	}
+
 	var registry *prom.Registry
 	{
-		registry = prom.NewRegistry(programVersion, namespace, deprecatedSubsystem, metricNameFilter, defaultGatherers)
+		registry = prom.NewRegistry(programVersion, namespace, deprecatedSubsystem, metricNameFilter, datacenterAggregate, defaultGatherers)
 	}
 
 	var manager *rt.Manager
@@ -324,6 +337,7 @@ func main() {
 			subscriberOptions = []rt.SubscriberOption{
 				rt.WithLogger(rtLogger),
 				rt.WithMetadataProvider(serviceCache),
+				rt.WithAggregateDatacenter(datacenterAggregate),
 			}
 		)
 		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, productCache, rtLogger)

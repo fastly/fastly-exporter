@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/fastly/fastly-exporter/pkg/filter"
+	"github.com/fastly/fastly-exporter/pkg/realtime"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -30,6 +31,7 @@ type Registry struct {
 	namespace             string
 	rtSubsystemDeprecated string
 	metricNameFilter      filter.Filter
+	aggregateDatacenter   realtime.DatacenterAggregate
 	byServiceID           map[string]*metricsRegistry
 	defaultGatherers      []prometheus.Gatherer
 
@@ -43,12 +45,13 @@ type Registry struct {
 // The rtSubsystemDeprecated param is used for default and real-time metrics
 // only. In a future version, those metrics will have their subsystem fixed to
 // "rt", and this parameter will be removed.
-func NewRegistry(version, namespace, rtSubsystemDeprecated string, metricNameFilter filter.Filter, defaultGatherers ...prometheus.Gatherer) *Registry {
+func NewRegistry(version, namespace, rtSubsystemDeprecated string, metricNameFilter filter.Filter, agg realtime.DatacenterAggregate, defaultGatherers ...prometheus.Gatherer) *Registry {
 	r := &Registry{
 		version:               version,
 		namespace:             namespace,
 		rtSubsystemDeprecated: rtSubsystemDeprecated,
 		metricNameFilter:      metricNameFilter,
+		aggregateDatacenter:   agg,
 		byServiceID:           map[string]*metricsRegistry{},
 		defaultGatherers:      defaultGatherers,
 	}
@@ -82,7 +85,7 @@ func (r *Registry) MetricsFor(serviceID string) *Metrics {
 	mr, ok := r.byServiceID[serviceID]
 	if !ok {
 		registry := prometheus.NewRegistry()
-		metrics := NewMetrics(r.namespace, r.rtSubsystemDeprecated, r.metricNameFilter, registry)
+		metrics := NewMetrics(r.namespace, r.rtSubsystemDeprecated, r.metricNameFilter, r.aggregateDatacenter, registry)
 		mr = &metricsRegistry{metrics, registry}
 		r.byServiceID[serviceID] = mr // TODO(pb): at some point, expire and remove?
 	}

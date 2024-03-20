@@ -119,6 +119,11 @@ Different flags (for the same filter target) combine with AND semantics. For
 example, `-metric-allowlist 'bytes_total$' -metric-blocklist imgopto` would only
 export metrics whose names ended in bytes_total, but didn't include imgopto.
 
+### Aggregate Datacenter
+
+Datacenter metrics can be aggregated to reduce the output size of the metrics
+endpoint by using the `-aggregate-datacenter` flag.
+
 ### Service discovery
 
 Per-service metrics are available via `/metrics?target=<service ID>`. Available

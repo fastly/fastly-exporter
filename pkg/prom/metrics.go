@@ -20,7 +20,7 @@ type Metrics struct {
 }
 
 // NewMetrics returns a fresh Metrics with the provided parameters.
-func NewMetrics(namespace, rtSubsystemWillBeDeprecated string, nameFilter filter.Filter, r prometheus.Registerer) *Metrics {
+func NewMetrics(namespace, rtSubsystemWillBeDeprecated string, nameFilter filter.Filter, agg realtime.DatacenterAggregate, r prometheus.Registerer) *Metrics {
 	var (
 		serviceInfo            = prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: rtSubsystemWillBeDeprecated, Name: "service_info", Help: "Static gauge with service ID, name, and version information."}, []string{"service_id", "service_name", "service_version"})
 		lastSuccessfulResponse = prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: rtSubsystemWillBeDeprecated, Name: "last_successful_response", Help: "Unix timestamp of the last successful response received from the real-time stats API."}, []string{"service_id", "service_name"})
@@ -30,7 +30,7 @@ func NewMetrics(namespace, rtSubsystemWillBeDeprecated string, nameFilter filter
 	return &Metrics{
 		ServiceInfo:            serviceInfo,
 		LastSuccessfulResponse: lastSuccessfulResponse,
-		Realtime:               realtime.NewMetrics(namespace, rtSubsystemWillBeDeprecated, nameFilter, r), // TODO(pb): change this to "rt" or "realtime"
+		Realtime:               realtime.NewMetrics(namespace, rtSubsystemWillBeDeprecated, nameFilter, agg, r), // TODO(pb): change this to "rt" or "realtime"
 		Origin:                 origin.NewMetrics(namespace, "origin", nameFilter, r),
 		Domain:                 domain.NewMetrics(namespace, "domain", nameFilter, r),
 	}

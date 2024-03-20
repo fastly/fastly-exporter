@@ -9,6 +9,7 @@ import (
 	"github.com/fastly/fastly-exporter/pkg/api"
 	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/fastly/fastly-exporter/pkg/prom"
+	"github.com/fastly/fastly-exporter/pkg/realtime"
 	"github.com/fastly/fastly-exporter/pkg/rt"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -23,7 +24,7 @@ func TestManager(t *testing.T) {
 		s3       = api.Service{ID: "3a3b3c", Name: "service 3", Version: 3}
 		client   = newMockRealtimeClient(`{}`)
 		token    = "irrelevant-token"
-		registry = prom.NewRegistry("v0.0.0-DEV", "namespace", "subsystem", filter.Filter{})
+		registry = prom.NewRegistry("v0.0.0-DEV", "namespace", "subsystem", filter.Filter{}, realtime.IndividualDatacenter)
 		logbuf   = &bytes.Buffer{}
 		logger   = log.NewLogfmtLogger(logbuf)
 		options  = []rt.SubscriberOption{rt.WithMetadataProvider(cache)}
