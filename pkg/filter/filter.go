@@ -41,6 +41,12 @@ func (f *Filter) Permit(s string) (allowed bool) {
 	return f.passAllowlist(s) && f.passBlocklist(s)
 }
 
+// Blocked checks if the provided string is blocked, according to the current
+// blocklist expressions.
+func (f *Filter) Blocked(s string) (blocked bool) {
+	return !f.passBlocklist(s)
+}
+
 func (f *Filter) passAllowlist(s string) bool {
 	if len(f.allowlist) <= 0 {
 		return true // default pass

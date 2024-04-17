@@ -1,6 +1,8 @@
 package prom
 
 import (
+	"regexp"
+
 	"github.com/fastly/fastly-exporter/pkg/domain"
 	"github.com/fastly/fastly-exporter/pkg/filter"
 	"github.com/fastly/fastly-exporter/pkg/origin"
@@ -25,7 +27,13 @@ func NewMetrics(namespace, rtSubsystemWillBeDeprecated string, nameFilter filter
 		serviceInfo            = prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: rtSubsystemWillBeDeprecated, Name: "service_info", Help: "Static gauge with service ID, name, and version information."}, []string{"service_id", "service_name", "service_version"})
 		lastSuccessfulResponse = prometheus.NewGaugeVec(prometheus.GaugeOpts{Namespace: namespace, Subsystem: rtSubsystemWillBeDeprecated, Name: "last_successful_response", Help: "Unix timestamp of the last successful response received from the real-time stats API."}, []string{"service_id", "service_name"})
 	)
-	r.MustRegister(serviceInfo, lastSuccessfulResponse)
+
+	if name := getName(serviceInfo); !nameFilter.Blocked(name) {
+		r.MustRegister(serviceInfo)
+	}
+	if name := getName(lastSuccessfulResponse); !nameFilter.Blocked(name) {
+		r.MustRegister(lastSuccessfulResponse)
+	}
 
 	return &Metrics{
 		ServiceInfo:            serviceInfo,
@@ -34,4 +42,17 @@ func NewMetrics(namespace, rtSubsystemWillBeDeprecated string, nameFilter filter
 		Origin:                 origin.NewMetrics(namespace, "origin", nameFilter, r),
 		Domain:                 domain.NewMetrics(namespace, "domain", nameFilter, r),
 	}
+}
+
+var descNameRegex = regexp.MustCompile("fqName: \"([^\"]+)\"")
+
+func getName(c prometheus.Collector) string {
+	d := make(chan *prometheus.Desc, 1)
+	c.Describe(d)
+	desc := (<-d).String()
+	matches := descNameRegex.FindAllStringSubmatch(desc, -1)
+	if len(matches) == 1 && len(matches[0]) == 2 {
+		return matches[0][1]
+	}
+	return ""
 }

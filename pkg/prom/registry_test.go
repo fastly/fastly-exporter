@@ -17,11 +17,14 @@ import (
 func TestRegistryEndpoints(t *testing.T) {
 	t.Parallel()
 
+	var f filter.Filter
+	f.Block("fastly_rt_service_info")
+
 	var (
 		version          = "dev"
 		namespace        = "fastly"
 		subsystem        = "rt"
-		metricNameFilter = filter.Filter{}
+		metricNameFilter = f
 		registry         = prom.NewRegistry(version, namespace, subsystem, metricNameFilter)
 	)
 
@@ -32,6 +35,9 @@ func TestRegistryEndpoints(t *testing.T) {
 	registry.MetricsFor("BBB").Realtime.RequestsTotal.With(prometheus.Labels{
 		"service_id": "BBB", "service_name": "Service Two", "datacenter": "NYC",
 	}).Add(2)
+
+	registry.MetricsFor("AAA").ServiceInfo.WithLabelValues("AAA", "Service One", "1").Set(1)
+	registry.MetricsFor("BBB").ServiceInfo.WithLabelValues("BBB", "Service Two", "1").Set(1)
 
 	server := httptest.NewServer(registry)
 	defer server.Close()
@@ -123,7 +129,10 @@ func TestRegistryEndpoints(t *testing.T) {
 		want, dont := []string{
 			`fastly_rt_requests_total{datacenter="NYC",service_id="AAA",service_name="Service One"} 1`,
 			`fastly_rt_requests_total{datacenter="NYC",service_id="BBB",service_name="Service Two"} 2`,
-		}, []string{}
+		}, []string{
+			`fastly_rt_service_info{service_id="AAA",service_name="Service One",service_version="1"} 1`,
+			`fastly_rt_service_info{service_id="BBB",service_name="Service Two",service_version="1"} 1`,
+		}
 		checkMetrics(body, want, dont)
 	})
 
