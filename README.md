@@ -104,7 +104,7 @@ fastly-exporter [common flags] -service-shard 3/3
 
 By default, all metrics provided by the Fastly real-time stats API are exported
 as Prometheus metrics. You can export only those metrics whose name matches a
-regex by using the `-metric-allowlist 'bytes_total$'` flag, or elide any metric
+regex by using the `-metric-allowlist 'bytes_total$'` flag, or exclude any metric
 whose name matches a regex by using the `-metric-blocklist imgopto` flag.
 
 ### Filter semantics
