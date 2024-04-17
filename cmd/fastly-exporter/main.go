@@ -269,7 +269,8 @@ func main() {
 
 	var datacenterCache *api.DatacenterCache
 	{
-		datacenterCache = api.NewDatacenterCache(apiClient, token)
+		enabled := !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "datacenter_info"))
+		datacenterCache = api.NewDatacenterCache(apiClient, token, enabled)
 	}
 
 	var productCache *api.ProductCache
@@ -285,12 +286,14 @@ func main() {
 			}
 			return nil
 		})
-		g.Go(func() error {
-			if err := datacenterCache.Refresh(context.Background()); err != nil {
-				level.Warn(logger).Log("during", "initial fetch of datacenters", "err", err, "msg", "datacenter labels unavailable, will retry")
-			}
-			return nil
-		})
+		if datacenterCache.Enabled() {
+			g.Go(func() error {
+				if err := datacenterCache.Refresh(context.Background()); err != nil {
+					level.Warn(logger).Log("during", "initial fetch of datacenters", "err", err, "msg", "datacenter labels unavailable, will retry")
+				}
+				return nil
+			})
+		}
 		g.Go(func() error {
 			if err := productCache.Refresh(context.Background()); err != nil {
 				level.Warn(logger).Log("during", "initial fetch of products", "err", err, "msg", "products API unavailable, will retry")
@@ -302,7 +305,7 @@ func main() {
 	}
 
 	var defaultGatherers prometheus.Gatherers
-	{
+	if datacenterCache.Enabled() {
 		dcs, err := datacenterCache.Gatherer(namespace, deprecatedSubsystem)
 		if err != nil {
 			level.Error(apiLogger).Log("during", "create datacenter gatherer", "err", err)
@@ -331,7 +334,9 @@ func main() {
 	}
 
 	var g run.Group
-	{
+	// only setup the ticker if the datacenterCache is enabled.
+	if datacenterCache.Enabled() {
+
 		// Every datacenterRefresh, ask the api.DatacenterCache to refresh
 		// metadata from the api.fastly.com/datacenters endpoint.
 		var (

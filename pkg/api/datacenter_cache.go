@@ -29,8 +29,9 @@ type Coördinates struct {
 // DatacenterCache polls api.fastly.com/datacenters and maintains a local cache
 // of the returned metadata. That information is exposed as Prometheus metrics.
 type DatacenterCache struct {
-	client HTTPClient
-	token  string
+	client  HTTPClient
+	token   string
+	enabled bool
 
 	mtx sync.Mutex
 	dcs []Datacenter
@@ -38,15 +39,19 @@ type DatacenterCache struct {
 
 // NewDatacenterCache returns an empty cache of datacenter metadata. Use the
 // Refresh method to update the cache.
-func NewDatacenterCache(client HTTPClient, token string) *DatacenterCache {
+func NewDatacenterCache(client HTTPClient, token string, enabled bool) *DatacenterCache {
 	return &DatacenterCache{
-		client: client,
-		token:  token,
+		client:  client,
+		token:   token,
+		enabled: enabled,
 	}
 }
 
 // Refresh the cache with metadata retreived from the Fastly API.
 func (c *DatacenterCache) Refresh(ctx context.Context) error {
+	if !c.enabled {
+		return nil
+	}
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.fastly.com/datacenters", nil)
 	if err != nil {
 		return fmt.Errorf("error constructing API datacenters request: %w", err)
@@ -107,6 +112,11 @@ func (c *DatacenterCache) Gatherer(namespace, subsystem string) (prometheus.Gath
 	}
 
 	return registry, nil
+}
+
+// Enabled returns true if the DatacenterCache is enabled
+func (c *DatacenterCache) Enabled() bool {
+	return c.enabled
 }
 
 type datacenterCollector struct {
