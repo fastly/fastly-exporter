@@ -66,6 +66,8 @@ type Datacenter struct {
 	ComputeStackLimitExceededTotal       uint64            `json:"compute_stack_limit_exceeded"`
 	DDOSActionBlackhole                  uint64            `json:"ddos_action_blackhole"`
 	DDOSActionClose                      uint64            `json:"ddos_action_close"`
+	DDOSActionDowngrade                  uint64            `json:"h2o_ddos_action_downgrade"`
+	DDOSActionDowngradedConnections      uint64            `json:"h2o_ddos_action_downgraded_connections"`
 	DDOSActionLimitStreamsConnections    uint64            `json:"ddos_action_limit_streams_connections"`
 	DDOSActionLimitStreamsRequests       uint64            `json:"ddos_action_limit_streams_requests"`
 	DDOSActionTarpit                     uint64            `json:"ddos_action_tarpit"`

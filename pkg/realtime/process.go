@@ -60,6 +60,8 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 			m.ComputeStackLimitExceededTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeStackLimitExceededTotal))
 			m.DDOSActionBlackholeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DDOSActionBlackhole))
 			m.DDOSActionCloseTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DDOSActionClose))
+			m.DDOSActionDowngradeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DDOSActionDowngrade))
+			m.DDOSActionDowngradedConnectionsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DDOSActionDowngradedConnections))
 			m.DDOSActionLimitStreamsConnectionsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DDOSActionLimitStreamsConnections))
 			m.DDOSActionLimitStreamsRequestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DDOSActionLimitStreamsRequests))
 			m.DDOSActionTarpitAcceptTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.DDOSActionTarpitAccept))
