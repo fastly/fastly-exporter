@@ -36,6 +36,7 @@ func Process(response *Response, serviceID, serviceName, serviceVersion string, 
 			m.ComputeRAMUsedBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeRAMUsed))
 			m.ComputeReqBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeReqBodyBytesTotal))
 			m.ComputeReqHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeReqHeaderBytesTotal))
+			m.ComputeRequestTimeBilledTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeRequestTimeBilledMilliseconds) / 10000.0)
 			m.ComputeRequestTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeRequestTimeMilliseconds) / 10000.0)
 			m.ComputeRequestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeRequests))
 			m.ComputeResourceLimitExceedTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ComputeResourceLimitExceedTotal))

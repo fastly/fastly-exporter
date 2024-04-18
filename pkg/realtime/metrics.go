@@ -37,6 +37,7 @@ type Metrics struct {
 	ComputeRAMUsedBytesTotal               *prometheus.CounterVec
 	ComputeReqBodyBytesTotal               *prometheus.CounterVec
 	ComputeReqHeaderBytesTotal             *prometheus.CounterVec
+	ComputeRequestTimeBilledTotal          *prometheus.CounterVec
 	ComputeRequestTimeTotal                *prometheus.CounterVec
 	ComputeRequestsTotal                   *prometheus.CounterVec
 	ComputeResourceLimitExceedTotal        *prometheus.CounterVec
@@ -230,6 +231,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		ComputeRAMUsedBytesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_ram_used_bytes_total", Help: "The amount of RAM used for your site by Fastly."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeReqBodyBytesTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_req_body_bytes_total", Help: "Total body bytes received by Compute@Edge."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeReqHeaderBytesTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_req_header_bytes_total", Help: "Total header bytes received by Compute@Edge."}, []string{"service_id", "service_name", "datacenter"}),
+		ComputeRequestTimeBilledTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_request_time_billed_total", Help: "The total amount of request processing time you will be billed for, measured in 50 millisecond increments. (in seconds)"}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeRequestTimeTotal:                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_request_time_total", Help: "The total amount of time used to process your requests, including active CPU time (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeRequestsTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_requests_total", Help: "The total number of requests that were received for your site by Fastly."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeResourceLimitExceedTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_resource_limit_exceeded_total", Help: "Number of times a guest exceeded its resource limit, includes heap, stack, globals, and code execution timeout."}, []string{"service_id", "service_name", "datacenter"}),
