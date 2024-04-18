@@ -29,6 +29,15 @@ type Datacenter struct {
 	BackendReqHeaderBytes                uint64            `json:"bereq_header_bytes"`
 	Blacklisted                          uint64            `json:"blacklist"`
 	BodySize                             uint64            `json:"body_size"`
+	BotChallengeCompleteTokensChecked    uint64            `json:"bot_challenge_complete_tokens_checked"`
+	BotChallengeCompleteTokensDisabled   uint64            `json:"bot_challenge_complete_tokens_disabled"`
+	BotChallengeCompleteTokensFailed     uint64            `json:"bot_challenge_complete_tokens_failed"`
+	BotChallengeCompleteTokensIssued     uint64            `json:"bot_challenge_complete_tokens_issued"`
+	BotChallengeCompleteTokensPassed     uint64            `json:"bot_challenge_complete_tokens_passed"`
+	BotChallengeStarts                   uint64            `json:"bot_challenge_starts"`
+	BotChallengesFailed                  uint64            `json:"bot_challenges_failed"`
+	BotChallengesIssued                  uint64            `json:"bot_challenges_issued"`
+	BotChallengesSucceeded               uint64            `json:"bot_challenges_succeeded"`
 	ComputeBackendReqBodyBytesTotal      uint64            `json:"compute_bereq_body_bytes"`
 	ComputeBackendReqErrorsTotal         uint64            `json:"compute_bereq_errors"`
 	ComputeBackendReqHeaderBytesTotal    uint64            `json:"compute_bereq_header_bytes"`
