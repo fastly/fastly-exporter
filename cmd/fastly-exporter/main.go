@@ -314,6 +314,20 @@ func main() {
 		defaultGatherers = append(defaultGatherers, dcs)
 	}
 
+	if !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "token_expiration")) {
+		tokenRecorder := api.NewTokenRecorder(apiClient, token)
+		tg, err := tokenRecorder.Gatherer(namespace, deprecatedSubsystem)
+		if err != nil {
+			level.Error(apiLogger).Log("during", "create token gatherer", "err", err)
+		} else {
+			err = tokenRecorder.Set(context.Background())
+			if err != nil {
+				level.Error(apiLogger).Log("during", "set token gauge metric", "err", err)
+			}
+			defaultGatherers = append(defaultGatherers, tg)
+		}
+	}
+
 	var registry *prom.Registry
 	{
 		registry = prom.NewRegistry(programVersion, namespace, deprecatedSubsystem, metricNameFilter, defaultGatherers)
