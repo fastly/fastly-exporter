@@ -197,6 +197,13 @@ type Metrics struct {
 	SynthsTotal                             *prometheus.CounterVec
 	TLSTotal                                *prometheus.CounterVec
 	UncacheableTotal                        *prometheus.CounterVec
+	VclOnComputeEdgeHitRequestsTotal        *prometheus.CounterVec
+	VclOnComputeEdgeMissRequestsTotal       *prometheus.CounterVec
+	VclOnComputeErrorRequestsTotal          *prometheus.CounterVec
+	VclOnComputeHitRequestsTotal            *prometheus.CounterVec
+	VclOnComputeMissRequestsTotal           *prometheus.CounterVec
+	VclOnComputePassRequestsTotal           *prometheus.CounterVec
+	VclOnComputeSynthRequestsTotal          *prometheus.CounterVec
 	VideoTotal                              *prometheus.CounterVec
 	WAFBlockedTotal                         *prometheus.CounterVec
 	WAFLoggedTotal                          *prometheus.CounterVec
@@ -402,6 +409,13 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		SynthsTotal:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "synth_total", Help: "TODO"}, []string{"service_id", "service_name", "datacenter"}),
 		TLSTotal:                                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "tls_total", Help: "Number of requests that were received over TLS."}, []string{"service_id", "service_name", "datacenter", "tls_version"}),
 		UncacheableTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "uncacheable_total", Help: "Number of requests that were designated uncachable."}, []string{"service_id", "service_name", "datacenter"}),
+		VclOnComputeHitRequestsTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "vcl_on_compute_hit_requests_total", Help: "Number of cache hits for a VCL service running on Compute."}, []string{"service_id", "service_name", "datacenter"}),
+		VclOnComputeMissRequestsTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "vcl_on_compute_miss_requests_total", Help: "Number of cache misses for a VCL service running on Compute."}, []string{"service_id", "service_name", "datacenter"}),
+		VclOnComputePassRequestsTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "vcl_on_compute_pass_requests_total", Help: "Number of requests that passed through the CDN without being cached for a VCL service running on Compute."}, []string{"service_id", "service_name", "datacenter"}),
+		VclOnComputeErrorRequestsTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "vcl_on_compute_error_requests_total", Help: "Number of cache errors for a VCL service running on Compute."}, []string{"service_id", "service_name", "datacenter"}),
+		VclOnComputeSynthRequestsTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "vcl_on_compute_synth_requests_total", Help: "Number of requests that returned a synthetic response (i.e., response objects created with the synthetic VCL statement) for a VCL service running on Compute."}, []string{"service_id", "service_name", "datacenter"}),
+		VclOnComputeEdgeHitRequestsTotal:        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "vcl_on_compute_edge_hit_requests_total", Help: "Number of requests sent by end users to Fastly that resulted in a hit at the edge for a VCL service running on Compute."}, []string{"service_id", "service_name", "datacenter"}),
+		VclOnComputeEdgeMissRequestsTotal:       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "vcl_on_compute_edge_miss_requests_total", Help: "Number of requests sent by end users to Fastly that resulted in a miss at the edge for a VCL service running on Compute."}, []string{"service_id", "service_name", "datacenter"}),
 		VideoTotal:                              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "video_total", Help: "Number of responses with the video segment or video manifest MIME type (i.e., application/x-mpegurl, application/vnd.apple.mpegurl, application/f4m, application/dash+xml, application/vnd.ms-sstr+xml, ideo/mp2t, audio/aac, video/f4f, video/x-flv, video/mp4, audio/mp4)."}, []string{"service_id", "service_name", "datacenter"}),
 		WAFBlockedTotal:                         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "waf_blocked_total", Help: "Number of requests that triggered a WAF rule and were blocked."}, []string{"service_id", "service_name", "datacenter"}),
 		WAFLoggedTotal:                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "waf_logged_total", Help: "Number of requests that triggered a WAF rule and were logged."}, []string{"service_id", "service_name", "datacenter"}),

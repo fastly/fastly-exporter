@@ -238,6 +238,13 @@ type Datacenter struct {
 	TLSv12                               uint64            `json:"tls_v12"`
 	TLSv13                               uint64            `json:"tls_v13"`
 	Uncacheable                          uint64            `json:"uncacheable"`
+	VclOnComputeEdgeHitRequests          uint64            `json:"vcl_on_compute_edge_hit_requests"`
+	VclOnComputeEdgeMissRequests         uint64            `json:"vcl_on_compute_edge_miss_requests"`
+	VclOnComputeErrorRequests            uint64            `json:"vcl_on_compute_error_requests"`
+	VclOnComputeHitRequests              uint64            `json:"vcl_on_compute_hit_requests"`
+	VclOnComputeMissRequests             uint64            `json:"vcl_on_compute_miss_requests"`
+	VclOnComputePassRequests             uint64            `json:"vcl_on_compute_pass_requests"`
+	VclOnComputeSynthRequests            uint64            `json:"vcl_on_compute_synth_requests"`
 	Video                                uint64            `json:"video"`
 	WAFBlocked                           uint64            `json:"waf_blocked"`
 	WAFLogged                            uint64            `json:"waf_logged"`
