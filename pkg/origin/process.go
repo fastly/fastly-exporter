@@ -7,8 +7,18 @@ const (
 )
 
 // Process updates the metrics with data from the API response.
-func Process(response *Response, serviceID, serviceName, serviceVersion string, m *Metrics) {
+func Process(response *Response, serviceID, serviceName, _ string, m *Metrics, aggregateOnly bool) {
+	const aggregateDC = "aggregate"
+
 	for _, d := range response.Data {
+		if aggregateOnly {
+			for origin, stats := range d.Aggregated {
+				process(serviceID, serviceName, aggregateDC, origin, stats, m)
+			}
+
+			continue
+		}
+
 		for datacenter, byOrigin := range d.Datacenter {
 			for origin, stats := range byOrigin {
 				process(serviceID, serviceName, datacenter, origin, stats, m)

@@ -44,6 +44,7 @@ func main() {
 		serviceRefresh      time.Duration
 		apiTimeout          time.Duration
 		rtTimeout           time.Duration
+		aggregateOnly       bool
 		debug               bool
 		versionFlag         bool
 		configFileExample   bool
@@ -67,6 +68,7 @@ func main() {
 		fs.DurationVar(&serviceRefresh, "api-refresh", 1*time.Minute, "DEPRECATED -- use service-refresh instead")
 		fs.DurationVar(&apiTimeout, "api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
 		fs.DurationVar(&rtTimeout, "rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
+		fs.BoolVar(&aggregateOnly, "aggregate-only", false, "Use aggregated data rather than per-datacenter")
 		fs.BoolVar(&debug, "debug", false, "log debug information")
 		fs.BoolVar(&versionFlag, "version", false, "print version information and exit")
 		fs.String("config-file", "", "config file (optional)")
@@ -341,6 +343,7 @@ func main() {
 			subscriberOptions = []rt.SubscriberOption{
 				rt.WithLogger(rtLogger),
 				rt.WithMetadataProvider(serviceCache),
+				rt.WithAggregateOnly(aggregateOnly),
 			}
 		)
 		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, productCache, rtLogger)

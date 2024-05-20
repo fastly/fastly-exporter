@@ -1,8 +1,18 @@
 package domain
 
 // Process updates the metrics with data from the API response.
-func Process(response *Response, serviceID, serviceName, serviceVersion string, m *Metrics) {
+func Process(response *Response, serviceID, serviceName, _ string, m *Metrics, aggregateOnly bool) {
+	const aggregateDC = "aggregate"
+
 	for _, d := range response.Data {
+		if aggregateOnly {
+			for domain, stats := range d.Aggregated {
+				process(serviceID, serviceName, aggregateDC, domain, stats, m)
+			}
+
+			continue
+		}
+
 		for datacenter, byDomain := range d.Datacenter {
 			for domain, stats := range byDomain {
 				process(serviceID, serviceName, datacenter, domain, stats, m)

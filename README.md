@@ -119,6 +119,19 @@ Different flags (for the same filter target) combine with AND semantics. For
 example, `-metric-allowlist 'bytes_total$' -metric-blocklist imgopto` would only
 export metrics whose names ended in bytes_total, but didn't include imgopto.
 
+### Metrics Grouping: by datacenter or aggregate
+
+The Fastly real-time stats API returns measurements grouped by datacenter as
+well as aggregated measurements for all datacenters. By default, exported
+metrics are grouped by datacenter. The response body size of the metrics
+endpoint can potentially be very large. This will be exacerbated when using
+the exporter with many services, many origins with Origin Inspector, and many
+domains with Domain Inspector. One way to reduce the output size of the
+metrics endpoint is by using the `-aggregate-only` flag. When this flag is
+used only the `aggregated` metrics from the real-time stats API will be
+exported. Metrics will still include the datacenter label but it will always
+be set to "aggregate".
+
 ### Service discovery
 
 Per-service metrics are available via `/metrics?target=<service ID>`. Available
