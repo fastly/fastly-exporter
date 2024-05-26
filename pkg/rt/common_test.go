@@ -4765,27 +4765,27 @@ const domainsResponseFixture = `{
 				}
 			},
 			"aggregated": {
-				"testorigin": {
-						"bandwidth": 1048,
-						"bereq_body_bytes": 16,
-						"bereq_header_bytes": 16,
-						"edge_hit_ratio": 0.5,
-						"edge_hit_requests": 5,
-						"edge_miss_requests": 5,
-						"edge_requests": 10,
-						"edge_resp_body_bytes": 1024,
-						"edge_resp_header_bytes": 48, 
-						"origin_fetch_resp_body_bytes": 1024,
-						"origin_fetch_resp_header_bytes": 48,
-						"origin_fetches": 5,
-						"origin_offload": 5,
-						"origin_status_200": 5,
-						"origin_status_2xx": 5,
-						"requests": 10,
-						"resp_body_bytes": 1024,
-						"resp_header_bytes": 48,
-						"status_200": 10,
-						"status_2xx": 10
+				"testhost": {
+					"bandwidth": 1048,
+					"bereq_body_bytes": 16,
+					"bereq_header_bytes": 16,
+					"edge_hit_ratio": 0.5,
+					"edge_hit_requests": 5,
+					"edge_miss_requests": 5,
+					"edge_requests": 10,
+					"edge_resp_body_bytes": 1024,
+					"edge_resp_header_bytes": 48,
+					"origin_fetch_resp_body_bytes": 1024,
+					"origin_fetch_resp_header_bytes": 48,
+					"origin_fetches": 5,
+					"origin_offload": 5,
+					"origin_status_200": 5,
+					"origin_status_2xx": 5,
+					"requests": 10,
+					"resp_body_bytes": 1024,
+					"resp_header_bytes": 48,
+					"status_200": 10,
+					"status_2xx": 10
 				}
 			}
 		}
