@@ -35,16 +35,17 @@ type MetadataProvider interface {
 // Subscriber polls rt.fastly.com endpoints for a single service ID. It emits
 // the received stats data to Prometheus metrics.
 type Subscriber struct {
-	client       HTTPClient
-	token        string
-	serviceID    string
-	provider     MetadataProvider
-	metrics      *prom.Metrics
-	postprocess  func()
-	logger       log.Logger
-	rtDelayCount int
-	oiDelayCount int
-	diDelayCount int
+	client        HTTPClient
+	token         string
+	serviceID     string
+	provider      MetadataProvider
+	metrics       *prom.Metrics
+	postprocess   func()
+	logger        log.Logger
+	rtDelayCount  int
+	oiDelayCount  int
+	diDelayCount  int
+	aggregateOnly bool
 }
 
 // SubscriberOption provides some additional behavior to a subscriber.
@@ -69,6 +70,13 @@ func WithLogger(logger log.Logger) SubscriberOption {
 // postprocess function is invoked. This option is only useful for tests.
 func WithPostprocess(f func()) SubscriberOption {
 	return func(s *Subscriber) { s.postprocess = f }
+}
+
+// WithAggregateOnly sets whether aggregate metrics are output instead of
+// per datacenter metrics. By default, per datacenter are provided. Enabling
+// this feature will significantly reduce the payload size of the metrics endpoint.
+func WithAggregateOnly(aggregateOnly bool) SubscriberOption {
+	return func(s *Subscriber) { s.aggregateOnly = aggregateOnly }
 }
 
 // NewSubscriber returns a ready-to-use subscriber. Callers must be sure to
@@ -223,7 +231,7 @@ func (s *Subscriber) queryRealtime(ctx context.Context, ts uint64) (currentName 
 			s.rtDelayCount = 0
 			result = apiResultSuccess
 		}
-		realtime.Process(&response, s.serviceID, name, version, s.metrics.Realtime)
+		realtime.Process(&response, s.serviceID, name, version, s.metrics.Realtime, s.aggregateOnly)
 		s.postprocess()
 
 	case http.StatusUnauthorized, http.StatusForbidden:
@@ -287,7 +295,7 @@ func (s *Subscriber) queryOrigins(ctx context.Context, ts uint64) (currentName s
 			s.oiDelayCount = 0
 			result = apiResultSuccess
 		}
-		origin.Process(&response, s.serviceID, name, version, s.metrics.Origin)
+		origin.Process(&response, s.serviceID, name, version, s.metrics.Origin, s.aggregateOnly)
 		s.postprocess()
 
 	case http.StatusUnauthorized, http.StatusForbidden:
@@ -351,7 +359,7 @@ func (s *Subscriber) queryDomains(ctx context.Context, ts uint64) (currentName s
 			s.diDelayCount = 0
 			result = apiResultSuccess
 		}
-		domain.Process(&response, s.serviceID, name, version, s.metrics.Domain)
+		domain.Process(&response, s.serviceID, name, version, s.metrics.Domain, s.aggregateOnly)
 		s.postprocess()
 
 	case http.StatusUnauthorized, http.StatusForbidden:
