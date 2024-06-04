@@ -39,6 +39,7 @@ func main() {
 		serviceBlocklist    stringslice
 		metricAllowlist     stringslice
 		metricBlocklist     stringslice
+		certificateRefresh  time.Duration
 		datacenterRefresh   time.Duration
 		productRefresh      time.Duration
 		serviceRefresh      time.Duration
@@ -62,6 +63,7 @@ func main() {
 		fs.Var(&serviceBlocklist, "service-blocklist", "if set, don't include services whose names match this regex (repeatable)")
 		fs.Var(&metricAllowlist, "metric-allowlist", "if set, only export metrics whose names match this regex (repeatable)")
 		fs.Var(&metricBlocklist, "metric-blocklist", "if set, don't export metrics whose names match this regex (repeatable)")
+		fs.DurationVar(&certificateRefresh, "certificate-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated certificates metadata (10m–24h)")
 		fs.DurationVar(&datacenterRefresh, "datacenter-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated datacenter metadata (10m–1h)")
 		fs.DurationVar(&productRefresh, "product-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated product metadata (10m–24h)")
 		fs.DurationVar(&serviceRefresh, "service-refresh", 1*time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
@@ -124,6 +126,14 @@ func main() {
 	})
 
 	{
+		if certificateRefresh < 10*time.Minute {
+			level.Warn(logger).Log("msg", "-certificate-refresh cannot be shorter than 10m; setting it to 10m")
+			certificateRefresh = 10 * time.Minute
+		}
+		if certificateRefresh > 24*time.Hour {
+			level.Warn(logger).Log("msg", "-certificaate-refresh cannot be longer than 24h; setting it to 24h")
+			certificateRefresh = 24 * time.Hour
+		}
 		if datacenterRefresh < 10*time.Minute {
 			level.Warn(logger).Log("msg", "-datacenter-refresh cannot be shorter than 10m; setting it to 10m")
 			datacenterRefresh = 10 * time.Minute
@@ -269,6 +279,11 @@ func main() {
 		serviceCache = api.NewServiceCache(apiClient, token, serviceCacheOptions...)
 	}
 
+	var certificateCache *api.CertificateCache
+	{
+		enabled := !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "cert_expiry_timestamp_seconds"))
+		certificateCache = api.NewCertificateCache(apiClient, token, enabled)
+	}
 	var datacenterCache *api.DatacenterCache
 	{
 		enabled := !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "datacenter_info"))
@@ -288,6 +303,14 @@ func main() {
 			}
 			return nil
 		})
+		if certificateCache.Enabled() {
+			g.Go(func() error {
+				if err := certificateCache.Refresh(context.Background()); err != nil {
+					level.Warn(logger).Log("during", "initial fetch of certificates", "err", err, "msg", "certificate labels unavailable, will retry")
+				}
+				return nil
+			})
+		}
 		if datacenterCache.Enabled() {
 			g.Go(func() error {
 				if err := datacenterCache.Refresh(context.Background()); err != nil {
@@ -307,6 +330,15 @@ func main() {
 	}
 
 	var defaultGatherers prometheus.Gatherers
+	if certificateCache.Enabled() {
+		certs, err := certificateCache.Gatherer(namespace, deprecatedSubsystem)
+		if err != nil {
+			level.Error(apiLogger).Log("during", "create certificate gatherer", "err", err)
+			os.Exit(1)
+		}
+		defaultGatherers = append(defaultGatherers, certs)
+	}
+
 	if datacenterCache.Enabled() {
 		dcs, err := datacenterCache.Gatherer(namespace, deprecatedSubsystem)
 		if err != nil {
@@ -351,6 +383,31 @@ func main() {
 	}
 
 	var g run.Group
+	// only setup the ticker if the certificateCache is enabled.
+	if certificateCache.Enabled() {
+
+		// Every certificateRefresh, ask the api.CertificateCache to refresh
+		// metadata from the api.fastly.com/tls/certificates endpoint.
+		var (
+			ctx, cancel = context.WithCancel(context.Background())
+			ticker      = time.NewTicker(certificateRefresh)
+		)
+		g.Add(func() error {
+			for {
+				select {
+				case <-ticker.C:
+					if err := certificateCache.Refresh(ctx); err != nil {
+						level.Warn(apiLogger).Log("during", "certificate refresh", "err", err, "msg", "the certificate info metrics may be stale")
+					}
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+		}, func(error) {
+			ticker.Stop()
+			cancel()
+		})
+	}
 	// only setup the ticker if the datacenterCache is enabled.
 	if datacenterCache.Enabled() {
 
