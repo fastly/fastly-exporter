@@ -111,7 +111,7 @@ func (c *CertificateCache) Gatherer(namespace, subsystem string) (prometheus.Gat
 	var (
 		fqName      = prometheus.BuildFQName(namespace, subsystem, "cert_expiry_timestamp_seconds")
 		help        = "Metadata about Fastly certificates."
-		labels      = []string{"CN", "name", "id", "issuer", "SN"}
+		labels      = []string{"cn", "name", "id", "issuer", "sn"}
 		constLabels = prometheus.Labels{}
 		desc        = prometheus.NewDesc(fqName, help, labels, constLabels)
 		collector   = &certificateCollector{desc: desc, cache: c}
