@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"net/http"
 	"sort"
 	"sync"
@@ -17,20 +18,20 @@ import (
 const maxCertificatesPageSize = 1000
 
 type Certificates struct {
-	Certificate        []Certificate      `json:"data"`
+	Certificate []Certificate `json:"data"`
 }
 
 type Certificate struct {
-	Attributes        Attributes      `json:"attributes"`
-	Id                string          `json:"id"`
+	Attributes Attributes `json:"attributes"`
+	Id         string     `json:"id"`
 }
 
 type Attributes struct {
-	CN          string      `json:"issued_to"`
-	Name        string      `json:"name"`
-	Issuer      string      `json:"issuer"`
-	Not_after   string      `json:"not_after"`
-	SN          string      `json:"serial_number"`
+	CN        string `json:"issued_to"`
+	Name      string `json:"name"`
+	Issuer    string `json:"issuer"`
+	Not_after string `json:"not_after"`
+	SN        string `json:"serial_number"`
 }
 
 // CertificateCache polls api.fastly.com/tls/certificates and maintains a local cache
@@ -40,7 +41,7 @@ type CertificateCache struct {
 	token   string
 	enabled bool
 
-	mtx sync.Mutex
+	mtx   sync.Mutex
 	certs Certificates
 }
 
@@ -143,11 +144,18 @@ func (c *certificateCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, cert := range c.cache.Certificates().Certificate {
 		format := "2006-01-02T15:04:05.000Z"
 		t, _ := time.Parse(format, cert.Attributes.Not_after)
+
+		bigISN := new(big.Int)
+		bigISN.SetString(cert.Attributes.SN, 10)
+
+		// Convert certificate SN to hex.
+		hexSN := fmt.Sprintf("%X", bigISN)
+
 		var (
 			desc        = c.desc
 			valueType   = prometheus.GaugeValue
 			value       = float64(t.Unix())
-			labelValues = []string{cert.Attributes.CN, cert.Attributes.Name, cert.Id, cert.Attributes.Issuer, cert.Attributes.SN}
+			labelValues = []string{cert.Attributes.CN, cert.Attributes.Name, cert.Id, cert.Attributes.Issuer, hexSN}
 		)
 		ch <- prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
 	}
