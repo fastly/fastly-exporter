@@ -38,10 +38,10 @@ type Datacenter struct {
 	BotChallengesIssued                        uint64            `json:"bot_challenges_issued"`
 	BotChallengesSucceeded                     uint64            `json:"bot_challenges_succeeded"`
 	BotChallengeStarts                         uint64            `json:"bot_challenge_starts"`
-	BotChallengesVerificationApiDuplicateCount uint64            `json:"bot_challenges_verification_api_duplicate_count"`
-	BotChallengesVerificationApiExpiredCount   uint64            `json:"bot_challenges_verification_api_expired_count"`
-	BotChallengesVerificationApiFailureCount   uint64            `json:"bot_challenges_verification_api_failure_count"`
-	BotChallengesVerificationApiSuccessCount   uint64            `json:"bot_challenges_verification_api_success_count"`
+	BotChallengesVerificationAPIDuplicateCount uint64            `json:"bot_challenges_verification_api_duplicate_count"`
+	BotChallengesVerificationAPIExpiredCount   uint64            `json:"bot_challenges_verification_api_expired_count"`
+	BotChallengesVerificationAPIFailureCount   uint64            `json:"bot_challenges_verification_api_failure_count"`
+	BotChallengesVerificationAPISuccessCount   uint64            `json:"bot_challenges_verification_api_success_count"`
 	ComputeBackendReqBodyBytesTotal            uint64            `json:"compute_bereq_body_bytes"`
 	ComputeBackendReqErrorsTotal               uint64            `json:"compute_bereq_errors"`
 	ComputeBackendReqHeaderBytesTotal          uint64            `json:"compute_bereq_header_bytes"`

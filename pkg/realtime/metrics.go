@@ -33,10 +33,10 @@ type Metrics struct {
 	BotChallengesIssuedTotal                   *prometheus.CounterVec
 	BotChallengesSucceededTotal                *prometheus.CounterVec
 	BotChallengeStartsTotal                    *prometheus.CounterVec
-	BotChallengesVerificationApiDuplicateCount *prometheus.CounterVec
-	BotChallengesVerificationApiExpiredCount   *prometheus.CounterVec
-	BotChallengesVerificationApiFailureCount   *prometheus.CounterVec
-	BotChallengesVerificationApiSuccessCount   *prometheus.CounterVec
+	BotChallengesVerificationAPIDuplicateCount *prometheus.CounterVec
+	BotChallengesVerificationAPIExpiredCount   *prometheus.CounterVec
+	BotChallengesVerificationAPIFailureCount   *prometheus.CounterVec
+	BotChallengesVerificationAPISuccessCount   *prometheus.CounterVec
 	ComputeBackendReqBodyBytesTotal            *prometheus.CounterVec
 	ComputeBackendReqErrorsTotal               *prometheus.CounterVec
 	ComputeBackendReqHeaderBytesTotal          *prometheus.CounterVec
@@ -248,10 +248,10 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		BotChallengesIssuedTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_issued_total", Help: "The number of challenges issued. For example, the issuance of a CAPTCHA challenge."}, []string{"service_id", "service_name", "datacenter"}),
 		BotChallengesSucceededTotal:                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_succeeded_total", Help: "The number of successful challenge solutions processed. For example, a correct CAPTCHA solution."}, []string{"service_id", "service_name", "datacenter"}),
 		BotChallengeStartsTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenge_starts_total", Help: "The number of challenge-start tokens created."}, []string{"service_id", "service_name", "datacenter"}),
-		BotChallengesVerificationApiDuplicateCount: prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_verification_api_duplicate_count", Help: ""}, []string{"service_id", "service_name", "datacenter"}),
-		BotChallengesVerificationApiExpiredCount:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_verification_api_expired_count", Help: ""}, []string{"service_id", "service_name", "datacenter"}),
-		BotChallengesVerificationApiFailureCount:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_verification_api_failure_count", Help: ""}, []string{"service_id", "service_name", "datacenter"}),
-		BotChallengesVerificationApiSuccessCount:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_verification_api_success_count", Help: ""}, []string{"service_id", "service_name", "datacenter"}),
+		BotChallengesVerificationAPIDuplicateCount: prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_verification_api_duplicate_count", Help: ""}, []string{"service_id", "service_name", "datacenter"}),
+		BotChallengesVerificationAPIExpiredCount:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_verification_api_expired_count", Help: ""}, []string{"service_id", "service_name", "datacenter"}),
+		BotChallengesVerificationAPIFailureCount:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_verification_api_failure_count", Help: ""}, []string{"service_id", "service_name", "datacenter"}),
+		BotChallengesVerificationAPISuccessCount:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "bot_challenges_verification_api_success_count", Help: ""}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeBackendReqBodyBytesTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_bereq_body_bytes_total", Help: "Total body bytes sent to backends (origins) by Compute@Edge."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeBackendReqErrorsTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_bereq_errors_total", Help: "Number of backend request errors, including timeouts."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeBackendReqHeaderBytesTotal:          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_bereq_header_bytes_total", Help: "Total header bytes sent to backends (origins) by Compute@Edge."}, []string{"service_id", "service_name", "datacenter"}),
