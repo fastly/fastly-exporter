@@ -59,6 +59,7 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "503").Add(float64(stats.Status503))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "504").Add(float64(stats.Status504))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "505").Add(float64(stats.Status505))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "530").Add(float64(stats.Status530))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "5xx").Add(float64(stats.Status5xx))
 
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "1xx").Add(float64(stats.ComputeStatus1xx))
@@ -82,6 +83,7 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "503").Add(float64(stats.ComputeStatus503))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "504").Add(float64(stats.ComputeStatus504))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "505").Add(float64(stats.ComputeStatus505))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "530").Add(float64(stats.ComputeStatus530))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "5xx").Add(float64(stats.ComputeStatus5xx))
 
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "1xx").Add(float64(stats.WafStatus1xx))
@@ -106,6 +108,7 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "503").Add(float64(stats.WafStatus503))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "504").Add(float64(stats.WafStatus504))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "505").Add(float64(stats.WafStatus505))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "530").Add(float64(stats.WafStatus530))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "5xx").Add(float64(stats.WafStatus5xx))
 
 	// Latency stats are clearly from xxx_bucket{le="v"} metrics,

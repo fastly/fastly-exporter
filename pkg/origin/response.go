@@ -47,6 +47,7 @@ type Stats struct {
 	Status503                  uint64 `json:"status_503"`                       // Number of responses received with status code 503 (Service Unavailable) from origin.
 	Status504                  uint64 `json:"status_504"`                       // Number of responses received with status code 504 (Gateway Timeout) from origin.
 	Status505                  uint64 `json:"status_505"`                       // Number of responses received with status code 505 (HTTP Version Not Supported) from origin.
+	Status530                  uint64 `json:"status_530"`                       // Number of responses received from origin with status code 530.
 	Status5xx                  uint64 `json:"status_5xx"`                       // Number of 5xx "Server Error" codes delivered from origin.
 	Latency0to1                uint64 `json:"latency_0_to_1ms"`                 // Number of responses from origin with latency between 0 and 1 millisecond.
 	Latency1to5                uint64 `json:"latency_1_to_5ms"`                 // Number of responses from origin with latency between 1 and 5 milliseconds.
@@ -86,6 +87,7 @@ type Stats struct {
 	WafStatus503               uint64 `json:"waf_status_503"`                   // Number of responses received with status code 503 (Service Unavailable) received for origin requests made by the Fastly WAF.
 	WafStatus504               uint64 `json:"waf_status_504"`                   // Number of responses received with status code 504 (Gateway Timeout) received for origin requests made by the Fastly WAF.
 	WafStatus505               uint64 `json:"waf_status_505"`                   // Number of responses received with status code 505 (HTTP Version Not Supported) received for origin requests made by the Fastly WAF.
+	WafStatus530               uint64 `json:"waf_status_530"`                   // Number of responses received with status code 530 received for origin requests made by the Fastly WAF.
 	WafLatency0to1             uint64 `json:"waf_latency_0_to_1ms"`             // Number of responses with latency between 0 and 1 millisecond received for origin requests made by the Fastly WAF.
 	WafLatency1to5             uint64 `json:"waf_latency_1_to_5ms"`             // Number of responses with latency between 1 and 5 milliseconds received for origin requests made by the Fastly WAF.
 	WafLatency5to10            uint64 `json:"waf_latency_5_to_10ms"`            // Number of responses with latency between 5 and 10 milliseconds received for origin requests made by the Fastly WAF.
@@ -124,6 +126,7 @@ type Stats struct {
 	ComputeStatus503           uint64 `json:"compute_status_503"`               // Number of responses received with status code 503 (Service Unavailable) for origin received by Compute@Edge.
 	ComputeStatus504           uint64 `json:"compute_status_504"`               // Number of responses received with status code 504 (Gateway Timeout) for origin received by Compute@Edge.
 	ComputeStatus505           uint64 `json:"compute_status_505"`               // Number of responses received with status code 505 (HTTP Version Not Supported) for origin received by Compute@Edge.
+	ComputeStatus530           uint64 `json:"compute_status_530"`               // Number of responses received with status code 530 for origin received by the Compute platform.
 	ComputeLatency0to1         uint64 `json:"compute_latency_0_to_1ms"`         // Number of responses with latency between 0 and 1 millisecond for origin received by Compute@Edge.
 	ComputeLatency1to5         uint64 `json:"compute_latency_1_to_5ms"`         // Number of responses with latency between 1 and 5 milliseconds for origin received by Compute@Edge.
 	ComputeLatency5to10        uint64 `json:"compute_latency_5_to_10ms"`        // Number of responses with latency between 5 and 10 milliseconds for origin received by Compute@Edge.
