@@ -48,6 +48,7 @@ type Datacenter struct {
 	ComputeBackendReqTotal                     uint64            `json:"compute_bereqs"`
 	ComputeBackendRespBodyBytesTotal           uint64            `json:"compute_beresp_body_bytes"`
 	ComputeBackendRespHeaderBytesTotal         uint64            `json:"compute_beresp_header_bytes"`
+	ComputeCacheOperationsCount                uint64            `json:"compute_cache_operations_count"`
 	ComputeExecutionTimeMilliseconds           uint64            `json:"compute_execution_time_ms"`
 	ComputeGlobalsLimitExceededTotal           uint64            `json:"compute_globals_limit_exceeded"`
 	ComputeGuestErrorsTotal                    uint64            `json:"compute_guest_errors"`
@@ -152,6 +153,8 @@ type Datacenter struct {
 	ObjectSize1k                               uint64            `json:"object_size_1k"`
 	ObjectSize1m                               uint64            `json:"object_size_1m"`
 	ObjectSizeOther                            uint64            `json:"object_size_other"`
+	ObjectStorageClassAOperationsCount         uint64            `json:"object_storage_class_a_operations_count"`
+	ObjectStorageClassBOperationsCount         uint64            `json:"object_storage_class_b_operations_count"`
 	OriginCacheFetches                         uint64            `json:"origin_cache_fetches"`
 	OriginCacheFetchRespBodyBytes              uint64            `json:"origin_cache_fetch_resp_body_bytes"`
 	OriginCacheFetchRespHeaderBytes            uint64            `json:"origin_cache_fetch_resp_header_bytes"`
@@ -239,6 +242,7 @@ type Datacenter struct {
 	Status503                                  uint64            `json:"status_503"`
 	Status504                                  uint64            `json:"status_504"`
 	Status505                                  uint64            `json:"status_505"`
+	Status530                                  uint64            `json:"status_530"`
 	Status5xx                                  uint64            `json:"status_5xx"`
 	Synths                                     uint64            `json:"synth"`
 	TLS                                        uint64            `json:"tls"`

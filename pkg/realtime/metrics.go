@@ -43,6 +43,7 @@ type Metrics struct {
 	ComputeBackendReqTotal                     *prometheus.CounterVec
 	ComputeBackendRespBodyBytesTotal           *prometheus.CounterVec
 	ComputeBackendRespHeaderBytesTotal         *prometheus.CounterVec
+	ComputeCacheOperationsCount                *prometheus.CounterVec
 	ComputeExecutionTimeTotal                  *prometheus.CounterVec
 	ComputeGlobalsLimitExceededTotal           *prometheus.CounterVec
 	ComputeGuestErrorsTotal                    *prometheus.CounterVec
@@ -137,6 +138,8 @@ type Metrics struct {
 	MissSubTimeTotal                           *prometheus.CounterVec
 	MissTimeTotal                              *prometheus.CounterVec
 	ObjectSizeBytes                            *prometheus.HistogramVec
+	ObjectStorageClassAOperationsCount         *prometheus.CounterVec
+	ObjectStorageClassBOperationsCount         *prometheus.CounterVec
 	OriginCacheFetchesTotal                    *prometheus.CounterVec
 	OriginCacheFetchRespBodyBytesTotal         *prometheus.CounterVec
 	OriginCacheFetchRespHeaderBytesTotal       *prometheus.CounterVec
@@ -258,6 +261,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		ComputeBackendReqTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_bereq_total", Help: "Number of backend requests started."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeBackendRespBodyBytesTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_beresp_body_bytes_total", Help: "Total body bytes received from backends (origins) by Compute@Edge."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeBackendRespHeaderBytesTotal:         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_beresp_header_bytes_total", Help: "Total header bytes received from backends (origins) by Compute@Edge."}, []string{"service_id", "service_name", "datacenter"}),
+		ComputeCacheOperationsCount:                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_cache_operations_count", Help: "Number of cache operations executed by the Compute platform."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeExecutionTimeTotal:                  prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_execution_time_total", Help: "The amount of active CPU time used to process your requests (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeGlobalsLimitExceededTotal:           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_globals_limit_exceeded_total", Help: "Number of times a guest exceeded its globals limit."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeGuestErrorsTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_guest_errors_total", Help: "Number of times a service experienced a guest code error."}, []string{"service_id", "service_name", "datacenter"}),
@@ -352,6 +356,8 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		MissSubTimeTotal:                           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_sub_time_total", Help: "Time spent inside the 'miss' Varnish subroutine (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		MissTimeTotal:                              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "miss_time_total", Help: "Total amount of time spent processing cache misses (in seconds)."}, []string{"service_id", "service_name", "datacenter"}),
 		ObjectSizeBytes:                            prometheus.NewHistogramVec(prometheus.HistogramOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_size_bytes", Help: "Histogram of count of objects served, bucketed by object size range.", Buckets: []float64{1024, 10240, 102400, 1.024e+06, 1.024e+07, 1.024e+08, 1.024e+09}}, []string{"service_id", "service_name", "datacenter"}),
+		ObjectStorageClassAOperationsCount:         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_storage_class_a_operations_count", Help: "A count of the number of Class A Object Storage operations."}, []string{"service_id", "service_name", "datacenter"}),
+		ObjectStorageClassBOperationsCount:         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "object_storage_class_b_operations_count", Help: "A count of the number of Class B Object Storage operations."}, []string{"service_id", "service_name", "datacenter"}),
 		OriginCacheFetchesTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_cache_fetches_total", Help: "The total number of completed requests made to backends (origins) that returned cacheable content."}, []string{"service_id", "service_name", "datacenter"}),
 		OriginCacheFetchRespBodyBytesTotal:         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_cache_fetch_resp_body_bytes_total", Help: "Body bytes received from origin for cacheable content."}, []string{"service_id", "service_name", "datacenter"}),
 		OriginCacheFetchRespHeaderBytesTotal:       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_cache_fetch_resp_header_bytes_total", Help: "Header bytes received from an origin for cacheable content."}, []string{"service_id", "service_name", "datacenter"}),
