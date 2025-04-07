@@ -1,6 +1,7 @@
 module github.com/fastly/fastly-exporter
 
 go 1.21
+toolchain go1.24.1
 
 require (
 	github.com/cespare/xxhash v1.1.0
@@ -11,7 +12,7 @@ require (
 	github.com/oklog/run v1.1.0
 	github.com/peterbourgon/ff/v3 v3.4.0
 	github.com/prometheus/client_golang v1.21.1
-	golang.org/x/sync v0.11.0
+	golang.org/x/sync v0.13.0
 )
 
 require (
