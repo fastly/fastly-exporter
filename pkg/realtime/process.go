@@ -125,7 +125,11 @@ func process(serviceID, serviceName, datacenter string, stats Datacenter, m *Met
 	m.HitSubTimeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HitSubTime))
 	m.HTTP2Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HTTP2))
 	m.HTTP3Total.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.HTTP3))
-	m.HTTPTotal.WithLabelValues(serviceID, serviceName, datacenter, "1").Add(float64(stats.Requests - (stats.HTTP2 + stats.HTTP3)))
+	var http1 uint64
+	if stats.HTTP2+stats.HTTP3 <= stats.Requests {
+		http1 = stats.Requests - (stats.HTTP2 + stats.HTTP3)
+	}
+	m.HTTPTotal.WithLabelValues(serviceID, serviceName, datacenter, "1").Add(float64(http1))
 	m.HTTPTotal.WithLabelValues(serviceID, serviceName, datacenter, "2").Add(float64(stats.HTTP2))
 	m.HTTPTotal.WithLabelValues(serviceID, serviceName, datacenter, "3").Add(float64(stats.HTTP3))
 	m.ImgOptoRespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.ImgOptoRespBodyBytes))
