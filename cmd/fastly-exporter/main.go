@@ -63,7 +63,7 @@ func main() {
 		fs.Var(&serviceBlocklist, "service-blocklist", "if set, don't include services whose names match this regex (repeatable)")
 		fs.Var(&metricAllowlist, "metric-allowlist", "if set, only export metrics whose names match this regex (repeatable)")
 		fs.Var(&metricBlocklist, "metric-blocklist", "if set, don't export metrics whose names match this regex (repeatable)")
-		fs.DurationVar(&certificateRefresh, "certificate-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated certificates metadata (10m–24h)")
+		fs.DurationVar(&certificateRefresh, "certificate-refresh", 6*time.Hour, "how often to poll api.fastly.com for updated custom TLS certificate metadata (10m–24h); a value of 0 will disable certificate refresh")
 		fs.DurationVar(&datacenterRefresh, "datacenter-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated datacenter metadata (10m–1h)")
 		fs.DurationVar(&productRefresh, "product-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated product metadata (10m–24h)")
 		fs.DurationVar(&serviceRefresh, "service-refresh", 1*time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
@@ -126,13 +126,17 @@ func main() {
 	})
 
 	{
-		if certificateRefresh < 10*time.Minute {
-			level.Warn(logger).Log("msg", "-certificate-refresh cannot be shorter than 10m; setting it to 10m")
-			certificateRefresh = 10 * time.Minute
-		}
-		if certificateRefresh > 24*time.Hour {
-			level.Warn(logger).Log("msg", "-certificaate-refresh cannot be longer than 24h; setting it to 24h")
-			certificateRefresh = 24 * time.Hour
+		if certificateRefresh == 0 {
+			level.Info(logger).Log("msg", "-certificate-refresh is disabled; set to a duration between 10m-24h to enable")
+		} else {
+			if certificateRefresh < 10*time.Minute {
+				level.Warn(logger).Log("msg", "-certificate-refresh cannot be shorter than 10m; setting it to 10m")
+				certificateRefresh = 10 * time.Minute
+			}
+			if certificateRefresh > 24*time.Hour {
+				level.Warn(logger).Log("msg", "-certificate-refresh cannot be longer than 24h; setting it to 24h")
+				certificateRefresh = 24 * time.Hour
+			}
 		}
 		if datacenterRefresh < 10*time.Minute {
 			level.Warn(logger).Log("msg", "-datacenter-refresh cannot be shorter than 10m; setting it to 10m")
@@ -281,7 +285,7 @@ func main() {
 
 	var certificateCache *api.CertificateCache
 	{
-		enabled := !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "cert_expiry_timestamp_seconds"))
+		enabled := certificateRefresh != 0 && !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "cert_expiry_timestamp_seconds"))
 		certificateCache = api.NewCertificateCache(apiClient, token, enabled)
 	}
 	var datacenterCache *api.DatacenterCache
