@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/fastly/fastly-exporter/pkg/api"
+	"github.com/go-kit/log"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -13,58 +14,60 @@ func TestCertificateCache(t *testing.T) {
 	t.Parallel()
 
 	for _, testcase := range []struct {
-		name      string
-		client    api.HTTPClient
-		wantCerts api.Certificates
-		wantErr   error
+		name        string
+		client      api.HTTPClient
+		wantCerts   []api.Certificate
+		wantErr     error
+		wantEnabled bool
 	}{
 		{
-			name:      "success",
-			client:    fixedResponseClient{code: http.StatusOK, response: certificatesResponseLarge},
-			wantErr:   nil,
-			wantCerts: api.Certificates{
-				Certificate: []api.Certificate {
-					api.Certificate{Id:"ZfkhTtm4LdaOprVcdsffx4",
-						Attributes: api.Attributes{
-							CN:"first.example1.com",
-							Name:"first.example1.com",
-							Issuer:"First CA",
-							Not_after:"2023-06-25T01:09:23.000Z",
-							SN:"52135557897532112355784498781325912334",
-						},
+			name:    "success",
+			client:  fixedResponseClient{code: http.StatusOK, response: certificatesResponseLarge},
+			wantErr: nil,
+			wantCerts: []api.Certificate{
+				{
+					ID: "ZfkhTtm4LdaOprVcdsffx4",
+					Attributes: api.Attributes{
+						CN:       "first.example1.com",
+						Name:     "first.example1.com",
+						Issuer:   "First CA",
+						NotAfter: "2023-06-25T01:09:23.000Z",
+						SN:       "52135557897532112355784498781325912334",
 					},
-					api.Certificate{Id:"YkUe3r6S3zN4m6lVCd3sGc",
-						Attributes: api.Attributes{
-							CN:"second.example2.com",
-							Name:"My Testing Cert",
-							Issuer:"Second CA",
-							Not_after:"2024-08-29T11:07:33.000Z",
-							SN:"11106091125671337225612345678987654321",
-						},
+				},
+				{
+					ID: "YkUe3r6S3zN4m6lVCd3sGc",
+					Attributes: api.Attributes{
+						CN:       "second.example2.com",
+						Name:     "My Testing Cert",
+						Issuer:   "Second CA",
+						NotAfter: "2024-08-29T11:07:33.000Z",
+						SN:       "11106091125671337225612345678987654321",
 					},
 				},
 			},
+			wantEnabled: true,
 		},
 		{
-			name:      "success_and_empty",
-			client:    fixedResponseClient{code: http.StatusOK, response: certificatesResponseEmpty},
-			wantErr:   nil,
-			wantCerts: api.Certificates{
-				Certificate: []api.Certificate{},
-			},
+			name:        "success_and_empty",
+			client:      fixedResponseClient{code: http.StatusOK, response: certificatesResponseEmpty},
+			wantErr:     nil,
+			wantCerts:   []api.Certificate{},
+			wantEnabled: true,
 		},
 		{
-			name:      "error",
-			client:    fixedResponseClient{code: http.StatusUnauthorized},
-			wantErr:   &api.Error{Code: http.StatusUnauthorized},
-			wantCerts: api.Certificates{},
+			name:        "forbidden",
+			client:      fixedResponseClient{code: http.StatusForbidden},
+			wantErr:     &api.Error{Code: http.StatusForbidden},
+			wantCerts:   nil,
+			wantEnabled: false,
 		},
 	} {
 		t.Run(testcase.name, func(t *testing.T) {
 			var (
 				ctx    = context.Background()
 				client = testcase.client
-				cache  = api.NewCertificateCache(client, "irrelevant token", true)
+				cache  = api.NewCertificateCache(client, "irrelevant token", true, log.NewNopLogger())
 			)
 
 			if want, have := testcase.wantErr, cache.Refresh(ctx); !cmp.Equal(want, have) {
@@ -72,6 +75,10 @@ func TestCertificateCache(t *testing.T) {
 			}
 
 			if want, have := testcase.wantCerts, cache.Certificates(); !cmp.Equal(want, have) {
+				t.Fatal(cmp.Diff(want, have))
+			}
+
+			if want, have := testcase.wantEnabled, cache.Enabled(); !cmp.Equal(want, have) {
 				t.Fatal(cmp.Diff(want, have))
 			}
 		})

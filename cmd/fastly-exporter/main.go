@@ -286,7 +286,7 @@ func main() {
 	var certificateCache *api.CertificateCache
 	{
 		enabled := certificateRefresh != 0 && !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "cert_expiry_timestamp_seconds"))
-		certificateCache = api.NewCertificateCache(apiClient, token, enabled)
+		certificateCache = api.NewCertificateCache(apiClient, token, enabled, logger)
 	}
 	var datacenterCache *api.DatacenterCache
 	{
@@ -310,7 +310,11 @@ func main() {
 		if certificateCache.Enabled() {
 			g.Go(func() error {
 				if err := certificateCache.Refresh(context.Background()); err != nil {
-					level.Warn(logger).Log("during", "initial fetch of certificates", "err", err, "msg", "certificate labels unavailable, will retry")
+					if certificateCache.Enabled() {
+						level.Warn(logger).Log("during", "initial fetch of certificates", "err", err, "msg", "certificate metrics unavailable, will retry")
+					} else {
+						level.Warn(logger).Log("during", "initial fetch of certificates", "err", err, "msg", "Disabling TLS certificate refresh. FASTLY_API_TOKEN must have the TLS management scope")
+					}
 				}
 				return nil
 			})
