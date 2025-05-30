@@ -1,11 +1,23 @@
 # fastly-exporter [![Latest Release](https://img.shields.io/github/release/fastly/fastly-exporter.svg?style=flat-square)](https://github.com/fastly/fastly-exporter/releases/latest) [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Ffastly%2Ffastly-exporter%2Fbadge%3Fref%3Dmain&style=flat-square)](https://actions-badge.atrox.dev/fastly/fastly-exporter/goto?ref=main)
 
-This program consumes from the [Fastly Real-time Analytics API][rt] and makes
+This program consumes from the [the Fastly API][api] and makes
 the data available to [Prometheus][prom]. It should behave like you expect:
 dynamically adding new services, removing old services, and reflecting changes
 to service metadata like name and version.
 
-[rt]: https://docs.fastly.com/api/analytics
+Fastly APIs consumed:
+
+* [Real-time Analytics API][rt]
+* [Service list][svc]
+* [Custom TLS Certificates][certs]
+* [POPs][pops]
+
+[api]: https://www.fastly.com/documentation/reference/api/
+[rt]: https://www.fastly.com/documentation/reference/api/metrics-stats/realtime/
+[svc]: https://www.fastly.com/documentation/reference/api/services/service/#list-services
+[pops]: https://www.fastly.com/documentation/reference/api/utils/pops/
+[certs]: https://www.fastly.com/documentation/reference/api/tls/custom-certs/
+
 [prom]: https://prometheus.io
 
 ## Getting
@@ -61,13 +73,23 @@ go build ./cmd/fastly-exporter
 
 ## Using
 
-### Basic
+### Authentication
 
-For simple use cases, all you need is a Fastly API token. [See this link][token]
+A valid Fastly API token is required to use the exporter. [See this link][token]
 for information on creating API tokens. The token can be provided via the
 `-token` flag or the `FASTLY_API_TOKEN` environment variable.
 
-[token]: https://docs.fastly.com/guides/account-management-and-security/using-api-tokens#creating-api-tokens
+If you would like to export TLS certificate metrics the token will need TLS Management permissions:
+* If you are using a [user token][token] the user must have TLS Management permissions. [See this link][user_perms] for how to update this access permissions.
+* If you are using an [automation token][auto_token] it must have TLS Management permissions.
+
+[token]: https://www.fastly.com/documentation/guides/account-info/account-management/using-api-tokens/#creating-api-tokens
+[auto_token]: https://www.fastly.com/documentation/guides/account-info/account-management/using-api-tokens/#creating-automation-tokens
+[user_perms]: https://www.fastly.com/documentation/guides/account-info/user-access-and-control/configuring-user-roles-and-permissions/#changing-user-roles-and-access-permissions-for-existing-users
+
+### Basic
+
+For simple use cases, all you need is a Fastly API token.
 
 ```sh
 fastly-exporter -token XXX
