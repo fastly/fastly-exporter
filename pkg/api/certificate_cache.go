@@ -20,6 +20,9 @@ import (
 // from the api.fastly.com/tls/certificates endpoint.
 const maxCertificatesPageSize = 200
 
+// format is the expected time format for the NotAfter timestamp from the Fastly API.
+const format = "2006-01-02T15:04:05.000Z"
+
 // CertificateResponse represents the top-level structure of the response from
 // the /tls/certificates endpoint.
 type CertificateResponse struct {
@@ -134,7 +137,7 @@ func (c *CertificateCache) Refresh(ctx context.Context) error {
 func (c *CertificateCache) Certificates() []Certificate {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-	certs := c.certs
+	certs := c.certs[:]
 	return certs
 }
 
@@ -174,7 +177,6 @@ func (c *certificateCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *certificateCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, cert := range c.cache.Certificates() {
-		format := "2006-01-02T15:04:05.000Z"
 		t, _ := time.Parse(format, cert.Attributes.NotAfter)
 
 		bigISN := new(big.Int)
