@@ -330,6 +330,13 @@ func main() {
 		}
 	}
 
+	bg, err := prom.BuildInfoGatherer(namespace, deprecatedSubsystem)
+	if err != nil {
+		level.Error(apiLogger).Log("during", "create build info gatherer", "err", err)
+	} else {
+		defaultGatherers = append(defaultGatherers, bg)
+	}
+
 	var registry *prom.Registry
 	{
 		registry = prom.NewRegistry(programVersion, namespace, deprecatedSubsystem, metricNameFilter, defaultGatherers)
