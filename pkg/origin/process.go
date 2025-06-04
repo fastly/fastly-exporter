@@ -59,6 +59,7 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "503").Add(float64(stats.Status503))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "504").Add(float64(stats.Status504))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "505").Add(float64(stats.Status505))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "530").Add(float64(stats.Status530))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery, "5xx").Add(float64(stats.Status5xx))
 
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "1xx").Add(float64(stats.ComputeStatus1xx))
@@ -74,6 +75,7 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "403").Add(float64(stats.ComputeStatus403))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "404").Add(float64(stats.ComputeStatus404))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "416").Add(float64(stats.ComputeStatus416))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "429").Add(float64(stats.ComputeStatus429))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "4xx").Add(float64(stats.ComputeStatus4xx))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "500").Add(float64(stats.ComputeStatus500))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "501").Add(float64(stats.ComputeStatus501))
@@ -81,6 +83,7 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "503").Add(float64(stats.ComputeStatus503))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "504").Add(float64(stats.ComputeStatus504))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "505").Add(float64(stats.ComputeStatus505))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "530").Add(float64(stats.ComputeStatus530))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute, "5xx").Add(float64(stats.ComputeStatus5xx))
 
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "1xx").Add(float64(stats.WafStatus1xx))
@@ -105,29 +108,27 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "503").Add(float64(stats.WafStatus503))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "504").Add(float64(stats.WafStatus504))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "505").Add(float64(stats.WafStatus505))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "530").Add(float64(stats.WafStatus530))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf, "5xx").Add(float64(stats.WafStatus5xx))
 
 	// Latency stats are clearly from xxx_bucket{le="v"} metrics,
 	// but I don't see a good way to re-populate a histogram from
 	// those numbers. (If I'm missing something, file an issue!)
-	//
-	// Our clue is the final bucket, which says it's observations
-	// "of 60s and above". Based on that we use the lower bound of
-	// each stat as the observed value, except for the first bucket
-	// which we yolo as 500us because 0 doesn't really make sense??
+	// We use the upper bound of each bucket because the interval
+	// is (start, end]
 	for v, n := range map[float64]uint64{
-		60.00:  stats.Latency60000plus,
-		10.00:  stats.Latency10000to60000,
-		5.000:  stats.Latency5000to10000,
-		1.000:  stats.Latency1000to5000,
-		0.500:  stats.Latency500to1000,
-		0.250:  stats.Latency250to500,
-		0.100:  stats.Latency100to250,
-		0.050:  stats.Latency50to100,
-		0.010:  stats.Latency10to50,
-		0.005:  stats.Latency5to10,
-		0.001:  stats.Latency1to5,
-		0.0005: stats.Latency0to1, // yolo
+		61.00: stats.Latency60000plus,
+		60.00: stats.Latency10000to60000,
+		10.00: stats.Latency5000to10000,
+		5.000: stats.Latency1000to5000,
+		1.000: stats.Latency500to1000,
+		0.500: stats.Latency250to500,
+		0.250: stats.Latency100to250,
+		0.100: stats.Latency50to100,
+		0.050: stats.Latency10to50,
+		0.010: stats.Latency5to10,
+		0.005: stats.Latency1to5,
+		0.001: stats.Latency0to1,
 	} {
 		for i := uint64(0); i < n; i++ {
 			m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin, srcDelivery).Observe(v)
@@ -135,18 +136,18 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	}
 
 	for v, n := range map[float64]uint64{
-		60.00:  stats.WafLatency60000plus,
-		10.00:  stats.WafLatency10000to60000,
-		5.000:  stats.WafLatency5000to10000,
-		1.000:  stats.WafLatency1000to5000,
-		0.500:  stats.WafLatency500to1000,
-		0.250:  stats.WafLatency250to500,
-		0.100:  stats.WafLatency100to250,
-		0.050:  stats.WafLatency50to100,
-		0.010:  stats.WafLatency10to50,
-		0.005:  stats.WafLatency5to10,
-		0.001:  stats.WafLatency1to5,
-		0.0005: stats.WafLatency0to1, // yolo
+		61.00: stats.WafLatency60000plus,
+		60.00: stats.WafLatency10000to60000,
+		10.00: stats.WafLatency5000to10000,
+		5.000: stats.WafLatency1000to5000,
+		1.000: stats.WafLatency500to1000,
+		0.500: stats.WafLatency250to500,
+		0.250: stats.WafLatency100to250,
+		0.100: stats.WafLatency50to100,
+		0.050: stats.WafLatency10to50,
+		0.010: stats.WafLatency5to10,
+		0.005: stats.WafLatency1to5,
+		0.001: stats.WafLatency0to1,
 	} {
 		for i := uint64(0); i < n; i++ {
 			m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin, srcWaf).Observe(v)
@@ -154,18 +155,18 @@ func process(serviceID, serviceName, datacenter, origin string, stats Stats, m *
 	}
 
 	for v, n := range map[float64]uint64{
-		60.00:  stats.ComputeLatency60000plus,
-		10.00:  stats.ComputeLatency10000to60000,
-		5.000:  stats.ComputeLatency5000to10000,
-		1.000:  stats.ComputeLatency1000to5000,
-		0.500:  stats.ComputeLatency500to1000,
-		0.250:  stats.ComputeLatency250to500,
-		0.100:  stats.ComputeLatency100to250,
-		0.050:  stats.ComputeLatency50to100,
-		0.010:  stats.ComputeLatency10to50,
-		0.005:  stats.ComputeLatency5to10,
-		0.001:  stats.ComputeLatency1to5,
-		0.0005: stats.ComputeLatency0to1, // yolo
+		61.00: stats.ComputeLatency60000plus,
+		60.00: stats.ComputeLatency10000to60000,
+		10.00: stats.ComputeLatency5000to10000,
+		5.000: stats.ComputeLatency1000to5000,
+		1.000: stats.ComputeLatency500to1000,
+		0.500: stats.ComputeLatency250to500,
+		0.250: stats.ComputeLatency100to250,
+		0.100: stats.ComputeLatency50to100,
+		0.050: stats.ComputeLatency10to50,
+		0.010: stats.ComputeLatency5to10,
+		0.005: stats.ComputeLatency1to5,
+		0.001: stats.ComputeLatency0to1,
 	} {
 		for i := uint64(0); i < n; i++ {
 			m.LatencySeconds.WithLabelValues(serviceID, serviceName, datacenter, origin, srcCompute).Observe(v)

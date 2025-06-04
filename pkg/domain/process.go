@@ -56,6 +56,7 @@ func process(serviceID, serviceName, datacenter, domain string, stats Stats, m *
 	m.OriginStatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "503").Add(float64(stats.OriginStatus503))
 	m.OriginStatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "504").Add(float64(stats.OriginStatus504))
 	m.OriginStatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "505").Add(float64(stats.OriginStatus505))
+	m.OriginStatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "530").Add(float64(stats.OriginStatus530))
 	m.OriginStatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "5xx").Add(float64(stats.OriginStatus5xx))
 	m.RequestsTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.Requests))
 	m.RespBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter, domain).Add(float64(stats.RespBodyBytes))
@@ -82,5 +83,6 @@ func process(serviceID, serviceName, datacenter, domain string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "503").Add(float64(stats.Status503))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "504").Add(float64(stats.Status504))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "505").Add(float64(stats.Status505))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "530").Add(float64(stats.Status530))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "5xx").Add(float64(stats.Status5xx))
 }

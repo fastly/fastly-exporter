@@ -57,6 +57,7 @@ type Stats struct {
 	OriginStatus503            uint64  `json:"origin_status_503"`              //	integer	Number of responses received from origin with status code 503 (Service Unavailable).
 	OriginStatus504            uint64  `json:"origin_status_504"`              //	integer	Number of responses received from origin with status code 504 (Gateway Timeout).
 	OriginStatus505            uint64  `json:"origin_status_505"`              //	integer	Number of responses received from origin with status code 505 (HTTP Version Not Supported).
+	OriginStatus530            uint64  `json:"origin_status_530"`              //	integer	Number of responses received from origin with status code 530.
 	OriginStatus5xx            uint64  `json:"origin_status_5xx"`              //	integer	Number of "Server Error" codes received from origin.
 	Requests                   uint64  `json:"requests"`                       //	integer	Number of requests processed.
 	RespBodyBytes              uint64  `json:"resp_body_bytes"`                //	integer	Total body bytes delivered.
@@ -83,5 +84,6 @@ type Stats struct {
 	Status503                  uint64  `json:"status_503"`                     //	integer	Number of responses received with status code 503 (Service Unavailable).
 	Status504                  uint64  `json:"status_504"`                     //	integer	Number of responses received with status code 504 (Gateway Timeout).
 	Status505                  uint64  `json:"status_505"`                     //	integer	Number of responses received with status code 505 (HTTP Version Not Supported).
+	Status530                  uint64  `json:"status_530"`                     //	integer Number of responses delivered with status code 530.
 	Status5xx                  uint64  `json:"status_5xx"`                     //	integer	Number of 5xx "Server Error" codes delivered.
 }
