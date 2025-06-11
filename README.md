@@ -20,15 +20,15 @@ Fastly APIs consumed:
 
 [prom]: https://prometheus.io
 
-## Getting
+# Installation
 
-### Binary
+## Binary
 
 Go to the [releases page][releases].
 
 [releases]: https://github.com/fastly/fastly-exporter/releases
 
-### Docker
+## Docker
 
 Available on the [packages page][pkg] as [fastly/fastly-exporter][img].
 
@@ -42,7 +42,7 @@ docker pull ghcr.io/fastly/fastly-exporter:latest
 Note that version `latest` will track RCs, alphas, etc. -- always use an
 explicit version in production.
 
-### Helm chart
+## Helm chart
 
 [Helm](https://helm.sh) must be installed to use the [prometheus-community/fastly-exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-fastly-exporter) chart.
 Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
@@ -59,7 +59,7 @@ And install:
 helm upgrade --install fastly-exporter prometheus-fastly-exporter --namespace monitoring --set token="fastly_api_token"
 ```
 
-### Source
+## Source
 
 If you have a working Go installation, you can clone the repo and install the
 binary from any revision, including HEAD.
@@ -71,9 +71,9 @@ go build ./cmd/fastly-exporter
 ./fastly-exporter -h
 ```
 
-## Using
+# Using the Exporter
 
-### Authentication
+## Authentication
 
 A valid Fastly API token is required to use the exporter. [See this link][token]
 for information on creating API tokens. The token can be provided via the
@@ -87,7 +87,7 @@ If you would like to export TLS certificate metrics the token will need TLS Mana
 [auto_token]: https://www.fastly.com/documentation/guides/account-info/account-management/using-api-tokens/#creating-automation-tokens
 [user_perms]: https://www.fastly.com/documentation/guides/account-info/user-access-and-control/configuring-user-roles-and-permissions/#changing-user-roles-and-access-permissions-for-existing-users
 
-### Basic
+## Basic
 
 For simple use cases, all you need is a Fastly API token.
 
@@ -100,7 +100,7 @@ and make them available as Prometheus metrics on [127.0.0.1:8080/metrics][local]
 
 [local]: http://127.0.0.1:8080/metrics
 
-### Filtering services
+## Filtering services
 
 By default, all services available to your token will be exported. You can
 specify an explicit set of service IDs to export by using the `-service xxx`
@@ -122,14 +122,14 @@ fastly-exporter [common flags] -service-shard 2/3
 fastly-exporter [common flags] -service-shard 3/3
 ```
 
-### Filtering metrics
+## Filtering metrics
 
 By default, all metrics provided by the Fastly real-time stats API are exported
 as Prometheus metrics. You can export only those metrics whose name matches a
 regex by using the `-metric-allowlist 'bytes_total$'` flag, or exclude any metric
 whose name matches a regex by using the `-metric-blocklist imgopto` flag.
 
-### Filter semantics
+## Filter semantics
 
 All flags that filter services or metrics are repeatable. Repeating the same
 flag causes its condition to be combined with OR semantics. For example,
@@ -141,7 +141,7 @@ Different flags (for the same filter target) combine with AND semantics. For
 example, `-metric-allowlist 'bytes_total$' -metric-blocklist imgopto` would only
 export metrics whose names ended in bytes_total, but didn't include imgopto.
 
-### Metrics Grouping: by datacenter or aggregate
+## Metrics Grouping: by datacenter or aggregate
 
 The Fastly real-time stats API returns measurements grouped by datacenter as
 well as aggregated measurements for all datacenters. By default, exported
@@ -154,7 +154,7 @@ used only the `aggregated` metrics from the real-time stats API will be
 exported. Metrics will still include the datacenter label but it will always
 be set to "aggregate".
 
-### Service discovery
+## Service discovery
 
 Per-service metrics are available via `/metrics?target=<service ID>`. Available
 services are enumerated as targets on the `/sd` endpoint, which is compatible
@@ -177,7 +177,7 @@ scrape_configs:
         replacement: 127.0.0.1:8080
 ```
 
-### Dashboards and Alerting
+## Dashboards and Alerting
 
 Data from the the Fastly exporter can be used to build dashboards and alerts with [Grafana][grafana] and [Alertmanager][alertmanager]. For a fully working example see [fastly-dashboards][dashboards] created by [@mrnetops][mrnetops]. Fastly-dashboards contains a Docker Compose setup, which boots up a full fastly-exporter + Prometheus + Alertmanager + Grafana + Fastly dashboard stack with Slack alerting integration.
 
@@ -185,3 +185,14 @@ Data from the the Fastly exporter can be used to build dashboards and alerts wit
 [alertmanager]: https://prometheus.io/docs/alerting/latest/alertmanager/
 [mrnetops]: https://github.com/mrnetops
 [dashboards]: https://github.com/mrnetops/fastly-dashboards
+
+# Maintainers
+
+## Releases
+
+To make a new release:
+
+1. Push a new git tag, e.g. `git tag v9.4.0 -m'v9.4.0'; git push --tags`
+1. GitHub Actions drafts the new release
+1. Click the "[Generate release notes](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#creating-automatically-generated-release-notes-for-a-new-release)" in GitHub
+1. Publish the new release
