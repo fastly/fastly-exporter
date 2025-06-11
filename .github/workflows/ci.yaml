@@ -118,7 +118,7 @@ jobs:
             type=semver,pattern=v{{version}}
       
       - name: Docker build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
