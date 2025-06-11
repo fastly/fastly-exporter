@@ -29,8 +29,11 @@ ${DIST_DIR}:
 ${DIST_ZIP}: ${DIST_BIN}
 	tar -C ${DIST_DIR} -c -z -f ${DIST_ZIP} ${DIST_BIN_FILE}
 
-${DOCKER_ZIP}: ${SOURCE} Dockerfile
+.PHONY: docker-build
+docker-build: ${SOURCE} Dockerfile
 	${DOCKER} build --tag=${DOCKER_TAG} .
+
+${DOCKER_ZIP}: docker-build
 	${DOCKER} save --output=$@ ${DOCKER_TAG}
 
 ${STATICCHECK}:

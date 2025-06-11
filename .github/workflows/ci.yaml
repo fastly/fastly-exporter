@@ -1,5 +1,7 @@
 name: CI
+
 on: [push, pull_request]
+
 jobs:
   test:
     strategy:
@@ -36,22 +38,44 @@ jobs:
   assets:
     strategy:
       matrix:
-        platform: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
+        target:
+          - { name: linux-amd64,  runner: ubuntu-latest, goos: linux,   goarch: amd64 }
+          - { name: windows-amd64,runner: windows-latest,goos: windows, goarch: amd64 }
+          - { name: linux-arm64,  runner: ubuntu-latest, goos: linux,   goarch: arm64 }
+    runs-on: ${{ matrix.target.runner }}
     needs: release
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: 1.x
-      - run: echo "APP_VERSION=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" >> $GITHUB_ENV
+
+      - name: Set App Version
+        run: echo "APP_VERSION=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" >> $GITHUB_ENV
         shell: bash
-      - run: echo "ASSET_NAME=fastly-exporter-${{ env.APP_VERSION }}.$(go env GOOS)-$(go env GOARCH).tar.gz" >> $GITHUB_ENV
+
+      - name: Set Go Environment for Target
+        env:
+          TARGET_GOOS: ${{ matrix.target.goos }}
+          TARGET_GOARCH: ${{ matrix.target.goarch }}
+        run: |
+          echo "GOOS=${TARGET_GOOS}" >> $GITHUB_ENV
+          echo "GOARCH=${TARGET_GOARCH}" >> $GITHUB_ENV
         shell: bash
-      - run: echo "ASSET_PATH=dist/v${{ env.APP_VERSION }}/${{ env.ASSET_NAME }}" >> $GITHUB_ENV
+
+      - name: Set Asset Name
+        run: echo "ASSET_NAME=fastly-exporter-${{ env.APP_VERSION }}.$(go env GOOS)-$(go env GOARCH).tar.gz" >> $GITHUB_ENV
         shell: bash
-      - run: make dist
-      - uses: actions/upload-release-asset@v1
+
+      - name: Set Asset Path
+        run: echo "ASSET_PATH=dist/v${{ env.APP_VERSION }}/${{ env.ASSET_NAME }}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Build distributable
+        run: make dist # This will use GOOS/GOARCH from the environment
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -59,21 +83,30 @@ jobs:
           asset_path: ${{ env.ASSET_PATH }}
           asset_name: ${{ env.ASSET_NAME }}
           asset_content_type: application/gzip
-
+          
   docker:
     runs-on: ubuntu-latest
     needs: release
     permissions:
       contents: read
       packages: write
+      
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      - name: Docker auth
+        uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@v3
+      
+      - name: Add Docker metadata
+        uses: docker/metadata-action@v3
         id: meta
         with:
           images: ghcr.io/fastly/fastly-exporter
@@ -83,8 +116,11 @@ jobs:
             type=semver,pattern=v{{major}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{version}}
-      - uses: docker/build-push-action@v2
+      
+      - name: Docker build and push
+        uses: docker/build-push-action@v2
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
