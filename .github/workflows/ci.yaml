@@ -66,14 +66,23 @@ jobs:
     permissions:
       contents: read
       packages: write
+      
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      - name: Docker auth
+        uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@v3
+      
+      - name: Add Docker metadata
+        uses: docker/metadata-action@v3
         id: meta
         with:
           images: ghcr.io/fastly/fastly-exporter
@@ -83,8 +92,11 @@ jobs:
             type=semver,pattern=v{{major}}
             type=semver,pattern=v{{major}}.{{minor}}
             type=semver,pattern=v{{version}}
-      - uses: docker/build-push-action@v2
+      
+      - name: Docker build and push
+        uses: docker/build-push-action@v2
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
