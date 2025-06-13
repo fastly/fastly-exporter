@@ -114,7 +114,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Add Docker metadata
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         id: meta
         with:
           images: ghcr.io/fastly/fastly-exporter
@@ -158,7 +158,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Add Docker metadata
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         id: meta
         with:
           images: ghcr.io/fastly/fastly-exporter
