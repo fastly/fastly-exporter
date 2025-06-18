@@ -1,4 +1,6 @@
 FROM golang:latest AS builder
+ARG VERSION=0.0.0-unknown
+ARG BRANCH=main
 
 RUN groupadd -r fastly-exporter
 RUN useradd -r -g fastly-exporter fastly-exporter
@@ -16,7 +18,7 @@ ADD pkg pkg
 
 RUN env CGO_ENABLED=0 go build \
 	-a \
-	-ldflags="-X main.programVersion=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" \
+	-ldflags="-X main.programVersion=$VERSION -X github.com/prometheus/common/version.Version=$VERSION -X github.com/prometheus/common/version.Branch=$BRANCH" \
 	-o /fastly-exporter \
 	./cmd/fastly-exporter
 

@@ -100,6 +100,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set App Version
+        run: echo "APP_VERSION=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Set Branch
+        run: echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+        shell: bash
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       
@@ -132,7 +140,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false # This indicates a dry run
           tags: ${{ steps.meta.outputs.tags }}
-  
+          build-args: |
+            VERSION=${{ env.APP_VERISON }}
+            BRANCH=${{ env.BRANCH }}
+
   docker-release:
     runs-on: ubuntu-latest
     needs: release
@@ -143,6 +154,14 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set App Version
+        run: echo "APP_VERSION=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Set Branch
+        run: echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+        shell: bash
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -176,3 +195,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            VERSION=${{ env.APP_VERISON }}
+            BRANCH=${{ env.BRANCH }}
