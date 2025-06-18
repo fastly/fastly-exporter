@@ -2,6 +2,7 @@ GO           ?= go
 GOOS         ?= $(shell ${GO} env GOOS)
 GOARCH       ?= $(shell ${GO} env GOARCH)
 VERSION      ?= $(shell git describe --tags --abbrev=0 | sed -e 's/^v//')
+BRANCH       ?= $(shell git rev-parse --abbrev-ref HEAD)
 STATICCHECK  ?= $(shell $(GO) env GOPATH)/bin/staticcheck
 REVIVE       ?= $(shell $(GO) env GOPATH)/bin/revive
 GOFUMPT      ?= $(shell $(GO) env GOPATH)/bin/gofumpt
@@ -18,10 +19,10 @@ DOCKER_TAG    = fastly-exporter:${VERSION}
 DOCKER_ZIP    = ${DIST_DIR}/${BINARY}-${VERSION}.docker.tar.gz
 
 ${BINARY}: ${SOURCE} Makefile
-	env CGO_ENABLED=0 ${GO} build -o ${BINARY} -ldflags="-X main.programVersion=${VERSION}" ${BINPKG}
+	env CGO_ENABLED=0 ${GO} build -o ${BINARY} -ldflags="-X main.programVersion=${VERSION} -X github.com/prometheus/common/version.Version=${VERSION} -X github.com/prometheus/common/version.Branch=${BRANCH}" ${BINPKG}
 
 ${DIST_BIN}: ${DIST_DIR} ${SOURCE} Makefile
-	env CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} ${GO} build -o $@ -ldflags="-X main.programVersion=${VERSION}" ${BINPKG}
+	env CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH} ${GO} build -o $@ -ldflags="-X main.programVersion=${VERSION} -X github.com/prometheus/common/version.Version=${VERSION} -X github.com/prometheus/common/version.Branch=${BRANCH}"  ${BINPKG}
 
 ${DIST_DIR}:
 	mkdir -p $@
@@ -31,7 +32,7 @@ ${DIST_ZIP}: ${DIST_BIN}
 
 .PHONY: docker-build
 docker-build: ${SOURCE} Dockerfile
-	${DOCKER} build --tag=${DOCKER_TAG} .
+	${DOCKER} build --build-arg VERSION=${VERSION} --build-arg BRANCH=${BRANCH} --tag=${DOCKER_TAG} .
 
 ${DOCKER_ZIP}: docker-build
 	${DOCKER} save --output=$@ ${DOCKER_TAG}
