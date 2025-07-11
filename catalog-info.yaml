@@ -1,0 +1,14 @@
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    github.com/project-slug: fastly/fastly-exporter
+  description: A Prometheus exporter for the Fastly Real-time Analytics API
+  name: fastly-exporter
+  title: fastly/fastly-exporter
+spec:
+  lifecycle: source
+  owner: group:data-cups-formerly-stats
+  type: repository
