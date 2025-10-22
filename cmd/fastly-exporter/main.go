@@ -43,6 +43,7 @@ func main() {
 		datacenterRefresh   time.Duration
 		productRefresh      time.Duration
 		serviceRefresh      time.Duration
+		dictionaryRefresh   time.Duration
 		apiTimeout          time.Duration
 		rtTimeout           time.Duration
 		aggregateOnly       bool
@@ -67,6 +68,8 @@ func main() {
 		fs.DurationVar(&datacenterRefresh, "datacenter-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated datacenter metadata (10m–1h)")
 		fs.DurationVar(&productRefresh, "product-refresh", 10*time.Minute, "how often to poll api.fastly.com for updated product metadata (10m–24h)")
 		fs.DurationVar(&serviceRefresh, "service-refresh", 1*time.Minute, "how often to poll api.fastly.com for updated service metadata (15s–10m)")
+		fs.DurationVar(&dictionaryRefresh, "dictionary-refresh", 5*time.Minute, "how often to poll api.fastly.com for dictionary metadata (1m–24h)")
+
 		fs.DurationVar(&serviceRefresh, "api-refresh", 1*time.Minute, "DEPRECATED -- use service-refresh instead")
 		fs.DurationVar(&apiTimeout, "api-timeout", 15*time.Second, "HTTP client timeout for api.fastly.com requests (5–60s)")
 		fs.DurationVar(&rtTimeout, "rt-timeout", 45*time.Second, "HTTP client timeout for rt.fastly.com requests (45–120s)")
@@ -157,6 +160,14 @@ func main() {
 		if serviceRefresh < 15*time.Second {
 			level.Warn(logger).Log("msg", "-service-refresh cannot be shorter than 15s; setting it to 15s")
 			serviceRefresh = 15 * time.Second
+		}
+		if dictionaryRefresh < 1*time.Minute {
+			level.Warn(logger).Log("msg", "-dictionary-refresh cannot be shorter than 1m; setting it to 1m")
+			dictionaryRefresh = 1 * time.Minute
+		}
+		if dictionaryRefresh > 24*time.Hour {
+			level.Warn(logger).Log("msg", "-dictionary-refresh cannot be longer than 24h; setting it to 24h")
+			dictionaryRefresh = 24 * time.Hour
 		}
 		if apiTimeout < 5*time.Second {
 			level.Warn(logger).Log("msg", "-api-timeout cannot be shorter than 5s; setting it to 5s")
@@ -299,6 +310,13 @@ func main() {
 		productCache = api.NewProductCache(apiClient, token, apiLogger)
 	}
 
+	// Dictionary info cache (digest, item_count, last_updated) -> Prom metrics
+	var dictionaryCache *api.DictionaryInfoCache
+	{
+		enabled := !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "dictionary_item_count"))
+		dictionaryCache = api.NewDictionaryInfoCache(apiClient, token, apiLogger, enabled)
+	}
+
 	{
 		var g errgroup.Group
 		g.Go(func() error {
@@ -323,6 +341,14 @@ func main() {
 			g.Go(func() error {
 				if err := datacenterCache.Refresh(context.Background()); err != nil {
 					level.Warn(logger).Log("during", "initial fetch of datacenters", "err", err, "msg", "datacenter labels unavailable, will retry")
+				}
+				return nil
+			})
+		}
+		if dictionaryCache.Enabled() {
+			g.Go(func() error {
+				if err := dictionaryCache.Refresh(context.Background()); err != nil {
+					level.Warn(logger).Log("during", "initial fetch of dictionary info", "err", err, "msg", "dictionary info metrics unavailable, will retry")
 				}
 				return nil
 			})
@@ -354,6 +380,15 @@ func main() {
 			os.Exit(1)
 		}
 		defaultGatherers = append(defaultGatherers, dcs)
+	}
+
+	if dictionaryCache.Enabled() {
+		di, err := dictionaryCache.Gatherer(namespace, deprecatedSubsystem)
+		if err != nil {
+			level.Error(apiLogger).Log("during", "create dictionary info gatherer", "err", err)
+			os.Exit(1)
+		}
+		defaultGatherers = append(defaultGatherers, di)
 	}
 
 	if !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "token_expiration")) {
@@ -438,6 +473,27 @@ func main() {
 				case <-ticker.C:
 					if err := datacenterCache.Refresh(ctx); err != nil {
 						level.Warn(apiLogger).Log("during", "datacenter refresh", "err", err, "msg", "the datacenter info metrics may be stale")
+					}
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+		}, func(error) {
+			ticker.Stop()
+			cancel()
+		})
+	}
+	if dictionaryCache.Enabled() {
+		var (
+			ctx, cancel = context.WithCancel(context.Background())
+			ticker      = time.NewTicker(dictionaryRefresh)
+		)
+		g.Add(func() error {
+			for {
+				select {
+				case <-ticker.C:
+					if err := dictionaryCache.Refresh(ctx); err != nil {
+						level.Warn(apiLogger).Log("during", "dictionary info refresh", "err", err, "msg", "dictionary info metrics may be stale")
 					}
 				case <-ctx.Done():
 					return ctx.Err()
