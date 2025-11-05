@@ -254,3 +254,19 @@ func (ss shardSlice) match(serviceID string) bool {
 	fmt.Fprint(h, serviceID)
 	return h.Sum64()%uint64(ss.m) == uint64(ss.n-1)
 }
+
+func (c *ServiceCache) Services() []Service {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+
+	services := make([]Service, 0, len(c.services))
+	for _, s := range c.services {
+		services = append(services, s)
+	}
+
+	sort.Slice(services, func(i, j int) bool {
+		return services[i].ID < services[j].ID
+	})
+
+	return services
+}

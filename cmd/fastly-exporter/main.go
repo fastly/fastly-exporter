@@ -314,7 +314,7 @@ func main() {
 	var dictionaryCache *api.DictionaryInfoCache
 	{
 		enabled := !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "dictionary_item_count"))
-		dictionaryCache = api.NewDictionaryInfoCache(apiClient, token, apiLogger, enabled)
+		dictionaryCache = api.NewDictionaryInfoCache(apiClient, token, apiLogger, serviceCache, enabled)
 	}
 
 	{

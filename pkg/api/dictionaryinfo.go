@@ -44,10 +44,11 @@ type dictItem struct {
 }
 
 type DictionaryInfoCache struct {
-	client  *http.Client
-	token   string
-	logger  log.Logger
-	enabled bool
+	client       *http.Client
+	token        string
+	logger       log.Logger
+	serviceCache *ServiceCache
+	enabled      bool
 
 	// Cached snapshot used by the collector to avoid network I/O on scrape.
 	snapshot []metricRow
@@ -64,15 +65,16 @@ type metricRow struct {
 	LastUpdatedTS  float64
 }
 
-func NewDictionaryInfoCache(client *http.Client, token string, logger log.Logger, enabled bool) *DictionaryInfoCache {
+func NewDictionaryInfoCache(client *http.Client, token string, logger log.Logger, serviceCache *ServiceCache, enabled bool) *DictionaryInfoCache {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 	return &DictionaryInfoCache{
-		client:  client,
-		token:   token,
-		logger:  log.With(logger, "component", "dictionary-info"),
-		enabled: enabled,
+		client:       client,
+		token:        token,
+		logger:       log.With(logger, "component", "dictionary-info"),
+		serviceCache: serviceCache,
+		enabled:      enabled,
 	}
 }
 
@@ -122,9 +124,30 @@ func (c *DictionaryInfoCache) Refresh(ctx context.Context) error {
 	if !c.enabled {
 		return nil
 	}
-	services, err := c.listServices(ctx)
-	if err != nil {
-		return err
+	var services []svc
+	if c.serviceCache != nil {
+		for _, s := range c.serviceCache.Services() {
+			active := s.Version
+			services = append(services, svc{
+				ID:   s.ID,
+				Name: s.Name,
+				Versions: []struct {
+					Number int  `json:"number"`
+					Active bool `json:"active"`
+				}{
+					{
+						Number: active,
+						Active: active > 0,
+					},
+				},
+			})
+		}
+	} else {
+		var err error
+		services, err = c.listServices(ctx)
+		if err != nil {
+			return err
+		}
 	}
 	var out []metricRow
 	for _, s := range services {
