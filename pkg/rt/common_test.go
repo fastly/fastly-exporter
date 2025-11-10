@@ -291,7 +291,10 @@ const rtResponseFixture = `{
             "hit_resp_body_bytes": 10944,
             "edge_requests": 1,
             "edge_resp_header_bytes": 428,
-            "edge_resp_body_bytes": 10944
+            "edge_resp_body_bytes": 10944,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           }
         },
         "aggregated": {
@@ -330,7 +333,10 @@ const rtResponseFixture = `{
           "hit_resp_body_bytes": 10944,
           "edge_requests": 1,
           "edge_resp_header_bytes": 428,
-          "edge_resp_body_bytes": 10944
+          "edge_resp_body_bytes": 10944,
+          "compute_execution_time_ms": 1100,
+          "compute_request_time_billed_ms": 2200,
+          "compute_request_time_ms": 3300
         },
         "recorded": 1603400951
       },
@@ -372,7 +378,10 @@ const rtResponseFixture = `{
             "hit_resp_body_bytes": 10944,
             "edge_requests": 1,
             "edge_resp_header_bytes": 427,
-            "edge_resp_body_bytes": 10944
+            "edge_resp_body_bytes": 10944,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           }
         },
         "aggregated": {
@@ -411,7 +420,10 @@ const rtResponseFixture = `{
           "hit_resp_body_bytes": 10944,
           "edge_requests": 1,
           "edge_resp_header_bytes": 427,
-          "edge_resp_body_bytes": 10944
+          "edge_resp_body_bytes": 10944,
+          "compute_execution_time_ms": 1100,
+          "compute_request_time_billed_ms": 2200,
+          "compute_request_time_ms": 3300
         },
         "recorded": 1603400952
       },
@@ -454,7 +466,10 @@ const rtResponseFixture = `{
             "hit_resp_body_bytes": 10944,
             "edge_requests": 1,
             "edge_resp_header_bytes": 424,
-            "edge_resp_body_bytes": 10944
+            "edge_resp_body_bytes": 10944,
+		    "compute_execution_time_ms": 1100,
+		    "compute_request_time_billed_ms": 2200,
+		    "compute_request_time_ms": 3300
           }
         },
         "aggregated": {
@@ -494,7 +509,10 @@ const rtResponseFixture = `{
           "hit_resp_body_bytes": 10944,
           "edge_requests": 1,
           "edge_resp_header_bytes": 424,
-          "edge_resp_body_bytes": 10944
+          "edge_resp_body_bytes": 10944,
+          "compute_execution_time_ms": 1100,
+          "compute_request_time_billed_ms": 2200,
+          "compute_request_time_ms": 3300
         },
         "recorded": 1603400954
       },
@@ -581,7 +599,10 @@ const rtResponseFixture = `{
             "origin_fetches": 1,
             "origin_fetch_header_bytes": 720,
             "origin_fetch_resp_header_bytes": 238,
-            "origin_fetch_resp_body_bytes": 107984
+            "origin_fetch_resp_body_bytes": 107984,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           }
         },
         "aggregated": {
@@ -624,7 +645,10 @@ const rtResponseFixture = `{
           "origin_fetches": 1,
           "origin_fetch_header_bytes": 720,
           "origin_fetch_resp_header_bytes": 238,
-          "origin_fetch_resp_body_bytes": 107984
+          "origin_fetch_resp_body_bytes": 107984,
+          "compute_execution_time_ms": 1100,
+          "compute_request_time_billed_ms": 2200,
+          "compute_request_time_ms": 3300
         },
         "recorded": 1603400959
       },
@@ -666,7 +690,10 @@ const rtResponseFixture = `{
             "miss_resp_body_bytes": 8509,
             "edge_requests": 1,
             "edge_resp_header_bytes": 449,
-            "edge_resp_body_bytes": 8509
+            "edge_resp_body_bytes": 8509,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           }
         },
         "aggregated": {
@@ -705,7 +732,10 @@ const rtResponseFixture = `{
           "miss_resp_body_bytes": 8509,
           "edge_requests": 1,
           "edge_resp_header_bytes": 449,
-          "edge_resp_body_bytes": 8509
+          "edge_resp_body_bytes": 8509,
+          "compute_execution_time_ms": 1100,
+          "compute_request_time_billed_ms": 2200,
+          "compute_request_time_ms": 3300
         },
         "recorded": 1603400970
       },
@@ -746,7 +776,10 @@ const rtResponseFixture = `{
             "predeliver_sub_time": 450,
             "predeliver_sub_count": 1,
             "edge_requests": 1,
-            "edge_resp_header_bytes": 242
+            "edge_resp_header_bytes": 242,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           },
           "YUL": {
             "requests": 0,
@@ -807,7 +840,10 @@ const rtResponseFixture = `{
           "origin_fetches": 1,
           "origin_fetch_header_bytes": 929,
           "origin_fetch_resp_header_bytes": 251,
-          "origin_fetch_resp_body_bytes": 22094
+          "origin_fetch_resp_body_bytes": 22094,
+          "compute_execution_time_ms": 1100,
+          "compute_request_time_billed_ms": 2200,
+          "compute_request_time_ms": 3300
         },
         "recorded": 1603400971
       },
@@ -849,7 +885,10 @@ const rtResponseFixture = `{
             "hit_resp_body_bytes": 10944,
             "edge_requests": 1,
             "edge_resp_header_bytes": 427,
-            "edge_resp_body_bytes": 10944
+            "edge_resp_body_bytes": 10944,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           }
         },
         "aggregated": {
@@ -888,7 +927,10 @@ const rtResponseFixture = `{
           "hit_resp_body_bytes": 10944,
           "edge_requests": 1,
           "edge_resp_header_bytes": 427,
-          "edge_resp_body_bytes": 10944
+          "edge_resp_body_bytes": 10944,
+          "compute_execution_time_ms": 1100,
+          "compute_request_time_billed_ms": 2200,
+          "compute_request_time_ms": 3300
         },
         "recorded": 1603400972
       },
@@ -945,7 +987,10 @@ const rtResponseFixture = `{
             "origin_fetches": 5,
             "origin_fetch_header_bytes": 3908,
             "origin_fetch_resp_header_bytes": 707,
-            "origin_fetch_resp_body_bytes": 59367
+            "origin_fetch_resp_body_bytes": 59367,
+            "compute_execution_time_ms": 6600,
+            "compute_request_time_billed_ms": 13200,
+            "compute_request_time_ms": 1980
           }
         },
         "aggregated": {
@@ -999,7 +1044,10 @@ const rtResponseFixture = `{
           "origin_fetches": 5,
           "origin_fetch_header_bytes": 3908,
           "origin_fetch_resp_header_bytes": 707,
-          "origin_fetch_resp_body_bytes": 59367
+          "origin_fetch_resp_body_bytes": 59367,
+          "compute_execution_time_ms": 6600,
+          "compute_request_time_billed_ms": 13200,
+          "compute_request_time_ms": 1980
         },
         "recorded": 1603400986
       },
@@ -1046,7 +1094,10 @@ const rtResponseFixture = `{
             "origin_fetches": 1,
             "origin_fetch_header_bytes": 672,
             "origin_fetch_resp_header_bytes": 221,
-            "origin_fetch_resp_body_bytes": 19
+            "origin_fetch_resp_body_bytes": 19,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           }
         },
         "aggregated": {
@@ -1090,7 +1141,10 @@ const rtResponseFixture = `{
           "origin_fetches": 1,
           "origin_fetch_header_bytes": 672,
           "origin_fetch_resp_header_bytes": 221,
-          "origin_fetch_resp_body_bytes": 19
+          "origin_fetch_resp_body_bytes": 19,
+          "compute_execution_time_ms": 1100,
+          "compute_request_time_billed_ms": 2200,
+          "compute_request_time_ms": 3300
         },
         "recorded": 1603400987
       },
@@ -1520,7 +1574,10 @@ const rtResponseFixture = `{
             "origin_fetches": 1,
             "origin_fetch_header_bytes": 985,
             "origin_fetch_resp_header_bytes": 250,
-            "origin_fetch_resp_body_bytes": 2057
+            "origin_fetch_resp_body_bytes": 2057,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           },
           "YUL": {
             "requests": 1,
@@ -1562,7 +1619,10 @@ const rtResponseFixture = `{
             "origin_fetches": 1,
             "origin_fetch_header_bytes": 929,
             "origin_fetch_resp_header_bytes": 251,
-            "origin_fetch_resp_body_bytes": 22094
+            "origin_fetch_resp_body_bytes": 22094,
+            "compute_execution_time_ms": 1100,
+            "compute_request_time_billed_ms": 2200,
+            "compute_request_time_ms": 3300
           }
         },
         "aggregated": {
@@ -1610,7 +1670,10 @@ const rtResponseFixture = `{
           "origin_fetches": 2,
           "origin_fetch_header_bytes": 1914,
           "origin_fetch_resp_header_bytes": 501,
-          "origin_fetch_resp_body_bytes": 24151
+          "origin_fetch_resp_body_bytes": 24151,
+          "compute_execution_time_ms": 2200,
+          "compute_request_time_billed_ms": 4400,
+          "compute_request_time_ms": 6600
         },
         "recorded": 1603401000
       },
@@ -1849,7 +1912,10 @@ const rtResponseFixture = `{
             "origin_fetches": 32,
             "origin_fetch_header_bytes": 34540,
             "origin_fetch_resp_header_bytes": 7385,
-            "origin_fetch_resp_body_bytes": 5828306
+            "origin_fetch_resp_body_bytes": 5828306,
+            "compute_execution_time_ms": 11000,
+            "compute_request_time_billed_ms": 22000,
+            "compute_request_time_ms": 33000
           }
         },
         "aggregated": {
@@ -1910,7 +1976,10 @@ const rtResponseFixture = `{
           "origin_fetches": 32,
           "origin_fetch_header_bytes": 34540,
           "origin_fetch_resp_header_bytes": 7385,
-          "origin_fetch_resp_body_bytes": 5828306
+          "origin_fetch_resp_body_bytes": 5828306,
+          "compute_execution_time_ms": 11000,
+          "compute_request_time_billed_ms": 22000,
+          "compute_request_time_ms": 33000
         },
         "recorded": 1603401004
       }
@@ -2241,15 +2310,15 @@ var expectedRTMetricsOutputMap = map[string]float64{
 	`testspace_testsystem_compute_beresp_header_bytes_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:               0,
 	`testspace_testsystem_compute_beresp_header_bytes_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:               0,
 	`testspace_testsystem_compute_beresp_header_bytes_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:                    0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:                    0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"}`:                    0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"}`:                    0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"}`:                    0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"}`:                    0,
+	`testspace_testsystem_compute_execution_time_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:                    1.1,
+	`testspace_testsystem_compute_execution_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:                    1.1,
+	`testspace_testsystem_compute_execution_time_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"}`:                    1.1,
+	`testspace_testsystem_compute_execution_time_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"}`:                    7.7,
+	`testspace_testsystem_compute_execution_time_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"}`:                    12.1,
+	`testspace_testsystem_compute_execution_time_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"}`:                    1.1,
 	`testspace_testsystem_compute_execution_time_total{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"}`:                    0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:                    0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:                    0,
+	`testspace_testsystem_compute_execution_time_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:                    2.2,
+	`testspace_testsystem_compute_execution_time_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:                    2.2,
 	`testspace_testsystem_compute_execution_time_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"}`:                    0,
 	`testspace_testsystem_compute_globals_limit_exceeded_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:            0,
 	`testspace_testsystem_compute_globals_limit_exceeded_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:            0,
@@ -2311,25 +2380,25 @@ var expectedRTMetricsOutputMap = map[string]float64{
 	`testspace_testsystem_compute_req_header_bytes_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:                  0,
 	`testspace_testsystem_compute_req_header_bytes_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:                  0,
 	`testspace_testsystem_compute_req_header_bytes_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"}`:                  0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"}`:               0,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:               2.2,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:               2.2,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"}`:               2.2,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"}`:               15.4,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"}`:               24.2,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"}`:               2.2,
 	`testspace_testsystem_compute_request_time_billed_total{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:               0,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:               4.4,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:               4.4,
 	`testspace_testsystem_compute_request_time_billed_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:                      0,
-	`testspace_testsystem_compute_request_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:                      0,
-	`testspace_testsystem_compute_request_time_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"}`:                      0,
-	`testspace_testsystem_compute_request_time_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"}`:                      0,
-	`testspace_testsystem_compute_request_time_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"}`:                      0,
-	`testspace_testsystem_compute_request_time_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_compute_request_time_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:                      3.3,
+	`testspace_testsystem_compute_request_time_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:                      3.3,
+	`testspace_testsystem_compute_request_time_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"}`:                      3.3,
+	`testspace_testsystem_compute_request_time_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"}`:                      5.28,
+	`testspace_testsystem_compute_request_time_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"}`:                      36.3,
+	`testspace_testsystem_compute_request_time_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"}`:                      3.3,
 	`testspace_testsystem_compute_request_time_total{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"}`:                      0,
-	`testspace_testsystem_compute_request_time_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:                      0,
-	`testspace_testsystem_compute_request_time_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_compute_request_time_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:                      6.6,
+	`testspace_testsystem_compute_request_time_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:                      6.6,
 	`testspace_testsystem_compute_request_time_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"}`:                      0,
 	`testspace_testsystem_compute_requests_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:                          0,
 	`testspace_testsystem_compute_requests_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:                          0,
@@ -4639,15 +4708,15 @@ var expectedRTMetricsAggOutputMap = map[string]float64{
 	`testspace_testsystem_compute_beresp_body_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                 0,
 	`testspace_testsystem_compute_beresp_header_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:               0,
 	`testspace_testsystem_compute_cache_operations_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                  0,
-	`testspace_testsystem_compute_execution_time_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                    0,
+	`testspace_testsystem_compute_execution_time_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                    28.6,
 	`testspace_testsystem_compute_globals_limit_exceeded_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:            0,
 	`testspace_testsystem_compute_guest_errors_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                      0,
 	`testspace_testsystem_compute_heap_limit_exceeded_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:               0,
 	`testspace_testsystem_compute_ram_used_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                    0,
 	`testspace_testsystem_compute_req_body_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                    0,
 	`testspace_testsystem_compute_req_header_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                  0,
-	`testspace_testsystem_compute_request_time_billed_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:               0,
-	`testspace_testsystem_compute_request_time_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_compute_request_time_billed_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:               57.2,
+	`testspace_testsystem_compute_request_time_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                      67.98,
 	`testspace_testsystem_compute_requests_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                          0,
 	`testspace_testsystem_compute_resource_limit_exceeded_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:           0,
 	`testspace_testsystem_compute_resp_body_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                   0,
