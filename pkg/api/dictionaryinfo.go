@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/go-kit/log"
@@ -14,14 +15,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// DictionaryInfo is the Fastly API response for the /info endpoint.
-type DictionaryInfo struct {
+// dictionaryInfo is the Fastly API response for the /info endpoint.
+type dictionaryInfo struct {
 	Digest      string `json:"digest"`
 	ItemCount   int64  `json:"item_count"`
 	LastUpdated string `json:"last_updated"` // may be RFC3339 or "2006-01-02 15:04:05"; can be empty
 }
 
-type dict struct {
+// dictionaryResp represents an individual dictionary from the listDictionaries API call.
+type dictionaryResp struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	UpdatedAt string `json:"updated_at"`
@@ -34,11 +36,13 @@ type DictionaryInfoCache struct {
 	serviceCache *ServiceCache
 	enabled      bool
 
+	mtx sync.RWMutex
+
 	// Cached snapshot used by the collector to avoid network I/O on scrape.
-	snapshot []metricRow
+	dictionaries []Dictionary
 }
 
-type metricRow struct {
+type Dictionary struct {
 	ServiceID      string
 	ServiceName    string
 	Version        int
@@ -69,7 +73,7 @@ func (c *DictionaryInfoCache) Refresh(ctx context.Context) error {
 	if !c.enabled {
 		return nil
 	}
-	var out []metricRow
+	var out []Dictionary
 	for _, s := range c.serviceCache.Services() {
 		active := s.Version
 		if active <= 0 {
@@ -90,7 +94,7 @@ func (c *DictionaryInfoCache) Refresh(ctx context.Context) error {
 			if ts == 0 {
 				ts = parseFastlyTime(d.UpdatedAt)
 			}
-			out = append(out, metricRow{
+			out = append(out, Dictionary{
 				ServiceID:      s.ID,
 				ServiceName:    s.Name,
 				Version:        active,
@@ -102,9 +106,20 @@ func (c *DictionaryInfoCache) Refresh(ctx context.Context) error {
 			})
 		}
 	}
-	c.snapshot = out
+
+	c.mtx.Lock()
+	c.dictionaries = out
+	c.mtx.Unlock()
+
 	level.Debug(c.logger).Log("msg", "refreshed dictionary info", "rows", len(out))
 	return nil
+}
+
+func (c *DictionaryInfoCache) Dictionaries() []Dictionary {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+	dictionaries := c.dictionaries[:]
+	return dictionaries
 }
 
 // dictionaryInfoCollector emits metrics from the DictionaryInfoCache snapshot.
@@ -120,7 +135,7 @@ func (dc *dictionaryInfoCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (dc *dictionaryInfoCollector) Collect(ch chan<- prometheus.Metric) {
-	for _, r := range dc.cache.snapshot {
+	for _, r := range dc.cache.Dictionaries() {
 		labels := []string{
 			r.ServiceID,
 			r.ServiceName,
@@ -177,7 +192,7 @@ func (c *DictionaryInfoCache) req(ctx context.Context, method, url string) (*htt
 	return req, nil
 }
 
-func (c *DictionaryInfoCache) listDictionaries(ctx context.Context, serviceID string, version int) ([]dict, error) {
+func (c *DictionaryInfoCache) listDictionaries(ctx context.Context, serviceID string, version int) ([]dictionaryResp, error) {
 	u := fmt.Sprintf("https://api.fastly.com/service/%s/version/%d/dictionary", serviceID, version)
 	req, err := c.req(ctx, http.MethodGet, u)
 	if err != nil {
@@ -191,25 +206,25 @@ func (c *DictionaryInfoCache) listDictionaries(ctx context.Context, serviceID st
 	if resp.StatusCode/100 != 2 {
 		return nil, fmt.Errorf("list dictionaries: %s", resp.Status)
 	}
-	var dicts []dict
+	var dicts []dictionaryResp
 	return dicts, json.NewDecoder(resp.Body).Decode(&dicts)
 }
 
-func (c *DictionaryInfoCache) getDictionaryInfo(ctx context.Context, serviceID string, version int, dictID string) (DictionaryInfo, error) {
+func (c *DictionaryInfoCache) getDictionaryInfo(ctx context.Context, serviceID string, version int, dictID string) (dictionaryInfo, error) {
 	u := fmt.Sprintf("https://api.fastly.com/service/%s/version/%d/dictionary/%s/info", serviceID, version, dictID)
 	req, err := c.req(ctx, http.MethodGet, u)
 	if err != nil {
-		return DictionaryInfo{}, err
+		return dictionaryInfo{}, err
 	}
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return DictionaryInfo{}, err
+		return dictionaryInfo{}, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
-		return DictionaryInfo{}, fmt.Errorf("get dictionary info: %s", resp.Status)
+		return dictionaryInfo{}, fmt.Errorf("get dictionary info: %s", resp.Status)
 	}
-	var info DictionaryInfo
+	var info dictionaryInfo
 	return info, json.NewDecoder(resp.Body).Decode(&info)
 }
 
