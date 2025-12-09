@@ -171,10 +171,12 @@ type certificateCollector struct {
 	cache *CertificateCache
 }
 
+// Describe implements prometheus.Collector
 func (c *certificateCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.desc
 }
 
+// Collect implements prometheus.Collector
 func (c *certificateCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, cert := range c.cache.Certificates() {
 		t, _ := time.Parse(format, cert.Attributes.NotAfter)
