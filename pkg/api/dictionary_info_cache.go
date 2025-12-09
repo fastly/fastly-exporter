@@ -1,4 +1,3 @@
-// pkg/api/dictionaryinfo.go
 package api
 
 import (
@@ -29,8 +28,11 @@ type dictionaryResp struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
+// DictionaryInfoCache polls api.fastly.com/service/%s/version/%d/dictionary and
+// api.fastly.com/service/%s/version/%d/dictionary/%s/info and maintains a local cache
+// of the dictionary info. That information is exposed as Prometheus metrics.
 type DictionaryInfoCache struct {
-	client       *http.Client
+	client       HTTPClient
 	token        string
 	logger       log.Logger
 	serviceCache *ServiceCache
@@ -42,6 +44,8 @@ type DictionaryInfoCache struct {
 	dictionaries []Dictionary
 }
 
+// Dictionary holds information about a single dictionary,
+// including its item count and unique identifier.
 type Dictionary struct {
 	ServiceID      string
 	ServiceName    string
@@ -53,7 +57,9 @@ type Dictionary struct {
 	LastUpdatedTS  float64
 }
 
-func NewDictionaryInfoCache(client *http.Client, token string, logger log.Logger, serviceCache *ServiceCache, enabled bool) *DictionaryInfoCache {
+// NewDictionaryInfoCache returns an empty cache of dictionary metadata. Use the
+// Refresh method to update the cache.
+func NewDictionaryInfoCache(client HTTPClient, token string, logger log.Logger, serviceCache *ServiceCache, enabled bool) *DictionaryInfoCache {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -66,6 +72,7 @@ func NewDictionaryInfoCache(client *http.Client, token string, logger log.Logger
 	}
 }
 
+// Enabled returns true if the DictionaryInfoCache is enabled
 func (c *DictionaryInfoCache) Enabled() bool { return c.enabled }
 
 // Refresh queries Fastly APIs and rebuilds the in-memory snapshot.
@@ -73,7 +80,7 @@ func (c *DictionaryInfoCache) Refresh(ctx context.Context) error {
 	if !c.enabled {
 		return nil
 	}
-	var out []Dictionary
+	out := []Dictionary{}
 	for _, s := range c.serviceCache.Services() {
 		active := s.Version
 		if active <= 0 {
@@ -82,7 +89,7 @@ func (c *DictionaryInfoCache) Refresh(ctx context.Context) error {
 		dicts, err := c.listDictionaries(ctx, s.ID, active)
 		if err != nil {
 			level.Warn(c.logger).Log("during", "list dictionaries", "service", s.ID, "err", err)
-			continue
+			return err
 		}
 		for _, d := range dicts {
 			info, err := c.getDictionaryInfo(ctx, s.ID, active, d.ID)
@@ -115,6 +122,7 @@ func (c *DictionaryInfoCache) Refresh(ctx context.Context) error {
 	return nil
 }
 
+// Dictionaries returns a copy of the currently cached dictionaries.
 func (c *DictionaryInfoCache) Dictionaries() []Dictionary {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
@@ -203,8 +211,12 @@ func (c *DictionaryInfoCache) listDictionaries(ctx context.Context, serviceID st
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("list dictionaries: %s", resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		// disable if we get a 403 and c.certs is nil (only true on first run)
+		if resp.StatusCode == http.StatusForbidden && c.dictionaries == nil {
+			c.enabled = false
+		}
+		return nil, NewError(resp)
 	}
 	var dicts []dictionaryResp
 	return dicts, json.NewDecoder(resp.Body).Decode(&dicts)
