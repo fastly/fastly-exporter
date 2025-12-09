@@ -3,3 +3,10 @@
 *.tar.gz
 *.test
 /vendor
+
+# Build outputs
+/bin/
+/out/
+*.exe
+*.cover
+*.out

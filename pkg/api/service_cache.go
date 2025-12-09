@@ -204,6 +204,23 @@ func (c *ServiceCache) ServiceIDs() (ids []string) {
 	return ids
 }
 
+// Services returns all services currently being monitored by the cache.
+func (c *ServiceCache) Services() []Service {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+
+	services := make([]Service, 0, len(c.services))
+	for _, s := range c.services {
+		services = append(services, s)
+	}
+
+	sort.Slice(services, func(i, j int) bool {
+		return services[i].ID < services[j].ID
+	})
+
+	return services
+}
+
 // Metadata returns selected metadata associated with a given service ID.
 // If the cache doesn't contain that service ID, found will be false.
 func (c *ServiceCache) Metadata(id string) (name string, version int, found bool) {
