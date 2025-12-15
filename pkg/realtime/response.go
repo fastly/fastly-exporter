@@ -63,9 +63,28 @@ type Datacenter struct {
 	ComputeRespBodyBytesTotal                  uint64            `json:"compute_resp_body_bytes"`
 	ComputeRespHeaderBytesTotal                uint64            `json:"compute_resp_header_bytes"`
 	ComputeRespStatus1xx                       uint64            `json:"compute_resp_status_1xx"`
+	ComputeRespStatus200                       uint64            `json:"compute_resp_status_200"`
+	ComputeRespStatus204                       uint64            `json:"compute_resp_status_204"`
+	ComputeRespStatus206                       uint64            `json:"compute_resp_status_206"`
 	ComputeRespStatus2xx                       uint64            `json:"compute_resp_status_2xx"`
+	ComputeRespStatus301                       uint64            `json:"compute_resp_status_301"`
+	ComputeRespStatus302                       uint64            `json:"compute_resp_status_302"`
+	ComputeRespStatus304                       uint64            `json:"compute_resp_status_304"`
 	ComputeRespStatus3xx                       uint64            `json:"compute_resp_status_3xx"`
+	ComputeRespStatus400                       uint64            `json:"compute_resp_status_400"`
+	ComputeRespStatus401                       uint64            `json:"compute_resp_status_401"`
+	ComputeRespStatus403                       uint64            `json:"compute_resp_status_403"`
+	ComputeRespStatus404                       uint64            `json:"compute_resp_status_404"`
+	ComputeRespStatus416                       uint64            `json:"compute_resp_status_416"`
+	ComputeRespStatus429                       uint64            `json:"compute_resp_status_429"`
 	ComputeRespStatus4xx                       uint64            `json:"compute_resp_status_4xx"`
+	ComputeRespStatus500                       uint64            `json:"compute_resp_status_500"`
+	ComputeRespStatus501                       uint64            `json:"compute_resp_status_501"`
+	ComputeRespStatus502                       uint64            `json:"compute_resp_status_502"`
+	ComputeRespStatus503                       uint64            `json:"compute_resp_status_503"`
+	ComputeRespStatus504                       uint64            `json:"compute_resp_status_504"`
+	ComputeRespStatus505                       uint64            `json:"compute_resp_status_505"`
+	ComputeRespStatus530                       uint64            `json:"compute_resp_status_530"`
 	ComputeRespStatus5xx                       uint64            `json:"compute_resp_status_5xx"`
 	ComputeRuntimeErrorsTotal                  uint64            `json:"compute_runtime_errors"`
 	ComputeStackLimitExceededTotal             uint64            `json:"compute_stack_limit_exceeded"`
