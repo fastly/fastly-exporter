@@ -58,6 +58,7 @@ type Metrics struct {
 	ComputeRespBodyBytesTotal                  *prometheus.CounterVec
 	ComputeRespHeaderBytesTotal                *prometheus.CounterVec
 	ComputeRespStatusTotal                     *prometheus.CounterVec
+	ComputeStatusCodeTotal                     *prometheus.CounterVec
 	ComputeRuntimeErrorsTotal                  *prometheus.CounterVec
 	ComputeStackLimitExceededTotal             *prometheus.CounterVec
 	DDOSActionBlackholeTotal                   *prometheus.CounterVec
@@ -276,6 +277,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		ComputeRespBodyBytesTotal:                  prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_resp_body_bytes_total", Help: "Total body bytes sent from Compute@Edge to end user."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeRespHeaderBytesTotal:                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_resp_header_bytes_total", Help: "Total header bytes sent from Compute@Edge to end user."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeRespStatusTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_resp_status_total", Help: "Number of responses delivered delivered by Compute@Edge, by status code group."}, []string{"service_id", "service_name", "datacenter", "status_group"}),
+		ComputeStatusCodeTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_status_code_total", Help: "Number of responses delivered by Compute@Edge, by individual status code."}, []string{"service_id", "service_name", "datacenter", "status_code"}),
 		ComputeRuntimeErrorsTotal:                  prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_runtime_errors_total", Help: "Number of times a service experienced a guest runtime error."}, []string{"service_id", "service_name", "datacenter"}),
 		ComputeStackLimitExceededTotal:             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "compute_stack_limit_exceeded_total", Help: "Number of times a guest exceeded its stack limit."}, []string{"service_id", "service_name", "datacenter"}),
 		DDOSActionBlackholeTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "ddos_action_blackhole_total", Help: "The number of times the blackhole action was taken. The blackhole action quietly closes a TCP connection without sending a reset. The blackhole action quietly closes a TCP connection without notifying its peer (all TCP state is dropped)."}, []string{"service_id", "service_name", "datacenter"}),
