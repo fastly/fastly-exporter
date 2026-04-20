@@ -7,6 +7,20 @@ updates:
     open-pull-requests-limit: 10
     cooldown:
       default-days: 14
+    groups:
+      prometheus:
+        patterns:
+          - "github.com/prometheus/*"
+      golang-x:
+        patterns:
+          - "golang.org/x/*"
+      go-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+        exclude-patterns:
+          - "github.com/prometheus/*"
+          - "golang.org/x/*"
 
   - package-ecosystem: github-actions
     directory: "/"
@@ -15,3 +29,10 @@ updates:
     open-pull-requests-limit: 10
     cooldown:
       default-days: 14
+    groups:
+      docker-actions:
+        patterns:
+          - "docker/*"
+      github-actions:
+        patterns:
+          - "actions/*"
