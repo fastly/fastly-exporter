@@ -4,3 +4,29 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      prometheus:
+        patterns:
+          - "github.com/prometheus/*"
+      golang-x:
+        patterns:
+          - "golang.org/x/*"
+      go-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+        exclude-patterns:
+          - "github.com/prometheus/*"
+          - "golang.org/x/*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      docker-actions:
+        patterns:
+          - "docker/*"
+      github-actions:
+        patterns:
+          - "actions/*"
