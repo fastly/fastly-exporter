@@ -4,6 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 14
     groups:
       prometheus:
         patterns:
@@ -23,6 +26,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 14
     groups:
       docker-actions:
         patterns:
