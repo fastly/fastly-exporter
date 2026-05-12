@@ -122,7 +122,7 @@ func TestServiceCache(t *testing.T) {
 			var (
 				ctx    = context.Background()
 				client = fixedResponseClient{code: 200, response: serviceResponseLarge}
-				cache  = api.NewServiceCache(client, "irrelevant_token", testcase.options...)
+				cache  = api.NewServiceCache(client, "irrelevant_token", "", testcase.options...)
 			)
 			if err := cache.Refresh(ctx); err != nil {
 				t.Fatal(err)
@@ -167,7 +167,7 @@ func TestServiceCachePagination(t *testing.T) {
 	var (
 		ctx    = context.Background()
 		client = paginatedResponseClient{responses}
-		cache  = api.NewServiceCache(client, "irrelevant_token")
+		cache  = api.NewServiceCache(client, "irrelevant_token", "")
 	)
 
 	if err := cache.Refresh(ctx); err != nil {

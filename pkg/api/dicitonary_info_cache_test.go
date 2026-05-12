@@ -15,7 +15,7 @@ func TestDictionaryInfoCache(t *testing.T) {
 	t.Parallel()
 
 	svcClient := fixedResponseClient{code: 200, response: serviceResponseForDictionaryInfo}
-	serviceCache := api.NewServiceCache(svcClient, "irrelevant_token")
+	serviceCache := api.NewServiceCache(svcClient, "irrelevant_token", "")
 	serviceCache.Refresh(context.Background())
 
 	for _, testcase := range []struct {
@@ -73,7 +73,7 @@ func TestDictionaryInfoCache(t *testing.T) {
 			var (
 				ctx    = context.Background()
 				client = testcase.client
-				cache  = api.NewDictionaryInfoCache(client, "irrelevant token", log.NewNopLogger(), serviceCache, true)
+				cache  = api.NewDictionaryInfoCache(client, "irrelevant token", "", log.NewNopLogger(), serviceCache, true)
 			)
 
 			if want, have := testcase.wantErr, cache.Refresh(ctx); !cmp.Equal(want, have) {

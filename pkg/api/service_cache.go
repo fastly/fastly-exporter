@@ -30,8 +30,9 @@ type Service struct {
 // ServiceCache polls api.fastly.com/service to keep metadata about
 // one or more service IDs up-to-date.
 type ServiceCache struct {
-	client HTTPClient
-	token  string
+	client  HTTPClient
+	token   string
+	baseURL string
 
 	serviceIDs stringSet
 	nameFilter filter.Filter
@@ -45,11 +46,15 @@ type ServiceCache struct {
 // NewServiceCache returns an empty cache of service metadata. By default, it
 // will fetch metadata about all services available to the provided token. Use
 // options to restrict which services the cache should manage.
-func NewServiceCache(client HTTPClient, token string, options ...ServiceCacheOption) *ServiceCache {
+func NewServiceCache(client HTTPClient, token, baseURL string, options ...ServiceCacheOption) *ServiceCache {
+	if baseURL == "" {
+		baseURL = BaseURL("")
+	}
 	c := &ServiceCache{
-		client: client,
-		token:  token,
-		logger: log.NewNopLogger(),
+		client:  client,
+		token:   token,
+		baseURL: baseURL,
+		logger:  log.NewNopLogger(),
 	}
 	for _, option := range options {
 		option(c)
@@ -96,7 +101,7 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 	begin := time.Now()
 
 	var (
-		uri     = fmt.Sprintf("https://api.fastly.com/service?page=1&per_page=%d&filter%%5Binclude_versions%%5D=false", maxServicePageSize)
+		uri     = fmt.Sprintf("%s/service?page=1&per_page=%d&filter%%5Binclude_versions%%5D=false", c.baseURL, maxServicePageSize)
 		total   = 0
 		nextgen = map[string]Service{}
 	)
@@ -126,7 +131,8 @@ func (c *ServiceCache) Refresh(ctx context.Context) error {
 		total += len(response)
 
 		for _, s := range response {
-			debug := level.Debug(log.With(c.logger,
+			debug := level.Debug(log.With(
+				c.logger,
 				"service_id", s.ID,
 				"service_name", s.Name,
 				"service_version", s.Version,

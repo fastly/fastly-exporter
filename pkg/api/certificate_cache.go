@@ -53,6 +53,7 @@ type Attributes struct {
 type CertificateCache struct {
 	client  HTTPClient
 	token   string
+	baseURL string
 	enabled bool
 	logger  log.Logger
 
@@ -62,10 +63,14 @@ type CertificateCache struct {
 
 // NewCertificateCache returns an empty cache of certificates metadata. Use the
 // Refresh method to update the cache.
-func NewCertificateCache(client HTTPClient, token string, enabled bool, logger log.Logger) *CertificateCache {
+func NewCertificateCache(client HTTPClient, token, baseURL string, enabled bool, logger log.Logger) *CertificateCache {
+	if baseURL == "" {
+		baseURL = BaseURL("")
+	}
 	return &CertificateCache{
 		client:  client,
 		token:   token,
+		baseURL: baseURL,
 		enabled: enabled,
 		logger:  logger,
 	}
@@ -79,7 +84,7 @@ func (c *CertificateCache) Refresh(ctx context.Context) error {
 	begin := time.Now()
 
 	var (
-		uri       = fmt.Sprintf("https://api.fastly.com/tls/certificates?page%%5Bnumber%%5D=1&page%%5Bsize%%5D=%d&sort=created_at", maxCertificatesPageSize)
+		uri       = fmt.Sprintf("%s/tls/certificates?page%%5Bnumber%%5D=1&page%%5Bsize%%5D=%d&sort=created_at", c.baseURL, maxCertificatesPageSize)
 		nextCerts = []Certificate{}
 		total     = 0
 	)

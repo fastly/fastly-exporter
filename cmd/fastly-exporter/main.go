@@ -80,7 +80,8 @@ func main() {
 		fs.BoolVar(&configFileExample, "config-file-example", false, "print example config file to stdout and exit")
 		fs.Usage = usageFor(fs)
 	}
-	if err := ff.Parse(fs, os.Args[1:],
+	if err := ff.Parse(
+		fs, os.Args[1:],
 		ff.WithEnvVarPrefix("FASTLY_EXPORTER"),
 		ff.WithConfigFileFlag("config-file"),
 		ff.WithConfigFileParser(ff.PlainParser),
@@ -111,6 +112,10 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+	baseDomain := os.Getenv("FASTLY_BASE_URL")
+	apiBaseURL := api.BaseURL(baseDomain)
+	rtBaseURL := api.RTBaseURL(baseDomain)
 
 	switch deprecatedSubsystem {
 	case "rt":
@@ -291,30 +296,30 @@ func main() {
 			serviceCacheOptions = append(serviceCacheOptions, api.WithShard(shardN, shardM))
 		}
 
-		serviceCache = api.NewServiceCache(apiClient, token, serviceCacheOptions...)
+		serviceCache = api.NewServiceCache(apiClient, token, apiBaseURL, serviceCacheOptions...)
 	}
 
 	var certificateCache *api.CertificateCache
 	{
 		enabled := certificateRefresh != 0 && !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "cert_expiry_timestamp_seconds"))
-		certificateCache = api.NewCertificateCache(apiClient, token, enabled, logger)
+		certificateCache = api.NewCertificateCache(apiClient, token, apiBaseURL, enabled, logger)
 	}
 	var datacenterCache *api.DatacenterCache
 	{
 		enabled := !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "datacenter_info"))
-		datacenterCache = api.NewDatacenterCache(apiClient, token, enabled)
+		datacenterCache = api.NewDatacenterCache(apiClient, token, apiBaseURL, enabled)
 	}
 
 	var productCache *api.ProductCache
 	{
-		productCache = api.NewProductCache(apiClient, token, apiLogger)
+		productCache = api.NewProductCache(apiClient, token, apiBaseURL, apiLogger)
 	}
 
 	// Dictionary info cache (digest, item_count, last_updated) -> Prom metrics
 	var dictionaryCache *api.DictionaryInfoCache
 	{
 		enabled := !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "dictionary_item_count"))
-		dictionaryCache = api.NewDictionaryInfoCache(apiClient, token, apiLogger, serviceCache, enabled)
+		dictionaryCache = api.NewDictionaryInfoCache(apiClient, token, apiBaseURL, apiLogger, serviceCache, enabled)
 	}
 
 	{
@@ -392,7 +397,7 @@ func main() {
 	}
 
 	if !metricNameFilter.Blocked(prometheus.BuildFQName(namespace, deprecatedSubsystem, "token_expiration")) {
-		tokenRecorder := api.NewTokenRecorder(apiClient, token)
+		tokenRecorder := api.NewTokenRecorder(apiClient, token, apiBaseURL)
 		tg, err := tokenRecorder.Gatherer(namespace, deprecatedSubsystem)
 		if err != nil {
 			level.Error(apiLogger).Log("during", "create token gatherer", "err", err)
@@ -426,6 +431,7 @@ func main() {
 				rt.WithLogger(rtLogger),
 				rt.WithMetadataProvider(serviceCache),
 				rt.WithAggregateOnly(aggregateOnly),
+				rt.WithBaseURL(rtBaseURL),
 			}
 		)
 		manager = rt.NewManager(serviceCache, rtClient, token, registry, subscriberOptions, productCache, rtLogger)

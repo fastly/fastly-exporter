@@ -12,17 +12,22 @@ import (
 
 // TokenRecorder requests api.fastly.com/tokens/self once and sets a gauge metric
 type TokenRecorder struct {
-	client HTTPClient
-	token  string
-	metric *prometheus.GaugeVec
+	client  HTTPClient
+	token   string
+	baseURL string
+	metric  *prometheus.GaugeVec
 }
 
 // NewTokenRecorder returns an empty token recorder. Use the
 // Set method to get token data and set the gauge metric.
-func NewTokenRecorder(client HTTPClient, token string) *TokenRecorder {
+func NewTokenRecorder(client HTTPClient, token, baseURL string) *TokenRecorder {
+	if baseURL == "" {
+		baseURL = BaseURL("")
+	}
 	return &TokenRecorder{
-		client: client,
-		token:  token,
+		client:  client,
+		token:   token,
+		baseURL: baseURL,
 	}
 }
 
@@ -59,7 +64,7 @@ type token struct {
 }
 
 func (t *TokenRecorder) getToken(ctx context.Context) (*token, error) {
-	uri := "https://api.fastly.com/tokens/self"
+	uri := t.baseURL + "/tokens/self"
 
 	req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
 	if err != nil {

@@ -15,7 +15,7 @@ func TestTokenMetric(t *testing.T) {
 		namespace = "fastly"
 		subsystem = "rt"
 	)
-	client := api.NewTokenRecorder(fixedResponseClient{code: http.StatusOK, response: tokenReponseExpiresAt}, "")
+	client := api.NewTokenRecorder(fixedResponseClient{code: http.StatusOK, response: tokenReponseExpiresAt}, "", "")
 	gatherer, _ := client.Gatherer(namespace, subsystem)
 	client.Set(context.Background())
 
@@ -35,7 +35,7 @@ func TestTokenMetricWithoutExpiration(t *testing.T) {
 		namespace = "fastly"
 		subsystem = "rt"
 	)
-	client := api.NewTokenRecorder(fixedResponseClient{code: http.StatusOK, response: tokenReponseNoExpiry}, "")
+	client := api.NewTokenRecorder(fixedResponseClient{code: http.StatusOK, response: tokenReponseNoExpiry}, "", "")
 	gatherer, _ := client.Gatherer(namespace, subsystem)
 	client.Set(context.Background())
 

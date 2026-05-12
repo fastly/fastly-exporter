@@ -31,6 +31,7 @@ type Coördinates struct {
 type DatacenterCache struct {
 	client  HTTPClient
 	token   string
+	baseURL string
 	enabled bool
 
 	mtx sync.Mutex
@@ -39,10 +40,14 @@ type DatacenterCache struct {
 
 // NewDatacenterCache returns an empty cache of datacenter metadata. Use the
 // Refresh method to update the cache.
-func NewDatacenterCache(client HTTPClient, token string, enabled bool) *DatacenterCache {
+func NewDatacenterCache(client HTTPClient, token, baseURL string, enabled bool) *DatacenterCache {
+	if baseURL == "" {
+		baseURL = BaseURL("")
+	}
 	return &DatacenterCache{
 		client:  client,
 		token:   token,
+		baseURL: baseURL,
 		enabled: enabled,
 	}
 }
@@ -52,7 +57,7 @@ func (c *DatacenterCache) Refresh(ctx context.Context) error {
 	if !c.enabled {
 		return nil
 	}
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.fastly.com/datacenters", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/datacenters", nil)
 	if err != nil {
 		return fmt.Errorf("error constructing API datacenters request: %w", err)
 	}

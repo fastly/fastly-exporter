@@ -38,9 +38,10 @@ type Product struct {
 // ProductCache fetches product information from the Fastly Product Entitlement API
 // and stores results in a local cache.
 type ProductCache struct {
-	client HTTPClient
-	token  string
-	logger log.Logger
+	client  HTTPClient
+	token   string
+	baseURL string
+	logger  log.Logger
 
 	mtx      sync.Mutex
 	products map[string]bool
@@ -48,10 +49,14 @@ type ProductCache struct {
 
 // NewProductCache returns an empty cache of Product information. Use the Refresh method
 // to populate with data.
-func NewProductCache(client HTTPClient, token string, logger log.Logger) *ProductCache {
+func NewProductCache(client HTTPClient, token, baseURL string, logger log.Logger) *ProductCache {
+	if baseURL == "" {
+		baseURL = BaseURL("")
+	}
 	return &ProductCache{
 		client:   client,
 		token:    token,
+		baseURL:  baseURL,
 		logger:   logger,
 		products: make(map[string]bool),
 	}
@@ -63,7 +68,7 @@ func (p *ProductCache) Refresh(ctx context.Context) error {
 		if product == ProductDefault {
 			continue
 		}
-		uri := fmt.Sprintf("https://api.fastly.com/entitled-products/%s", product)
+		uri := fmt.Sprintf("%s/entitled-products/%s", p.baseURL, product)
 
 		req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
 		if err != nil {

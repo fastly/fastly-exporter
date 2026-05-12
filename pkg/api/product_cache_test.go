@@ -38,7 +38,7 @@ func TestProductCache(t *testing.T) {
 			var (
 				ctx    = context.Background()
 				client = testcase.client
-				cache  = api.NewProductCache(client, "irrelevant token", log.NewNopLogger())
+				cache  = api.NewProductCache(client, "irrelevant token", "", log.NewNopLogger())
 			)
 
 			// err

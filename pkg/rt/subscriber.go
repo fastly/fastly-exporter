@@ -38,6 +38,7 @@ type Subscriber struct {
 	client        HTTPClient
 	token         string
 	serviceID     string
+	baseURL       string
 	provider      MetadataProvider
 	metrics       *prom.Metrics
 	postprocess   func()
@@ -79,6 +80,12 @@ func WithAggregateOnly(aggregateOnly bool) SubscriberOption {
 	return func(s *Subscriber) { s.aggregateOnly = aggregateOnly }
 }
 
+// WithBaseURL sets the base URL for the real-time stats API.
+// By default, https://rt.fastly.com is used.
+func WithBaseURL(u string) SubscriberOption {
+	return func(s *Subscriber) { s.baseURL = u }
+}
+
 // NewSubscriber returns a ready-to-use subscriber. Callers must be sure to
 // invoke the Run method of the returned subscriber in order to actually update
 // any metrics.
@@ -87,6 +94,7 @@ func NewSubscriber(client HTTPClient, token, serviceID string, metrics *prom.Met
 		client:      client,
 		token:       token,
 		serviceID:   serviceID,
+		baseURL:     "https://rt.fastly.com",
 		metrics:     metrics,
 		provider:    nopMetadataProvider{},
 		postprocess: func() {},
@@ -194,7 +202,7 @@ func (s *Subscriber) queryRealtime(ctx context.Context, ts uint64) (currentName 
 
 	// rt.fastly.com blocks until it has data to return.
 	// It's safe to call in a (single-threaded!) hot loop.
-	u := fmt.Sprintf("https://rt.fastly.com/v1/channel/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
+	u := fmt.Sprintf("%s/v1/channel/%s/ts/%d", s.baseURL, url.QueryEscape(s.serviceID), ts)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return name, apiResultError, 0, ts, fmt.Errorf("error constructing real-time stats API request: %w", err)
@@ -258,7 +266,7 @@ func (s *Subscriber) queryOrigins(ctx context.Context, ts uint64) (currentName s
 
 	// rt.fastly.com blocks until it has data to return.
 	// It's safe to call in a (single-threaded!) hot loop.
-	u := fmt.Sprintf("https://rt.fastly.com/v1/origins/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
+	u := fmt.Sprintf("%s/v1/origins/%s/ts/%d", s.baseURL, url.QueryEscape(s.serviceID), ts)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return name, apiResultError, 0, ts, fmt.Errorf("error constructing origins API request: %w", err)
@@ -322,7 +330,7 @@ func (s *Subscriber) queryDomains(ctx context.Context, ts uint64) (currentName s
 
 	// rt.fastly.com blocks until it has data to return.
 	// It's safe to call in a (single-threaded!) hot loop.
-	u := fmt.Sprintf("https://rt.fastly.com/v1/domains/%s/ts/%d", url.QueryEscape(s.serviceID), ts)
+	u := fmt.Sprintf("%s/v1/domains/%s/ts/%d", s.baseURL, url.QueryEscape(s.serviceID), ts)
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
 		return name, apiResultError, 0, ts, fmt.Errorf("error constructing domains API request: %w", err)
@@ -427,7 +435,7 @@ func (s *Subscriber) rtDelay() time.Duration {
 		s.rtDelayCount = maxDelayCount
 	}
 
-	return time.Duration(cube(s.rtDelayCount)+((rand.Intn(10)+1)*(s.rtDelayCount))) * time.Second
+	return time.Duration(cube(s.rtDelayCount)+((rand.Intn(10)+1)*s.rtDelayCount)) * time.Second
 }
 
 func (s *Subscriber) oiDelay() time.Duration {
@@ -436,7 +444,7 @@ func (s *Subscriber) oiDelay() time.Duration {
 		s.oiDelayCount = maxDelayCount
 	}
 
-	return time.Duration(cube(s.oiDelayCount)+((rand.Intn(10)+1)*(s.oiDelayCount))) * time.Second
+	return time.Duration(cube(s.oiDelayCount)+((rand.Intn(10)+1)*s.oiDelayCount)) * time.Second
 }
 
 func (s *Subscriber) diDelay() time.Duration {
@@ -445,7 +453,7 @@ func (s *Subscriber) diDelay() time.Duration {
 		s.diDelayCount = maxDelayCount
 	}
 
-	return time.Duration(cube(s.diDelayCount)+((rand.Intn(10)+1)*(s.diDelayCount))) * time.Second
+	return time.Duration(cube(s.diDelayCount)+((rand.Intn(10)+1)*s.diDelayCount)) * time.Second
 }
 
 func cube(i int) int {

@@ -6,6 +6,26 @@ import (
 	"strings"
 )
 
+// DefaultBaseDomain is the default Fastly base domain.
+// API and RT URLs are derived as https://api.{domain} and https://rt.{domain}.
+const DefaultBaseDomain = "fastly.com"
+
+// BaseURL returns the full API base URL for a given base domain.
+func BaseURL(baseDomain string) string {
+	if baseDomain == "" {
+		baseDomain = DefaultBaseDomain
+	}
+	return "https://api." + baseDomain
+}
+
+// RTBaseURL returns the full real-time stats base URL for a given base domain.
+func RTBaseURL(baseDomain string) string {
+	if baseDomain == "" {
+		baseDomain = DefaultBaseDomain
+	}
+	return "https://rt." + baseDomain
+}
+
 // HTTPClient is a consumer contract for components in this package.
 // It models a concrete http.Client.
 type HTTPClient interface {

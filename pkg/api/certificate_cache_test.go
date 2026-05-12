@@ -67,7 +67,7 @@ func TestCertificateCache(t *testing.T) {
 			var (
 				ctx    = context.Background()
 				client = testcase.client
-				cache  = api.NewCertificateCache(client, "irrelevant token", true, log.NewNopLogger())
+				cache  = api.NewCertificateCache(client, "irrelevant token", "", true, log.NewNopLogger())
 			)
 
 			if want, have := testcase.wantErr, cache.Refresh(ctx); !cmp.Equal(want, have) {

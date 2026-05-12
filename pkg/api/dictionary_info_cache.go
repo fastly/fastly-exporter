@@ -34,6 +34,7 @@ type dictionaryResp struct {
 type DictionaryInfoCache struct {
 	client       HTTPClient
 	token        string
+	baseURL      string
 	logger       log.Logger
 	serviceCache *ServiceCache
 	enabled      bool
@@ -59,13 +60,17 @@ type Dictionary struct {
 
 // NewDictionaryInfoCache returns an empty cache of dictionary metadata. Use the
 // Refresh method to update the cache.
-func NewDictionaryInfoCache(client HTTPClient, token string, logger log.Logger, serviceCache *ServiceCache, enabled bool) *DictionaryInfoCache {
+func NewDictionaryInfoCache(client HTTPClient, token, baseURL string, logger log.Logger, serviceCache *ServiceCache, enabled bool) *DictionaryInfoCache {
+	if baseURL == "" {
+		baseURL = BaseURL("")
+	}
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
 	return &DictionaryInfoCache{
 		client:       client,
 		token:        token,
+		baseURL:      baseURL,
 		logger:       log.With(logger, "component", "dictionary-info"),
 		serviceCache: serviceCache,
 		enabled:      enabled,
@@ -201,7 +206,7 @@ func (c *DictionaryInfoCache) req(ctx context.Context, method, url string) (*htt
 }
 
 func (c *DictionaryInfoCache) listDictionaries(ctx context.Context, serviceID string, version int) ([]dictionaryResp, error) {
-	u := fmt.Sprintf("https://api.fastly.com/service/%s/version/%d/dictionary", serviceID, version)
+	u := fmt.Sprintf("%s/service/%s/version/%d/dictionary", c.baseURL, serviceID, version)
 	req, err := c.req(ctx, http.MethodGet, u)
 	if err != nil {
 		return nil, err
@@ -223,7 +228,7 @@ func (c *DictionaryInfoCache) listDictionaries(ctx context.Context, serviceID st
 }
 
 func (c *DictionaryInfoCache) getDictionaryInfo(ctx context.Context, serviceID string, version int, dictID string) (dictionaryInfo, error) {
-	u := fmt.Sprintf("https://api.fastly.com/service/%s/version/%d/dictionary/%s/info", serviceID, version, dictID)
+	u := fmt.Sprintf("%s/service/%s/version/%d/dictionary/%s/info", c.baseURL, serviceID, version, dictID)
 	req, err := c.req(ctx, http.MethodGet, u)
 	if err != nil {
 		return dictionaryInfo{}, err
