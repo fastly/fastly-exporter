@@ -115,7 +115,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
       
       - name: Docker auth
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -134,7 +134,7 @@ jobs:
             type=semver,pattern=v{{version}}
       
       - name: Docker build
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v7.1.0
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -170,7 +170,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
       
       - name: Docker auth
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -189,7 +189,7 @@ jobs:
             type=semver,pattern=v{{version}}
       
       - name: Docker build and push
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v7.1.0
         with:
           context: .
           platforms: linux/amd64,linux/arm64
