@@ -427,7 +427,7 @@ func (s *Subscriber) rtDelay() time.Duration {
 		s.rtDelayCount = maxDelayCount
 	}
 
-	return time.Duration(cube(s.rtDelayCount)+((rand.Intn(10)+1)*(s.rtDelayCount))) * time.Second
+	return time.Duration(cube(s.rtDelayCount)+((rand.Intn(10)+1)*s.rtDelayCount)) * time.Second
 }
 
 func (s *Subscriber) oiDelay() time.Duration {
@@ -436,7 +436,7 @@ func (s *Subscriber) oiDelay() time.Duration {
 		s.oiDelayCount = maxDelayCount
 	}
 
-	return time.Duration(cube(s.oiDelayCount)+((rand.Intn(10)+1)*(s.oiDelayCount))) * time.Second
+	return time.Duration(cube(s.oiDelayCount)+((rand.Intn(10)+1)*s.oiDelayCount)) * time.Second
 }
 
 func (s *Subscriber) diDelay() time.Duration {
@@ -445,7 +445,7 @@ func (s *Subscriber) diDelay() time.Duration {
 		s.diDelayCount = maxDelayCount
 	}
 
-	return time.Duration(cube(s.diDelayCount)+((rand.Intn(10)+1)*(s.diDelayCount))) * time.Second
+	return time.Duration(cube(s.diDelayCount)+((rand.Intn(10)+1)*s.diDelayCount)) * time.Second
 }
 
 func cube(i int) int {

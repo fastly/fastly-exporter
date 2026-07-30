@@ -187,7 +187,7 @@ type countingRealtimeClient struct {
 }
 
 func (c *countingRealtimeClient) Do(req *http.Request) (*http.Response, error) {
-	atomic.AddUint64(&(c.served), 1)
+	atomic.AddUint64(&c.served, 1)
 	return fixedResponseClient{c.code, c.response}.Do(req)
 }
 
