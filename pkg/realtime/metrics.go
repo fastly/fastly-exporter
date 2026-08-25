@@ -139,15 +139,24 @@ type Metrics struct {
 	HTTP2Total                                        *prometheus.CounterVec
 	HTTP3Total                                        *prometheus.CounterVec
 	HTTPTotal                                         *prometheus.CounterVec
+	ImgOptoAVIFCountTotal                             *prometheus.CounterVec
+	ImgOptoComputeRequestsTotal                       *prometheus.CounterVec
+	ImgOptoGIFCountTotal                              *prometheus.CounterVec
+	ImgOptoJPEGCountTotal                             *prometheus.CounterVec
+	ImgOptoJPEGXLCountTotal                           *prometheus.CounterVec
+	ImgOptoMP4CountTotal                              *prometheus.CounterVec
+	ImgOptoPNGCountTotal                              *prometheus.CounterVec
 	ImgOptoRespBodyBytesTotal                         *prometheus.CounterVec
 	ImgOptoRespHeaderBytesTotal                       *prometheus.CounterVec
 	ImgOptoShieldRespBodyBytesTotal                   *prometheus.CounterVec
 	ImgOptoShieldRespHeaderBytesTotal                 *prometheus.CounterVec
 	ImgOptoShieldTotal                                *prometheus.CounterVec
+	ImgOptoSVGCountTotal                              *prometheus.CounterVec
 	ImgOptoTotal                                      *prometheus.CounterVec
 	ImgOptoTransformRespBodyBytesTotal                *prometheus.CounterVec
 	ImgOptoTransformRespHeaderBytesTotal              *prometheus.CounterVec
 	ImgOptoTransformTotal                             *prometheus.CounterVec
+	ImgOptoWebPCountTotal                             *prometheus.CounterVec
 	ImgVideoFramesTotal                               *prometheus.CounterVec
 	ImgVideoRespBodyBytesTotal                        *prometheus.CounterVec
 	ImgVideoRespHeaderBytesTotal                      *prometheus.CounterVec
@@ -387,15 +396,24 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		HTTP2Total:                                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http2_total", Help: "Number of requests received over HTTP2."}, []string{"service_id", "service_name", "datacenter"}),
 		HTTP3Total:                                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http3_total", Help: "Number of requests received over HTTP3."}, []string{"service_id", "service_name", "datacenter"}),
 		HTTPTotal:                                         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http_total", Help: "Number of requests received, by HTTP version."}, []string{"service_id", "service_name", "datacenter", "http_version"}),
+		ImgOptoAVIFCountTotal:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_avif_count_total", Help: "Count of AVIF images delivered to end user by Image Optimizer."}, []string{"service_id", "service_name", "datacenter"}),
+		ImgOptoComputeRequestsTotal:                       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_compute_requests_total", Help: "The number of Image Optimizer requests made from Compute services."}, []string{"service_id", "service_name", "datacenter"}),
+		ImgOptoGIFCountTotal:                              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_gif_count_total", Help: "Count of GIF images delivered to end user by Image Optimizer."}, []string{"service_id", "service_name", "datacenter"}),
+		ImgOptoJPEGCountTotal:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_jpeg_count_total", Help: "Count of JPEG images delivered to end user by Image Optimizer."}, []string{"service_id", "service_name", "datacenter"}),
+		ImgOptoJPEGXLCountTotal:                           prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_jpegxl_count_total", Help: "Count of JPEGXL images delivered to end user by Image Optimizer."}, []string{"service_id", "service_name", "datacenter"}),
+		ImgOptoMP4CountTotal:                              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_mp4_count_total", Help: "Count of MP4s delivered to end user by Image Optimizer."}, []string{"service_id", "service_name", "datacenter"}),
+		ImgOptoPNGCountTotal:                              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_png_count_total", Help: "Count of PNG images delivered to end user by Image Optimizer."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoRespBodyBytesTotal:                         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_resp_body_bytes_total", Help: "Total body bytes delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoRespHeaderBytesTotal:                       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_resp_header_bytes_total", Help: "Total header bytes delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoShieldRespBodyBytesTotal:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_shield_resp_body_bytes_total", Help: "Total body bytes delivered via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoShieldRespHeaderBytesTotal:                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_shield_resp_header_bytes_total", Help: "Total header bytes delivered via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoShieldTotal:                                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_shield_total", Help: "Number of responses delivered via a shield from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
+		ImgOptoSVGCountTotal:                              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_svg_count_total", Help: "Count of SVG images delivered to end user by Image Optimizer."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoTotal:                                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_total", Help: "Number of responses that came from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoTransformRespBodyBytesTotal:                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_transform_resp_body_bytes_total", Help: "Total body bytes of transforms delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoTransformRespHeaderBytesTotal:              prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_transform_resp_header_bytes_total", Help: "Total header bytes of transforms delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgOptoTransformTotal:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_transforms_total", Help: "Total transforms performed by the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
+		ImgOptoWebPCountTotal:                             prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgopto_webp_count_total", Help: "Count of WebP images delivered to end user by Image Optimizer."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgVideoFramesTotal:                               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_frames_total", Help: "Number of video frames that came from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgVideoRespBodyBytesTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_resp_body_bytes_total", Help: "Total body bytes of video delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),
 		ImgVideoRespHeaderBytesTotal:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "imgvideo_resp_header_bytes_total", Help: "Total header bytes of video delivered from the Fastly Image Optimizer service."}, []string{"service_id", "service_name", "datacenter"}),

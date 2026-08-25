@@ -166,12 +166,21 @@ type Datacenter struct {
 	HTTP2                                             uint64            `json:"http2"`
 	HTTP3                                             uint64            `json:"http3"`
 	ImgOpto                                           uint64            `json:"imgopto"`
+	ImgOptoAVIFCount                                  uint64            `json:"imgopto_avif_count"`
+	ImgOptoComputeRequests                            uint64            `json:"imgopto_compute_requests"`
+	ImgOptoGIFCount                                   uint64            `json:"imgopto_gif_count"`
+	ImgOptoJPEGCount                                  uint64            `json:"imgopto_jpeg_count"`
+	ImgOptoJPEGXLCount                                uint64            `json:"imgopto_jpegxl_count"`
+	ImgOptoMP4Count                                   uint64            `json:"imgopto_mp4_count"`
+	ImgOptoPNGCount                                   uint64            `json:"imgopto_png_count"`
 	ImgOptoRespBodyBytes                              uint64            `json:"imgopto_resp_body_bytes"`
 	ImgOptoRespHeaderBytes                            uint64            `json:"imgopto_resp_header_bytes"`
 	ImgOptoShield                                     uint64            `json:"imgopto_shield"`
+	ImgOptoSVGCount                                   uint64            `json:"imgopto_svg_count"`
 	ImgOptoShieldRespBodyBytes                        uint64            `json:"imgopto_shield_resp_body_bytes"`
 	ImgOptoShieldRespHeaderBytes                      uint64            `json:"imgopto_shield_resp_header_bytes"`
 	ImgOptoTransform                                  uint64            `json:"imgopto_transforms"`
+	ImgOptoWebPCount                                  uint64            `json:"imgopto_webp_count"`
 	ImgOptoTransformRespBodyBytes                     uint64            `json:"imgopto_transform_resp_body_bytes"`
 	ImgOptoTransformRespHeaderBytes                   uint64            `json:"imgopto_transform_resp_header_bytes"`
 	ImgVideo                                          uint64            `json:"imgvideo"`
