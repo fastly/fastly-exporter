@@ -52,7 +52,10 @@ type Datacenter struct {
 	ComputeExecutionTimeMilliseconds                  uint64            `json:"compute_execution_time_ms"`
 	ComputeGlobalsLimitExceededTotal                  uint64            `json:"compute_globals_limit_exceeded"`
 	ComputeGuestErrorsTotal                           uint64            `json:"compute_guest_errors"`
+	ComputeHandoff                                    uint64            `json:"compute_handoff"`
 	ComputeHeapLimitExceededTotal                     uint64            `json:"compute_heap_limit_exceeded"`
+	ComputePlatformInternalErrors                     uint64            `json:"compute_platform_internal_error"`
+	ComputePlatformInvalidRequestErrors               uint64            `json:"compute_platform_invalid_request_error"`
 	ComputeRAMUsed                                    uint64            `json:"compute_ram_used"`
 	ComputeReqBodyBytesTotal                          uint64            `json:"compute_req_body_bytes"`
 	ComputeReqHeaderBytesTotal                        uint64            `json:"compute_req_header_bytes"`
@@ -62,6 +65,7 @@ type Datacenter struct {
 	ComputeResourceLimitExceedTotal                   uint64            `json:"compute_resource_limit_exceeded"`
 	ComputeRespBodyBytesTotal                         uint64            `json:"compute_resp_body_bytes"`
 	ComputeRespHeaderBytesTotal                       uint64            `json:"compute_resp_header_bytes"`
+	ComputeRespStatus103                              uint64            `json:"compute_resp_status_103"`
 	ComputeRespStatus1xx                              uint64            `json:"compute_resp_status_1xx"`
 	ComputeRespStatus200                              uint64            `json:"compute_resp_status_200"`
 	ComputeRespStatus204                              uint64            `json:"compute_resp_status_204"`
@@ -87,6 +91,7 @@ type Datacenter struct {
 	ComputeRespStatus530                              uint64            `json:"compute_resp_status_530"`
 	ComputeRespStatus5xx                              uint64            `json:"compute_resp_status_5xx"`
 	ComputeRuntimeErrorsTotal                         uint64            `json:"compute_runtime_errors"`
+	ComputeSandboxes                                  uint64            `json:"compute_sandboxes"`
 	ComputeServiceBackendReq5xxErrorsTotal            uint64            `json:"compute_service_bereq_5xx_error"`
 	ComputeServiceBackendReqConnErrorsTotal           uint64            `json:"compute_service_bereq_conn_error"`
 	ComputeServiceBackendReqConnOtherErrorsTotal      uint64            `json:"compute_service_bereq_conn_other_error"`
@@ -104,6 +109,13 @@ type Datacenter struct {
 	ComputeServiceBackendReqTLSErrorsTotal            uint64            `json:"compute_service_bereq_tls_error"`
 	ComputeServiceBackendReqTLSOtherErrorsTotal       uint64            `json:"compute_service_bereq_tls_other_error"`
 	ComputeServiceBackendReqTLSServerCertErrorsTotal  uint64            `json:"compute_service_bereq_tls_server_cert_error"`
+	ComputeServiceChainErrors                         uint64            `json:"compute_service_chain_error"`
+	ComputeServiceLimitsErrors                        uint64            `json:"compute_service_limits_error"`
+	ComputeServiceMemoryExceededErrors                uint64            `json:"compute_service_memory_exceeded_error"`
+	ComputeServiceResourceLimitsErrors                uint64            `json:"compute_service_resource_limits_error"`
+	ComputeServiceRuntimeErrors                       uint64            `json:"compute_service_runtime_error"`
+	ComputeServiceTimeoutErrors                       uint64            `json:"compute_service_timeout_error"`
+	ComputeServiceVCPUExceededErrors                  uint64            `json:"compute_service_vcpu_exceeded_error"`
 	ComputeStackLimitExceededTotal                    uint64            `json:"compute_stack_limit_exceeded"`
 	DDOSActionBlackhole                               uint64            `json:"ddos_action_blackhole"`
 	DDOSActionClose                                   uint64            `json:"ddos_action_close"`
