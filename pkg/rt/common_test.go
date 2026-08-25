@@ -6001,6 +6001,8 @@ var expectedDomainsMetricsOutputMap = map[string]float64{
 	`testspace_domain_edge_requests_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                          10,
 	`testspace_domain_edge_resp_body_bytes_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                   1024,
 	`testspace_domain_edge_resp_header_bytes_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                 48,
+	`testspace_domain_http2_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                                  0,
+	`testspace_domain_http3_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                                  0,
 	`testspace_domain_origin_fetch_resp_body_bytes{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                 1024,
 	`testspace_domain_origin_fetch_resp_header_bytes{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:               48,
 	`testspace_domain_origin_fetches{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                               5,
@@ -6056,6 +6058,10 @@ var expectedDomainsMetricsOutputMap = map[string]float64{
 	`testspace_domain_status_group_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name",status_group="3xx"}`:        0,
 	`testspace_domain_status_group_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name",status_group="4xx"}`:        0,
 	`testspace_domain_status_group_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name",status_group="5xx"}`:        0,
+	`testspace_domain_tls_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name",tls_version="1.0"}`:                  0,
+	`testspace_domain_tls_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name",tls_version="1.1"}`:                  0,
+	`testspace_domain_tls_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name",tls_version="1.2"}`:                  0,
+	`testspace_domain_tls_total{datacenter="TYO",domain="testhost",service_id="my-service-id",service_name="my-service-name",tls_version="1.3"}`:                  0,
 }
 
 var expectedDomainsMetricsAggOutputMap = map[string]float64{
@@ -6067,6 +6073,8 @@ var expectedDomainsMetricsAggOutputMap = map[string]float64{
 	`testspace_domain_edge_requests_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                          10,
 	`testspace_domain_edge_resp_body_bytes_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                   1024,
 	`testspace_domain_edge_resp_header_bytes_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                 48,
+	`testspace_domain_http2_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                                  0,
+	`testspace_domain_http3_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                                  0,
 	`testspace_domain_origin_fetch_resp_body_bytes{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                 1024,
 	`testspace_domain_origin_fetch_resp_header_bytes{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:               48,
 	`testspace_domain_origin_fetches{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name"}`:                               5,
@@ -6122,4 +6130,8 @@ var expectedDomainsMetricsAggOutputMap = map[string]float64{
 	`testspace_domain_status_group_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name",status_group="3xx"}`:        0,
 	`testspace_domain_status_group_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name",status_group="4xx"}`:        0,
 	`testspace_domain_status_group_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name",status_group="5xx"}`:        0,
+	`testspace_domain_tls_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name",tls_version="1.0"}`:                  0,
+	`testspace_domain_tls_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name",tls_version="1.1"}`:                  0,
+	`testspace_domain_tls_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name",tls_version="1.2"}`:                  0,
+	`testspace_domain_tls_total{datacenter="aggregate",domain="testhost",service_id="my-service-id",service_name="my-service-name",tls_version="1.3"}`:                  0,
 }
