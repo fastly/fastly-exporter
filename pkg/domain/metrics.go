@@ -20,6 +20,8 @@ type Metrics struct {
 	EdgeRequestsTotal               *prometheus.CounterVec
 	EdgeResponseBodyBytesTotal      *prometheus.CounterVec
 	EdgeResponseHeaderBytesTotal    *prometheus.CounterVec
+	HTTP2Total                      *prometheus.CounterVec
+	HTTP3Total                      *prometheus.CounterVec
 	OriginFetchRespBodyBytesTotal   *prometheus.CounterVec
 	OriginFetchRespHeaderBytesTotal *prometheus.CounterVec
 	OriginFetches                   *prometheus.CounterVec
@@ -31,6 +33,7 @@ type Metrics struct {
 	RespHeaderBytesTotal            *prometheus.CounterVec
 	StatusCodeTotal                 *prometheus.CounterVec
 	StatusGroupTotal                *prometheus.CounterVec
+	TLSTotal                        *prometheus.CounterVec
 }
 
 // NewMetrics returns a new set of metrics registered to the Registerer.
@@ -45,6 +48,8 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		EdgeRequestsTotal:               prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_requests_total", Help: "Number of requests sent by end users to Fastly."}, []string{"service_id", "service_name", "datacenter", "domain"}),
 		EdgeResponseBodyBytesTotal:      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_resp_body_bytes_total", Help: "Total body bytes delivered from Fastly to the end user."}, []string{"service_id", "service_name", "datacenter", "domain"}),
 		EdgeResponseHeaderBytesTotal:    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "edge_resp_header_bytes_total", Help: "Total header bytes delivered from Fastly to the end user."}, []string{"service_id", "service_name", "datacenter", "domain"}),
+		HTTP2Total:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http2_total", Help: "Number of requests received over HTTP/2."}, []string{"service_id", "service_name", "datacenter", "domain"}),
+		HTTP3Total:                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "http3_total", Help: "Number of requests received over HTTP/3."}, []string{"service_id", "service_name", "datacenter", "domain"}),
 		OriginFetchRespBodyBytesTotal:   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_resp_body_bytes", Help: "Total body bytes received from origin."}, []string{"service_id", "service_name", "datacenter", "domain"}),
 		OriginFetchRespHeaderBytesTotal: prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetch_resp_header_bytes", Help: "Total header bytes received from origin."}, []string{"service_id", "service_name", "datacenter", "domain"}),
 		OriginFetches:                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "origin_fetches", Help: "Number of requests sent to origin."}, []string{"service_id", "service_name", "datacenter", "domain"}),
@@ -56,6 +61,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		RespHeaderBytesTotal:            prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "resp_header_bytes_total", Help: `Total header bytes delivered.`}, []string{"service_id", "service_name", "datacenter", "domain"}),
 		StatusCodeTotal:                 prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "status_code_total", Help: `Number of responses, by status code e.g. 200, 419.`}, []string{"service_id", "service_name", "datacenter", "domain", "status_code"}),
 		StatusGroupTotal:                prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "status_group_total", Help: `Number of responses, by status group e.g. 1xx, 2xx.`}, []string{"service_id", "service_name", "datacenter", "domain", "status_group"}),
+		TLSTotal:                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "tls_total", Help: "Number of requests received over TLS, by TLS version."}, []string{"service_id", "service_name", "datacenter", "domain", "tls_version"}),
 	}
 
 	for i, v := 0, reflect.ValueOf(m); i < v.NumField(); i++ {

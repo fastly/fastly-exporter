@@ -31,6 +31,8 @@ type Stats struct {
 	EdgeRequests               uint64  `json:"edge_requests"`                  //	integer	Number of requests sent by end users to Fastly.
 	EdgeRespBodyBytes          uint64  `json:"edge_resp_body_bytes"`           //	integer	Total body bytes delivered from Fastly to the end user.
 	EdgeRespHeaderBytes        uint64  `json:"edge_resp_header_bytes"`         //	integer	Total header bytes delivered from Fastly to the end user.
+	HTTP2                      uint64  `json:"http2"`                          //	integer	Number of requests received over HTTP/2.
+	HTTP3                      uint64  `json:"http3"`                          //	integer	Number of requests received over HTTP/3.
 	OriginFetchRespBodyBytes   uint64  `json:"origin_fetch_resp_body_bytes"`   //	integer	Total body bytes received from origin.
 	OriginFetchRespHeaderBytes uint64  `json:"origin_fetch_resp_header_bytes"` //	integer	Total header bytes received from origin.
 	OriginFetches              uint64  `json:"origin_fetches"`                 //	integer	Number of requests sent to origin.
@@ -85,5 +87,9 @@ type Stats struct {
 	Status504                  uint64  `json:"status_504"`                     //	integer	Number of responses received with status code 504 (Gateway Timeout).
 	Status505                  uint64  `json:"status_505"`                     //	integer	Number of responses received with status code 505 (HTTP Version Not Supported).
 	Status530                  uint64  `json:"status_530"`                     //	integer Number of responses delivered with status code 530.
+	TLSv10                     uint64  `json:"tls_v10"`                        //	integer	Number of requests received over TLS 1.0.
+	TLSv11                     uint64  `json:"tls_v11"`                        //	integer	Number of requests received over TLS 1.1.
+	TLSv12                     uint64  `json:"tls_v12"`                        //	integer	Number of requests received over TLS 1.2.
+	TLSv13                     uint64  `json:"tls_v13"`                        //	integer	Number of requests received over TLS 1.3.
 	Status5xx                  uint64  `json:"status_5xx"`                     //	integer	Number of 5xx "Server Error" codes delivered.
 }
