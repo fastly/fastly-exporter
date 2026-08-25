@@ -16,6 +16,7 @@ type Response struct {
 
 // Datacenter models the per-datacenter portion of the rt.fastly.com response.
 type Datacenter struct {
+	APIDiscoveryRequestsCount                         uint64            `json:"api_discovery_requests_count"`
 	AttackBlockedReqBodyBytes                         uint64            `json:"attack_blocked_req_body_bytes"`
 	AttackBlockedReqHeaderBytes                       uint64            `json:"attack_blocked_req_header_bytes"`
 	AttackLoggedReqBodyBytes                          uint64            `json:"attack_logged_req_body_bytes"`

@@ -1990,6 +1990,16 @@ const rtResponseFixture = `{
 `
 
 var expectedRTMetricsOutputMap = map[string]float64{
+	`testspace_testsystem_api_discovery_requests_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="HHN",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="LGA",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="SEA",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="SYD",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="TYO",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="YUL",service_id="my-service-id",service_name="my-service-name"}`:                      0,
+	`testspace_testsystem_api_discovery_requests_total{datacenter="YYZ",service_id="my-service-id",service_name="my-service-name"}`:                      0,
 	`testspace_testsystem_attack_blocked_req_body_bytes_total{datacenter="BUR",service_id="my-service-id",service_name="my-service-name"}`:               0,
 	`testspace_testsystem_attack_blocked_req_body_bytes_total{datacenter="BWI",service_id="my-service-id",service_name="my-service-name"}`:               0,
 	`testspace_testsystem_attack_blocked_req_body_bytes_total{datacenter="FRA",service_id="my-service-id",service_name="my-service-name"}`:               0,
@@ -5265,6 +5275,7 @@ var expectedRTMetricsOutputMap = map[string]float64{
 }
 
 var expectedRTMetricsAggOutputMap = map[string]float64{
+	`testspace_testsystem_api_discovery_requests_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                      0,
 	`testspace_testsystem_attack_blocked_req_body_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:               0,
 	`testspace_testsystem_attack_blocked_req_header_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:             0,
 	`testspace_testsystem_attack_logged_req_body_bytes_total{datacenter="aggregate",service_id="my-service-id",service_name="my-service-name"}`:                0,

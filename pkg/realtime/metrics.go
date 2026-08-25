@@ -11,6 +11,7 @@ import (
 
 // Metrics collects all of the Prometheus metrics that map to real-time stats.
 type Metrics struct {
+	APIDiscoveryRequestsTotal                         *prometheus.CounterVec
 	AttackBlockedReqBodyBytesTotal                    *prometheus.CounterVec
 	AttackBlockedReqHeaderBytesTotal                  *prometheus.CounterVec
 	AttackLoggedReqBodyBytesTotal                     *prometheus.CounterVec
@@ -269,6 +270,7 @@ type Metrics struct {
 // Only metrics whose names pass the name filter are registered.
 func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometheus.Registerer) *Metrics {
 	m := Metrics{
+		APIDiscoveryRequestsTotal:                         prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "api_discovery_requests_total", Help: "Number of requests processed by the API Discovery engine."}, []string{"service_id", "service_name", "datacenter"}),
 		AttackBlockedReqBodyBytesTotal:                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "attack_blocked_req_body_bytes_total", Help: "Total body bytes received from requests that triggered a WAF rule that was blocked."}, []string{"service_id", "service_name", "datacenter"}),
 		AttackBlockedReqHeaderBytesTotal:                  prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "attack_blocked_req_header_bytes_total", Help: "Total header bytes received from requests that triggered a WAF rule that was blocked."}, []string{"service_id", "service_name", "datacenter"}),
 		AttackLoggedReqBodyBytesTotal:                     prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "attack_logged_req_body_bytes_total", Help: "Total body bytes received from requests that triggered a WAF rule that was logged."}, []string{"service_id", "service_name", "datacenter"}),

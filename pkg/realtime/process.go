@@ -24,6 +24,7 @@ func Process(response *Response, serviceID, serviceName, _ string, m *Metrics, a
 }
 
 func process(serviceID, serviceName, datacenter string, stats Datacenter, m *Metrics) {
+	m.APIDiscoveryRequestsTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.APIDiscoveryRequestsCount))
 	m.AttackBlockedReqBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackBlockedReqBodyBytes))
 	m.AttackBlockedReqHeaderBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackBlockedReqHeaderBytes))
 	m.AttackLoggedReqBodyBytesTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.AttackLoggedReqBodyBytes))
