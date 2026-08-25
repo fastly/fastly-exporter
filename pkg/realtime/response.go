@@ -309,6 +309,7 @@ type Datacenter struct {
 	TLSv12                                            uint64            `json:"tls_v12"`
 	TLSv13                                            uint64            `json:"tls_v13"`
 	Uncacheable                                       uint64            `json:"uncacheable"`
+	Upgrade                                           uint64            `json:"upgrade"`
 	Video                                             uint64            `json:"video"`
 	WAFBlocked                                        uint64            `json:"waf_blocked"`
 	WAFLogged                                         uint64            `json:"waf_logged"`

@@ -249,6 +249,7 @@ type Metrics struct {
 	SynthsTotal                                       *prometheus.CounterVec
 	TLSTotal                                          *prometheus.CounterVec
 	UncacheableTotal                                  *prometheus.CounterVec
+	UpgradeTotal                                      *prometheus.CounterVec
 	VideoTotal                                        *prometheus.CounterVec
 	WAFBlockedTotal                                   *prometheus.CounterVec
 	WAFLoggedTotal                                    *prometheus.CounterVec
@@ -506,6 +507,7 @@ func NewMetrics(namespace, subsystem string, nameFilter filter.Filter, r prometh
 		SynthsTotal:                                       prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "synth_total", Help: "TODO"}, []string{"service_id", "service_name", "datacenter"}),
 		TLSTotal:                                          prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "tls_total", Help: "Number of requests that were received over TLS."}, []string{"service_id", "service_name", "datacenter", "tls_version"}),
 		UncacheableTotal:                                  prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "uncacheable_total", Help: "Number of requests that were designated uncachable."}, []string{"service_id", "service_name", "datacenter"}),
+		UpgradeTotal:                                      prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "upgrade_total", Help: "Number of requests that resulted in a WebSocket upgrade."}, []string{"service_id", "service_name", "datacenter"}),
 		VideoTotal:                                        prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "video_total", Help: "Number of responses with the video segment or video manifest MIME type (i.e., application/x-mpegurl, application/vnd.apple.mpegurl, application/f4m, application/dash+xml, application/vnd.ms-sstr+xml, ideo/mp2t, audio/aac, video/f4f, video/x-flv, video/mp4, audio/mp4)."}, []string{"service_id", "service_name", "datacenter"}),
 		WAFBlockedTotal:                                   prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "waf_blocked_total", Help: "Number of requests that triggered a WAF rule and were blocked."}, []string{"service_id", "service_name", "datacenter"}),
 		WAFLoggedTotal:                                    prometheus.NewCounterVec(prometheus.CounterOpts{Namespace: namespace, Subsystem: subsystem, Name: "waf_logged_total", Help: "Number of requests that triggered a WAF rule and were logged."}, []string{"service_id", "service_name", "datacenter"}),

@@ -314,6 +314,7 @@ func process(serviceID, serviceName, datacenter string, stats Datacenter, m *Met
 	m.TLSTotal.WithLabelValues(serviceID, serviceName, datacenter, "1.2").Add(float64(stats.TLSv12))
 	m.TLSTotal.WithLabelValues(serviceID, serviceName, datacenter, "1.3").Add(float64(stats.TLSv13))
 	m.UncacheableTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Uncacheable))
+	m.UpgradeTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Upgrade))
 	m.VideoTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.Video))
 	m.WAFBlockedTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.WAFBlocked))
 	m.WAFLoggedTotal.WithLabelValues(serviceID, serviceName, datacenter).Add(float64(stats.WAFLogged))
