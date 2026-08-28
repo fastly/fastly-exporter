@@ -79,6 +79,7 @@ type Stats struct {
 	Status404                  uint64  `json:"status_404"`                     //	integer	Number of responses received with status code 404 (Not Found).
 	Status416                  uint64  `json:"status_416"`                     //	integer	Number of responses received with status code 416 (Range Not Satisfiable).
 	Status429                  uint64  `json:"status_429"`                     //	integer	Number of responses received with status code 429 (Too Many Requests).
+	Status499                  uint64  `json:"status_499"`                     //	integer	Number of responses received with status code 499 (Client disconnects).
 	Status4xx                  uint64  `json:"status_4xx"`                     //	integer	Number of 4xx "Client Error" codes delivered.
 	Status500                  uint64  `json:"status_500"`                     //	integer	Number of responses received with status code 500 (Internal Server Error).
 	Status501                  uint64  `json:"status_501"`                     //	integer	Number of responses received with status code 501 (Not Implemented).
