@@ -78,6 +78,7 @@ func process(serviceID, serviceName, datacenter, domain string, stats Stats, m *
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "404").Add(float64(stats.Status404))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "416").Add(float64(stats.Status416))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "429").Add(float64(stats.Status429))
+	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "499").Add(float64(stats.Status499))
 	m.StatusGroupTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "4xx").Add(float64(stats.Status4xx))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "500").Add(float64(stats.Status500))
 	m.StatusCodeTotal.WithLabelValues(serviceID, serviceName, datacenter, domain, "501").Add(float64(stats.Status501))
