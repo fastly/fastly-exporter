@@ -8,12 +8,17 @@ to service metadata like name and version.
 Fastly APIs consumed:
 
 * [Real-time Analytics API][rt]
+* [Origin Inspector Real-time API][oi-rt] (when the account is entitled, see [below](#origin-inspector-and-domain-inspector))
+* [Domain Inspector Real-time API][di-rt] (when the account is entitled)
+* Product entitlement (`GET /entitled-products/{product}`), to decide whether to poll Origin Inspector and Domain Inspector
 * [Service list][svc]
 * [Custom TLS Certificates][certs]
 * [POPs][pops]
 
 [api]: https://www.fastly.com/documentation/reference/api/
 [rt]: https://www.fastly.com/documentation/reference/api/metrics-stats/realtime/
+[oi-rt]: https://www.fastly.com/documentation/reference/api/metrics-stats/origin-inspector/real-time/
+[di-rt]: https://www.fastly.com/documentation/reference/api/metrics-stats/domain-inspector/real-time/
 [svc]: https://www.fastly.com/documentation/reference/api/services/service/#list-services
 [pops]: https://www.fastly.com/documentation/reference/api/utils/pops/
 [certs]: https://www.fastly.com/documentation/reference/api/tls/custom-certs/
@@ -100,6 +105,92 @@ and make them available as Prometheus metrics on [127.0.0.1:8080/metrics][local]
 
 [local]: http://127.0.0.1:8080/metrics
 
+## Origin Inspector and Domain Inspector
+
+If your account is entitled to [Origin Inspector][oi] or [Domain Inspector][di],
+the exporter polls their real-time APIs alongside the standard real-time stats
+and exports the results. There is no flag to turn this on. At startup, and every
+`-product-refresh` (default 10m), the exporter calls
+`GET https://api.fastly.com/entitled-products/{product}` for each product and
+starts one extra subscriber per service for each product the account has access
+to. The log shows this as `type=origin_inspector subscriber=create` and
+`type=domain_inspector subscriber=create`. Run with `-debug` to see the
+entitlement result itself (`product=origin_inspector hasAccess=true`).
+
+Both products are [enabled per service][oi-enable]. Services without the product
+enabled don't produce origin or domain metrics.
+
+[oi]: https://docs.fastly.com/products/origin-inspector
+[di]: https://docs.fastly.com/products/domain-inspector
+[oi-enable]: https://www.fastly.com/documentation/reference/api/products/origin_inspector/
+
+### Origin Inspector metrics
+
+Exported under the `origin` subsystem (`fastly_origin_*` with the default
+namespace). Every metric carries the labels `service_id`, `service_name`,
+`datacenter`, `origin`, and `source`. `source` is one of `delivery`, `compute`,
+or `waf`, identifying which part of the Fastly platform made the origin request.
+
+| Metric | Type | Extra labels |
+|--------|------|--------------|
+| `fastly_origin_responses_total` | counter | |
+| `fastly_origin_resp_body_bytes_total` | counter | |
+| `fastly_origin_resp_header_bytes_total` | counter | |
+| `fastly_origin_status_code_total` | counter | `status_code` |
+| `fastly_origin_status_group_total` | counter | `status_group` |
+| `fastly_origin_latency_seconds` | histogram | |
+
+### Domain Inspector metrics
+
+Exported under the `domain` subsystem (`fastly_domain_*`). Every metric carries
+the labels `service_id`, `service_name`, `datacenter`, and `domain`.
+
+| Metric | Type | Extra labels |
+|--------|------|--------------|
+| `fastly_domain_requests_total` | counter | |
+| `fastly_domain_edge_requests_total` | counter | |
+| `fastly_domain_edge_hit_requests_total` | counter | |
+| `fastly_domain_edge_miss_requests_total` | counter | |
+| `fastly_domain_edge_hit_ratio` | gauge | |
+| `fastly_domain_resp_body_bytes_total` | counter | |
+| `fastly_domain_resp_header_bytes_total` | counter | |
+| `fastly_domain_edge_resp_body_bytes_total` | counter | |
+| `fastly_domain_edge_resp_header_bytes_total` | counter | |
+| `fastly_domain_bereq_body_bytes_total` | counter | |
+| `fastly_domain_bereq_header_bytes_total` | counter | |
+| `fastly_domain_origin_fetches` | counter | |
+| `fastly_domain_origin_fetch_resp_body_bytes` | counter | |
+| `fastly_domain_origin_fetch_resp_header_bytes` | counter | |
+| `fastly_domain_origin_offload` | gauge | |
+| `fastly_domain_status_code_total` | counter | `status_code` |
+| `fastly_domain_status_group_total` | counter | `status_group` |
+| `fastly_domain_origin_status_code_total` | counter | `status_code` |
+| `fastly_domain_origin_status_group_total` | counter | `status_group` |
+| `fastly_domain_http2_total` | counter | |
+| `fastly_domain_http3_total` | counter | |
+| `fastly_domain_tls_total` | counter | `tls_version` |
+
+### Controlling cardinality
+
+Origin metrics are emitted per datacenter, per origin, per source. Domain
+metrics are emitted per datacenter, per domain. On a service with many origins
+or domains, this multiplies the size of the `/metrics` response by the number of
+Fastly POPs. Options, from least to most aggressive:
+
+```sh
+# Drop the per-datacenter breakdown and keep only aggregated values
+fastly-exporter -token XXX -aggregate-only
+
+# Keep origin status codes, drop the other origin metrics
+fastly-exporter -token XXX -metric-blocklist '^fastly_origin_(resp_|responses|latency)'
+
+# Turn domain metrics off entirely
+fastly-exporter -token XXX -metric-blocklist '^fastly_domain_'
+```
+
+Blocklisting a metric stops it from being exported. It doesn't stop the
+exporter from polling rt.fastly.com for that product.
+
 ## Filtering services
 
 By default, all services available to your token will be exported. You can
@@ -148,7 +239,8 @@ well as aggregated measurements for all datacenters. By default, exported
 metrics are grouped by datacenter. The response body size of the metrics
 endpoint can potentially be very large. This will be exacerbated when using
 the exporter with many services, many origins with Origin Inspector, and many
-domains with Domain Inspector. One way to reduce the output size of the
+domains with Domain Inspector (see [Controlling cardinality](#controlling-cardinality)).
+One way to reduce the output size of the
 metrics endpoint is by using the `-aggregate-only` flag. When this flag is
 used only the `aggregated` metrics from the real-time stats API will be
 exported. Metrics will still include the datacenter label but it will always
