@@ -15,7 +15,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7.0.0
         with:
-          go-version: 1.x
+          go-version: 1.27.x
       - run: make lint
         if: ${{ matrix.platform == 'ubuntu-latest' }}
       - run: make test
@@ -54,7 +54,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7.0.0
         with:
-          go-version: 1.x
+          go-version: 1.27.x
 
       - name: Set App Version
         run: echo "APP_VERSION=$(git describe --tags --abbrev=0 | sed -e 's/^v//')" >> $GITHUB_ENV

@@ -1,6 +1,6 @@
 module github.com/fastly/fastly-exporter
 
-go 1.26.0
+go 1.27.3
 
 require (
 	github.com/cespare/xxhash v1.1.0
