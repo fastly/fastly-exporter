@@ -293,6 +293,7 @@ type Datacenter struct {
 	Status406                                         uint64            `json:"status_406"`
 	Status416                                         uint64            `json:"status_416"`
 	Status429                                         uint64            `json:"status_429"`
+	Status499                                         uint64            `json:"status_499"`
 	Status4xx                                         uint64            `json:"status_4xx"`
 	Status500                                         uint64            `json:"status_500"`
 	Status501                                         uint64            `json:"status_501"`
