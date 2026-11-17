@@ -21,7 +21,8 @@ import (
 // Writers (i.e. rt.Subscribers) should call MetricsFor with their specific
 // service ID, and update the returned set of Prometheus metrics. Readers (i.e.
 // Prometheus) can scrape metrics for all services via the `/metrics` endpoint,
-// or a single service via `/metrics?target=<service ID>`.
+// or a single service via `/metrics?target=<service ID>`. If a service name
+// lookup is configured, the target may also be a service name.
 //
 // https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
 type Registry struct {
@@ -32,6 +33,7 @@ type Registry struct {
 	metricNameFilter      filter.Filter
 	byServiceID           map[string]*metricsRegistry
 	defaultGatherers      []prometheus.Gatherer
+	serviceNameLookup     func(serviceID string) (name string, found bool)
 
 	http.Handler
 }
@@ -61,6 +63,16 @@ func NewRegistry(version, namespace, rtSubsystemDeprecated string, metricNameFil
 	r.Handler = router
 
 	return r
+}
+
+// SetServiceNameLookup configures a function that resolves a service ID to
+// its current service name. When set, `/metrics?target=<service name>` returns
+// metrics for every service whose name matches exactly, as long as the target
+// doesn't match a service ID.
+func (r *Registry) SetServiceNameLookup(lookup func(serviceID string) (name string, found bool)) {
+	r.mtx.Lock()
+	defer r.mtx.Unlock()
+	r.serviceNameLookup = lookup
 }
 
 // metricsRegistry combines a set of metrics for a single Fastly service with a
@@ -177,21 +189,31 @@ func (r *Registry) serviceIDs() []string {
 }
 
 func (r *Registry) servicesGathererFor(target string) prometheus.Gatherer {
-	var allow func(candidate string) bool
-	switch target {
-	case "":
-		allow = func(candidate string) bool { return true }
-	default:
-		allow = func(candidate string) bool { return candidate == target }
-	}
-
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	var gatherers prometheus.Gatherers
-	for serviceID, mr := range r.byServiceID {
-		if allow(serviceID) {
+
+	// Empty target means all services.
+	if target == "" {
+		for _, mr := range r.byServiceID {
 			gatherers = append(gatherers, mr.registry)
+		}
+		return gatherers
+	}
+
+	// A service ID match takes precedence.
+	if mr, ok := r.byServiceID[target]; ok {
+		return append(gatherers, mr.registry)
+	}
+
+	// Otherwise, treat the target as a service name. Service names aren't
+	// unique, so every service with that name is included.
+	if r.serviceNameLookup != nil {
+		for serviceID, mr := range r.byServiceID {
+			if name, found := r.serviceNameLookup(serviceID); found && name == target {
+				gatherers = append(gatherers, mr.registry)
+			}
 		}
 	}
 

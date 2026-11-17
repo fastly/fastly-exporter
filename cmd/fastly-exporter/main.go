@@ -415,6 +415,10 @@ func main() {
 	var registry *prom.Registry
 	{
 		registry = prom.NewRegistry(programVersion, namespace, deprecatedSubsystem, metricNameFilter, defaultGatherers)
+		registry.SetServiceNameLookup(func(serviceID string) (string, bool) {
+			name, _, found := serviceCache.Metadata(serviceID)
+			return name, found
+		})
 	}
 
 	var manager *rt.Manager

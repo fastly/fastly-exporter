@@ -28,6 +28,12 @@ func TestRegistryEndpoints(t *testing.T) {
 		registry         = prom.NewRegistry(version, namespace, subsystem, metricNameFilter)
 	)
 
+	serviceNames := map[string]string{"AAA": "Service One", "BBB": "Service Two", "DDD": "Service Two"}
+	registry.SetServiceNameLookup(func(serviceID string) (string, bool) {
+		name, ok := serviceNames[serviceID]
+		return name, ok
+	})
+
 	registry.MetricsFor("AAA").Realtime.RequestsTotal.With(prometheus.Labels{
 		"service_id": "AAA", "service_name": "Service One", "datacenter": "NYC",
 	}).Add(1)
@@ -35,6 +41,10 @@ func TestRegistryEndpoints(t *testing.T) {
 	registry.MetricsFor("BBB").Realtime.RequestsTotal.With(prometheus.Labels{
 		"service_id": "BBB", "service_name": "Service Two", "datacenter": "NYC",
 	}).Add(2)
+
+	registry.MetricsFor("DDD").Realtime.RequestsTotal.With(prometheus.Labels{
+		"service_id": "DDD", "service_name": "Service Two", "datacenter": "NYC",
+	}).Add(4)
 
 	registry.MetricsFor("AAA").ServiceInfo.WithLabelValues("AAA", "Service One", "1").Set(1)
 	registry.MetricsFor("BBB").ServiceInfo.WithLabelValues("BBB", "Service Two", "1").Set(1)
@@ -161,6 +171,28 @@ func TestRegistryEndpoints(t *testing.T) {
 		want, dont := []string{}, []string{
 			`fastly_rt_requests_total{datacenter="NYC",service_id="AAA",service_name="Service One"} 1`,
 			`fastly_rt_requests_total{datacenter="NYC",service_id="BBB",service_name="Service Two"} 2`,
+		}
+		checkMetrics(body, want, dont)
+	})
+
+	t.Run("metrics?target=Service+One", func(t *testing.T) {
+		body := get(testRequest{path: "/metrics?target=Service+One"})
+		want, dont := []string{
+			`fastly_rt_requests_total{datacenter="NYC",service_id="AAA",service_name="Service One"} 1`,
+		}, []string{
+			`fastly_rt_requests_total{datacenter="NYC",service_id="BBB",service_name="Service Two"} 2`,
+			`fastly_rt_requests_total{datacenter="NYC",service_id="DDD",service_name="Service Two"} 4`,
+		}
+		checkMetrics(body, want, dont)
+	})
+
+	t.Run("metrics?target=Service%20Two (duplicate names)", func(t *testing.T) {
+		body := get(testRequest{path: "/metrics?target=Service%20Two"})
+		want, dont := []string{
+			`fastly_rt_requests_total{datacenter="NYC",service_id="BBB",service_name="Service Two"} 2`,
+			`fastly_rt_requests_total{datacenter="NYC",service_id="DDD",service_name="Service Two"} 4`,
+		}, []string{
+			`fastly_rt_requests_total{datacenter="NYC",service_id="AAA",service_name="Service One"} 1`,
 		}
 		checkMetrics(body, want, dont)
 	})
