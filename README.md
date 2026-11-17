@@ -248,7 +248,10 @@ be set to "aggregate".
 
 ## Service discovery
 
-Per-service metrics are available via `/metrics?target=<service ID>`. Available
+Per-service metrics are available via `/metrics?target=<service ID>`. The
+target may also be a service name, e.g. `/metrics?target=My%20Service`. A
+service ID match takes precedence; otherwise all services with exactly that
+name are returned (Fastly service names are not guaranteed to be unique). Available
 services are enumerated as targets on the `/sd` endpoint, which is compatible
 with the [generic HTTP service discovery][httpsd] feature of Prometheus. An
 example Prometheus scrape config for the Fastly exporter follows.
